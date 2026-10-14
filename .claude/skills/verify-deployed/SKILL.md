@@ -60,8 +60,8 @@ that matters to a user.
 merge commit. Check the thing itself:
 
 ```bash
-gh api repos/Issen007/SkillStreak/commits/main --jq '.sha[0:7] + "  " + (.commit.message|split("\n")[0])'
-gh api repos/Issen007/SkillStreak/contents/<a file the PR added>?ref=main --jq '.name'
+gh api repos/Skillstreak/SkillStreak/commits/main --jq '.sha[0:7] + "  " + (.commit.message|split("\n")[0])'
+gh api repos/Skillstreak/SkillStreak/contents/<a file the PR added>?ref=main --jq '.name'
 ```
 
 If a file the PR added is on `main`, it merged. Nothing else is evidence.
@@ -90,7 +90,7 @@ And confirm the GitHub side was actually touched — names and timestamps
 are readable, values are not:
 
 ```bash
-gh api repos/Issen007/SkillStreak/actions/secrets --jq '.secrets[] | "\(.name)  \(.updated_at)"'
+gh api repos/Skillstreak/SkillStreak/actions/secrets --jq '.secrets[] | "\(.name)  \(.updated_at)"'
 ```
 
 A Google App Password is **16 lowercase letters** (19 with spaces). Any
