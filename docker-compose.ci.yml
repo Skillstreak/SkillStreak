@@ -1,0 +1,25 @@
+# CI-only overlay for the compose smoke test: a throwaway MinIO in place of
+# Safespring, so no real storage key ever reaches CI (see the comment above
+# the backend-test job's env in .github/workflows/ci-cd.yml). Not for local
+# dev; docker-compose.yml alone still expects your own bucket in .env.
+services:
+  # The api's MINIO_* values come from .env, which the CI step writes;
+  # docker-compose.yml's `:?` checks need them set before any overlay applies.
+  api:
+    depends_on:
+      minio:
+        condition: service_healthy
+
+  minio:
+    # Chainguard's build, pinned by digest: Bitnami, Docker Hub and quay.io
+    # each stopped serving MinIO to anonymous pulls.
+    image: cgr.dev/chainguard/minio@sha256:2136d593beacf4461187035eca949fe49abd589d5079735025c711ca58fee0c8
+    command: server /tmp/data
+    environment:
+      MINIO_ROOT_USER: ci-minio-user
+      MINIO_ROOT_PASSWORD: ci-minio-password
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

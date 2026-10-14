@@ -139,7 +139,7 @@ async function readFormatTags(bytes: Buffer): Promise<Record<string, string>> {
 // fixture-creation conventions. Requires ffmpeg/ffprobe (see
 // ffmpegAvailable() — the same real-binary posture as
 // video-processing.service.spec.ts) and a real S3 bucket reachable at
-// MINIO_ENDPOINT (CI's Safespring test bucket, or your own) — this suite is the one place a genuinely-real upload
+// MINIO_ENDPOINT (CI's throwaway MinIO, or your own bucket) — this suite is the one place a genuinely-real upload
 // -> remux -> playback round trip is proven, not just each layer in
 // isolation.
 describe('Fas 3: video clips & the team feed (e2e)', () => {
