@@ -1172,7 +1172,7 @@ jobs:
           owner="${{ github.repository_owner }}"
           image="ghcr.io/${owner,,}/skillstreak-clip-tagger:main-${GITHUB_SHA}"
           for manifest in k8s-ai/clip-tagger.yaml k8s-ai/plan-generator.yaml; do
-            sed "s|ghcr.io/issen007/skillstreak-clip-tagger:PLACEHOLDER_IMAGE_TAG|${image}|" \
+            sed "s|ghcr.io/skillstreak/skillstreak-clip-tagger:PLACEHOLDER_IMAGE_TAG|${image}|" \
               "$manifest" | kubectl apply -f -
           done
 

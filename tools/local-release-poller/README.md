@@ -26,7 +26,7 @@ same posture as `tools/lab-access/`.
    rather than failing loudly if it's still running), then runs
    `kubectl set image` on `deployment/api` and `deployment/site` in the
    `skillstreak` namespace to point at
-   `ghcr.io/issen007/skillstreak-{api,site}:prerelease-<sha>`, and waits
+   `ghcr.io/skillstreak/skillstreak-{api,site}:prerelease-<sha>`, and waits
    for the rollout.
 
 Unlike the api image, the site image isn't interchangeable with what the

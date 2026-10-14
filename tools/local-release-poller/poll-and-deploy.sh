@@ -13,7 +13,7 @@
 # the newest prerelease automatically" half of that split.
 #
 # Deliberately does NOT `docker pull` anything itself — the images this
-# updates the Deployments to point at live on GHCR (ghcr.io/issen007/
+# updates the Deployments to point at live on GHCR (ghcr.io/skillstreak/
 # skillstreak-{api,site}:prerelease-<sha>, pushed by
 # .github/workflows/ci-cd.yml's `internal-images` job, which only runs on
 # pushes to `review`), and it's Kubernetes' own containerd on the node
@@ -43,7 +43,7 @@
 # directory's README for install steps).
 set -euo pipefail
 
-REPO="Issen007/SkillStreak"
+REPO="Skillstreak/SkillStreak"
 # The single integration branch (was `prerelease` until 2026-08-10, when
 # `review` took over that role). The image TAG prefix below is still
 # `prerelease-` on purpose: it names the build channel, not the branch, so
@@ -163,8 +163,8 @@ fi
 
 echo "New ${BRANCH} commit detected: ${latest_sha} (currently deployed: ${current_sha:-none yet})"
 
-api_image="ghcr.io/issen007/skillstreak-api:prerelease-${latest_sha}"
-site_image="ghcr.io/issen007/skillstreak-site:prerelease-${latest_sha}"
+api_image="ghcr.io/skillstreak/skillstreak-api:prerelease-${latest_sha}"
+site_image="ghcr.io/skillstreak/skillstreak-site:prerelease-${latest_sha}"
 
 # The internal-images CI job only runs after backend-test/compose-smoke-test
 # pass, and only pushes once both images are built — but there's still a

@@ -108,7 +108,7 @@ It's kept up to date automatically by `tools/local-release-poller/`
 (a systemd user timer on ubuntu01 itself, not this repo's CI) polling for
 new `review` commits, and by `.github/workflows/ci-cd.yml`'s
 `internal-images` job, which builds and pushes
-`ghcr.io/issen007/skillstreak-{api,site}:prerelease-<sha>` on every push to
+`ghcr.io/skillstreak/skillstreak-{api,site}:prerelease-<sha>` on every push to
 `review` — the tag keeps the older name deliberately, because it labels the
 build *channel* ("an internal pre-release build") rather than the branch,
 so images already on GHCR and the version a running pod reports at

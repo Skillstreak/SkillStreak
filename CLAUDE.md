@@ -218,7 +218,7 @@ stay meaningful.
 ci-cd.yml`'s `release` job (triggered on push to `main`) bumps the version
 (via git tags), creates a GitHub Release,
 and builds/pushes Docker images tagged with that version to GHCR
-(`ghcr.io/issen007/skillstreak-api`/`skillstreak-site`), alongside the
+(`ghcr.io/skillstreak/skillstreak-api`/`skillstreak-site`), alongside the
 existing git-SHA-tagged images.
 
 The bump **cascades at 9** (project owner's spec, 2026-08-09): `+0.0.1`
