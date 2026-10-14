@@ -5,7 +5,10 @@ import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
-import { pointsForTrainingLog } from '../src/training-logs/points.util';
+import {
+  CLICK_ONLY_WEEKLY_LIMIT,
+  pointsForTrainingLog,
+} from '../src/training-logs/points.util';
 import { AppExceptionFilter } from '../src/common/errors/http-exception.filter';
 import { ParentalConsentStatus } from '../src/players/player-consent-status.enum';
 import { TeamJoinStatus } from '../src/players/team-join-status.enum';
@@ -101,7 +104,7 @@ describe('Training-log concurrency (e2e)', () => {
     await app.close();
   });
 
-  it('collapses N concurrent same-day logs into exactly one streak increment while crediting every log to the team pool', async () => {
+  it('collapses N concurrent same-day logs into exactly one streak increment and pays at most the weekly click-only limit into the team pool', async () => {
     const createResponse = await request(app.getHttpServer())
       .post('/api/v1/players')
       .send({
@@ -170,15 +173,15 @@ describe('Training-log concurrency (e2e)', () => {
     expect(player.currentStreakCount).toBe(1);
     expect(player.longestStreakCount).toBe(1);
 
-    // ...but every one of the N logs still landed in the team pool — no
-    // lost updates from TeamPoolService's atomic increment.
-    // Every concurrent log is an unproven tap, so each contributes
-    // pointsForTrainingLog(DURATION_MINUTES) — computed rather than
-    // hardcoded, since the multipliers themselves are pinned by
-    // points.util.spec.ts and this test is about none of the concurrent
-    // credits being lost.
+    // ...and the team pool got exactly the paid taps: no lost updates from
+    // TeamPoolService's atomic increment, and no more than
+    // CLICK_ONLY_WEEKLY_LIMIT paid click-only logs (ADR-0038), counted under
+    // the same player row lock, so concurrent taps cannot both be the 3rd.
+    // Each paid tap is worth pointsForTrainingLog(DURATION_MINUTES), computed
+    // rather than hardcoded since points.util.spec.ts pins the multipliers.
     const expectedPoints =
-      CONCURRENT_REQUEST_COUNT * pointsForTrainingLog(DURATION_MINUTES);
+      Math.min(CONCURRENT_REQUEST_COUNT, CLICK_ONLY_WEEKLY_LIMIT) *
+      pointsForTrainingLog(DURATION_MINUTES);
     const highestReportedPoolTotal = Math.max(
       ...bodies.map((b) => b.teamPool.pointsTotal),
     );

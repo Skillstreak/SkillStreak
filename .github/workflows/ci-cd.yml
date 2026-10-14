@@ -48,12 +48,17 @@ jobs:
           --health-retries 10
     # Fas 3's video-clip e2e suite exercises real S3 object storage (the
     # object-storage/metadata-stripping path is the whole point of that
-    # suite, not something to stub out). It uses a dedicated CI bucket at
-    # Safespring, the same provider production uses. Self-hosted MinIO was
-    # dropped on 2026-10-09: Bitnami, then Docker Hub, then quay.io each
-    # stopped serving its image to anonymous pulls, and every outage
-    # blocked every merge in the repo. Test objects are synthetic; the
-    # bucket should carry a short expiry lifecycle rule.
+    # suite, not something to stub out). It runs against a throwaway MinIO
+    # started below that lives only for this job.
+    #
+    # Not Safespring: Safespring keys are account-wide, so a CI key would be
+    # the production key, and this workflow runs test code from any branch
+    # pushed to a public repo, including the dev-staff pods' branches. One
+    # edited test could print a key that opens children's clips. No real
+    # storage credential belongs in CI.
+    #
+    # Chainguard's image because Bitnami, Docker Hub and quay.io each stopped
+    # serving MinIO to anonymous pulls (2026-09/10). Pinned by digest.
     env:
       DATABASE_URL: postgres://app:app@localhost:5432/app_dev
       REDIS_URL: redis://localhost:6379
@@ -70,10 +75,10 @@ jobs:
       # three-provider OAuth testing" decision — see StaffAuthService's
       # unit tests instead, which mock the OIDC client entirely.
       STAFF_JWT_SECRET: ci-only-test-secret
-      MINIO_ENDPOINT: https://s3a4.sto2.safedc.net
-      MINIO_ACCESS_KEY: ${{ secrets.CI_S3_ACCESS_KEY }}
-      MINIO_SECRET_KEY: ${{ secrets.CI_S3_SECRET_KEY }}
-      MINIO_BUCKET: ${{ vars.CI_S3_BUCKET }}
+      MINIO_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: ci-minio-user
+      MINIO_SECRET_KEY: ci-minio-password
+      MINIO_BUCKET: clips
     steps:
       - uses: actions/checkout@v4
 
@@ -174,6 +179,24 @@ jobs:
           done
 
           command -v ffmpeg && command -v ffprobe && ffmpeg -version | head -1
+
+      - name: Start throwaway MinIO (see comment above)
+        run: |
+          docker run -d --name minio-ci \
+            -e MINIO_ROOT_USER=ci-minio-user \
+            -e MINIO_ROOT_PASSWORD=ci-minio-password \
+            -p 9000:9000 \
+            cgr.dev/chainguard/minio@sha256:2136d593beacf4461187035eca949fe49abd589d5079735025c711ca58fee0c8 server /tmp/data
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/live; then
+              echo "MinIO is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MinIO did not become healthy in time"
+          docker logs minio-ci
+          exit 1
 
       - uses: pnpm/action-setup@v4
         with:
@@ -631,17 +654,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: docker-build
+    env:
+      COMPOSE_FILE: docker-compose.yml:docker-compose.ci.yml
     steps:
       - uses: actions/checkout@v4
 
+      # A throwaway MinIO from docker-compose.ci.yml instead of Safespring:
+      # no real storage key in CI (see the backend-test job's env comment).
       - name: Prepare env file
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          cat >> .env <<'ENV'
+          MINIO_ENDPOINT=http://minio:9000
+          MINIO_ACCESS_KEY=ci-minio-user
+          MINIO_SECRET_KEY=ci-minio-password
+          MINIO_BUCKET=clips
+          ENV
 
       - name: Start stack
-        env:
-          MINIO_ACCESS_KEY: ${{ secrets.CI_S3_ACCESS_KEY }}
-          MINIO_SECRET_KEY: ${{ secrets.CI_S3_SECRET_KEY }}
-          MINIO_BUCKET: ${{ vars.CI_S3_BUCKET }}
         run: docker compose up -d --build
 
       - name: Wait for API health check
