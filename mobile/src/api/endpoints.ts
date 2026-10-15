@@ -125,6 +125,24 @@ export function getClickOnlyAllowance(): Promise<ClickOnlyAllowance> {
   });
 }
 
+export type QuickFeedbackAnswer =
+  | { questionId: 'fun_today'; choice: 'happy' | 'meh' | 'sad' }
+  | {
+      questionId: 'want_more';
+      choice: 'drills' | 'challenges' | 'badges' | 'unsure';
+    };
+
+/** I-002 — POST /feedback/quick, 204. Anonymous on the server: pre-set
+ * choices only, no free text. A second answer in the same ISO week is a 429
+ * with code FEEDBACK_ALREADY_GIVEN. */
+export function postQuickFeedback(answers: QuickFeedbackAnswer[]): Promise<void> {
+  return apiClient.request<void>('/feedback/quick', {
+    method: 'POST',
+    body: { answers },
+    auth: true,
+  });
+}
+
 /** 4. GET /players/me — auth required. */
 export function getMe(): Promise<PlayerMeResponse> {
   return apiClient.request<PlayerMeResponse>('/players/me', { auth: true });

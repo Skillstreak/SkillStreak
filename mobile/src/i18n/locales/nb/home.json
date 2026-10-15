@@ -326,5 +326,22 @@
     "notifTitle": "Tiden er ute! ⏱️",
     "notifBody": "Bra kjempa! Åpne appen og logg økta di.",
     "rejected": "Timeren kunne ikke brukes denne gangen. Avbryt timeren og logg økta som vanlig i stedet — den teller likevel."
+  },
+  "feedbackCard": {
+    "title": "Hjelp oss å bli bedre",
+    "answer": "Svar (10 sek)",
+    "notNow": "Ikke nå"
+  },
+  "feedbackModal": {
+    "progress": "Spørsmål {{step}} av 2",
+    "funQuestion": "Var det gøy i dag?",
+    "wantQuestion": "Hva vil du ha mer av?",
+    "fun": { "happy": "Gøy", "meh": "Sånn passe", "sad": "Ikke gøy" },
+    "want": { "drills": "Øvelser", "challenges": "Utfordringer", "badges": "Merker", "unsure": "Vet ikke" },
+    "skip": "Hopp over",
+    "error": "Kunne ikke sende. Prøv igjen.",
+    "thanksHeading": "Takk!",
+    "thanksBody": "Du hjelper oss å gjøre appen bedre.",
+    "thanksButton": "Ferdig"
   }
 }

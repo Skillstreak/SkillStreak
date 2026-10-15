@@ -326,5 +326,22 @@
     "notifTitle": "Die Zeit ist um! ⏱️",
     "notifBody": "Stark gekämpft! Öffne die App und trag dein Training ein.",
     "rejected": "Der Timer konnte diesmal nicht verwendet werden. Brich den Timer ab und trag dein Training stattdessen ganz normal ein — es zählt trotzdem."
+  },
+  "feedbackCard": {
+    "title": "Hilf uns, besser zu werden",
+    "answer": "Antworten (10 Sek.)",
+    "notNow": "Jetzt nicht"
+  },
+  "feedbackModal": {
+    "progress": "Frage {{step}} von 2",
+    "funQuestion": "War es heute lustig?",
+    "wantQuestion": "Wovon willst du mehr?",
+    "fun": { "happy": "Lustig", "meh": "Na ja", "sad": "Nicht lustig" },
+    "want": { "drills": "Übungen", "challenges": "Challenges", "badges": "Abzeichen", "unsure": "Weiß nicht" },
+    "skip": "Überspringen",
+    "error": "Senden hat nicht geklappt. Versuch es noch einmal.",
+    "thanksHeading": "Danke!",
+    "thanksBody": "Du hilfst uns, die App besser zu machen.",
+    "thanksButton": "Fertig"
   }
 }

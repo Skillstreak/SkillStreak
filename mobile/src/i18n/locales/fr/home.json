@@ -326,5 +326,22 @@
     "notifTitle": "C'est l'heure ! ⏱️",
     "notifBody": "Bel effort ! Ouvre l'appli pour enregistrer ta séance.",
     "rejected": "Le minuteur n'a pas pu être utilisé cette fois. Annule le minuteur et enregistre ta séance normalement — elle compte quand même."
+  },
+  "feedbackCard": {
+    "title": "Aide-nous à nous améliorer",
+    "answer": "Répondre (10 s)",
+    "notNow": "Pas maintenant"
+  },
+  "feedbackModal": {
+    "progress": "Question {{step}} sur 2",
+    "funQuestion": "C'était amusant aujourd'hui ?",
+    "wantQuestion": "Tu veux plus de quoi ?",
+    "fun": { "happy": "Amusant", "meh": "Moyen", "sad": "Pas amusant" },
+    "want": { "drills": "Exercices", "challenges": "Défis", "badges": "Badges", "unsure": "Je ne sais pas" },
+    "skip": "Passer",
+    "error": "Envoi impossible. Réessaie.",
+    "thanksHeading": "Merci !",
+    "thanksBody": "Tu nous aides à améliorer l'appli.",
+    "thanksButton": "Terminé"
   }
 }

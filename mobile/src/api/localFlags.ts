@@ -145,6 +145,41 @@ export async function setClipLastViewedAt(teamId: string, value: string): Promis
   await secureSetItem(clipLastViewedKeyFor(teamId), value);
 }
 
+// --- I-002: the weekly quick-feedback card ---------------------------------
+// The server is the real once-a-week gate (a Redis key, never stored with the
+// answers). This local flag only stops the card from nagging: it records the
+// ISO week (Europe/Stockholm) in which the child answered OR tapped "Inte
+// nu", so the card stays gone until next week either way.
+const FEEDBACK_WEEK_KEY = 'skillstreak.quickFeedbackHandledWeek';
+
+/** ISO week like "2026-W42" for the current date in Europe/Stockholm. */
+export function currentStockholmIsoWeek(now: Date = new Date()): string {
+  const [y, m, d] = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Stockholm',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+    .format(now)
+    .split('-')
+    .map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const dayNumber = date.getUTCDay() || 7;
+  // Shift to the Thursday of this week; its year is the ISO year.
+  date.setUTCDate(date.getUTCDate() + 4 - dayNumber);
+  const yearStart = Date.UTC(date.getUTCFullYear(), 0, 1);
+  const week = Math.ceil(((date.getTime() - yearStart) / 86400000 + 1) / 7);
+  return `${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+export async function getQuickFeedbackHandledThisWeek(): Promise<boolean> {
+  return (await secureGetItem(FEEDBACK_WEEK_KEY)) === currentStockholmIsoWeek();
+}
+
+export async function setQuickFeedbackHandledThisWeek(): Promise<void> {
+  await secureSetItem(FEEDBACK_WEEK_KEY, currentStockholmIsoWeek());
+}
+
 // Fas 3's `seenChallengeClipIds` flags (Screen V3's one-time "you were
 // challenged" toast) lived here until Fas 4.6 and are deliberately gone,
 // not kept alongside the replacement: per docs/adr/

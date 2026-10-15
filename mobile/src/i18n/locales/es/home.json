@@ -326,5 +326,22 @@
     "notifTitle": "¡Se acabó el tiempo! ⏱️",
     "notifBody": "¡Buen esfuerzo! Abre la app para registrar tu sesión.",
     "rejected": "Esta vez no se pudo usar el temporizador. Cancélalo y registra tu sesión de la forma normal: cuenta igual."
+  },
+  "feedbackCard": {
+    "title": "Ayúdanos a mejorar",
+    "answer": "Responder (10 s)",
+    "notNow": "Ahora no"
+  },
+  "feedbackModal": {
+    "progress": "Pregunta {{step}} de 2",
+    "funQuestion": "¿Fue divertido hoy?",
+    "wantQuestion": "¿De qué quieres más?",
+    "fun": { "happy": "Divertido", "meh": "Regular", "sad": "No divertido" },
+    "want": { "drills": "Ejercicios", "challenges": "Retos", "badges": "Insignias", "unsure": "No sé" },
+    "skip": "Omitir",
+    "error": "No se pudo enviar. Inténtalo de nuevo.",
+    "thanksHeading": "¡Gracias!",
+    "thanksBody": "Nos ayudas a mejorar la app.",
+    "thanksButton": "Listo"
   }
 }
