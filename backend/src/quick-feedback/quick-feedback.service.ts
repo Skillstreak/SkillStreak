@@ -10,7 +10,7 @@ import { SubmitQuickFeedbackDto } from './dto/submit-quick-feedback.dto';
 import { QuickFeedbackAnswer } from './entities/quick-feedback-answer.entity';
 import {
   currentStockholmIsoWeek,
-  secondsUntilStockholmWeekEnd,
+  stockholmWeekEndEpochSeconds,
 } from './iso-week.util';
 import {
   QUICK_FEEDBACK_CHOICES,
@@ -49,7 +49,7 @@ export class QuickFeedbackService {
     const claimed = await this.redisService.tryClaimQuickFeedbackWeek(
       playerId,
       isoWeek,
-      secondsUntilStockholmWeekEnd(now),
+      stockholmWeekEndEpochSeconds(now),
     );
     if (!claimed) {
       throw new FeedbackAlreadyGivenException();

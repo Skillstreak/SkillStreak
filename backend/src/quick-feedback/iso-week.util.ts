@@ -43,3 +43,17 @@ export function secondsUntilStockholmWeekEnd(now: Date = new Date()): number {
   const wallNow = Date.UTC(year, month - 1, day, h % 24, m, s);
   return Math.ceil((nextMonday - wallNow) / 1000) + 3600;
 }
+
+/**
+ * Absolute expiry (Unix seconds) for every weekly feedback claim made at
+ * `now`: the end of the Stockholm week plus the margin, rounded to the hour.
+ * Every claim in a week gets the same value, so a key's remaining TTL says
+ * nothing about when that player answered. A per-claim relative TTL would:
+ * matched against the answers' insertion order it links a child to their
+ * answers. A DST change inside the week is the only split, one hour wide.
+ */
+export function stockholmWeekEndEpochSeconds(now: Date = new Date()): number {
+  const end =
+    Math.floor(now.getTime() / 1000) + secondsUntilStockholmWeekEnd(now);
+  return Math.round(end / 3600) * 3600;
+}

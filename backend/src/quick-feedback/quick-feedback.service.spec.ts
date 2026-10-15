@@ -6,6 +6,7 @@ import {
   currentStockholmIsoWeek,
   isoWeekOfDate,
   secondsUntilStockholmWeekEnd,
+  stockholmWeekEndEpochSeconds,
 } from './iso-week.util';
 import { QuickFeedbackService } from './quick-feedback.service';
 
@@ -102,5 +103,18 @@ describe('iso week helpers', () => {
     // Monday 2026-10-12 00:00 Stockholm → a full week.
     const full = secondsUntilStockholmWeekEnd(new Date('2026-10-11T22:00:00Z'));
     expect(full).toBe(7 * 86400 + 3600);
+  });
+
+  it('gives every claim in a week the same absolute expiry', () => {
+    // Monday morning, Wednesday afternoon (with odd milliseconds) and late
+    // Sunday of week 2026-W42: one expiry, so TTLs cannot order the players.
+    const expiries = [
+      '2026-10-12T05:00:00.000Z',
+      '2026-10-14T13:17:42.913Z',
+      '2026-10-18T21:59:59.999Z',
+    ].map((t) => stockholmWeekEndEpochSeconds(new Date(t)));
+    expect(new Set(expiries).size).toBe(1);
+    // Monday 2026-10-19 00:00 Stockholm (22:00 UTC) plus the 1h margin.
+    expect(expiries[0]).toBe(Date.UTC(2026, 9, 18, 23, 0, 0) / 1000);
   });
 });

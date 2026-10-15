@@ -867,13 +867,15 @@ export class RedisService {
   async tryClaimQuickFeedbackWeek(
     playerId: string,
     isoWeek: string,
-    ttlSeconds: number,
+    expireAtEpochSeconds: number,
   ): Promise<boolean> {
+    // EXAT, not EX: one shared absolute expiry per week, so the key's TTL
+    // does not record when this player answered.
     const result = await this.client.set(
       `quick-feedback:${playerId}:${isoWeek}`,
       '1',
-      'EX',
-      ttlSeconds,
+      'EXAT',
+      expireAtEpochSeconds,
       'NX',
     );
     return result === 'OK';
