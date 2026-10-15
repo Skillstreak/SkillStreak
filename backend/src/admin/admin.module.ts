@@ -13,6 +13,8 @@ import { AdminErrorLogService } from './admin-error-log.service';
 import { AdminImprovementSuggestionsService } from './admin-improvement-suggestions.service';
 import { AdminPlanningDocsService } from './admin-planning-docs.service';
 import { AdminSessionService } from './admin-session.service';
+import { AdminQuickFeedbackService } from './admin-quick-feedback.service';
+import { QuickFeedbackModule } from '../quick-feedback/quick-feedback.module';
 
 /**
  * docs/adr/0022-admin-control-center.md Decisions 4/6/7 — the admin control
@@ -60,6 +62,7 @@ import { AdminSessionService } from './admin-session.service';
     ErrorLogModule,
     BugReportsModule,
     ImprovementSuggestionsModule,
+    QuickFeedbackModule,
   ],
   controllers: [AdminController],
   providers: [
@@ -68,6 +71,7 @@ import { AdminSessionService } from './admin-session.service';
     AdminBugReportsService,
     AdminImprovementSuggestionsService,
     AdminPlanningDocsService,
+    AdminQuickFeedbackService,
   ],
 })
 export class AdminModule {}

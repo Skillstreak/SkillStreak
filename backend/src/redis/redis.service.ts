@@ -860,6 +860,33 @@ export class RedisService {
     return result === 'OK';
   }
 
+  /** I-002: once-a-week gate for anonymous quick feedback. The key holds
+   * the player id and the ISO week only — it is never stored with the
+   * answers, which carry no player id. Redis (not process memory) so the
+   * limit holds across API replicas. */
+  async tryClaimQuickFeedbackWeek(
+    playerId: string,
+    isoWeek: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const result = await this.client.set(
+      `quick-feedback:${playerId}:${isoWeek}`,
+      '1',
+      'EX',
+      ttlSeconds,
+      'NX',
+    );
+    return result === 'OK';
+  }
+
+  /** Gives the weekly slot back when saving the answers failed. */
+  async releaseQuickFeedbackWeek(
+    playerId: string,
+    isoWeek: string,
+  ): Promise<void> {
+    await this.client.del(`quick-feedback:${playerId}:${isoWeek}`);
+  }
+
   /** Same fixed-window shape as tryClaimErasureRequestDailyCap — the burst
    * cooldown above alone would still allow ~1,440 rows per player per day
    * into the operator's triage queue. */
