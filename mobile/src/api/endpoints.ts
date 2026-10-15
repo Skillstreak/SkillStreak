@@ -9,6 +9,7 @@ import type {
   ChatMessagesResponse,
   ClipPublicationResult,
   ClipsResponse,
+  ClickOnlyAllowance,
   CompleteClipUploadResponse,
   ConsentReminderResponse,
   CreateClipUploadUrlRequest,
@@ -16,6 +17,7 @@ import type {
   CreatePlayerRequest,
   CreatePlayerResponse,
   CreateTrainingLogRequest,
+  CreateTrainingTimerRequest,
   ConfirmContactChangeRequest,
   ConfirmContactChangeResponse,
   CreateWeeklyGoalRequest,
@@ -50,6 +52,7 @@ import type {
   TeammatesResponse,
   TeamRosterResponse,
   TrainingLogResponse,
+  TrainingTimerResponse,
   UnblockChatPlayerResponse,
   UpdateProfileRequest,
   UpdateWeeklyGoalRequest,
@@ -98,6 +101,44 @@ export function postTrainingLog(
   return apiClient.request<TrainingLogResponse>('/training-logs', {
     method: 'POST',
     body,
+    auth: true,
+  });
+}
+
+/** docs/adr/0038 Decision 2 — starts a server-clocked countdown. Starting
+ * a new one abandons any unused timer for this player. */
+export function postTrainingTimer(
+  body: CreateTrainingTimerRequest,
+): Promise<TrainingTimerResponse> {
+  return apiClient.request<TrainingTimerResponse>('/training-timers', {
+    method: 'POST',
+    body,
+    auth: true,
+  });
+}
+
+/** docs/adr/0038 Decision 4 — this week's paid click-only logs, shown in
+ * the evidence picker before the choice is made. */
+export function getClickOnlyAllowance(): Promise<ClickOnlyAllowance> {
+  return apiClient.request<ClickOnlyAllowance>('/training-logs/click-only-allowance', {
+    auth: true,
+  });
+}
+
+export type QuickFeedbackAnswer =
+  | { questionId: 'fun_today'; choice: 'happy' | 'meh' | 'sad' }
+  | {
+      questionId: 'want_more';
+      choice: 'drills' | 'challenges' | 'badges' | 'unsure';
+    };
+
+/** I-002 — POST /feedback/quick, 204. Anonymous on the server: pre-set
+ * choices only, no free text. A second answer in the same ISO week is a 429
+ * with code FEEDBACK_ALREADY_GIVEN. */
+export function postQuickFeedback(answers: QuickFeedbackAnswer[]): Promise<void> {
+  return apiClient.request<void>('/feedback/quick', {
+    method: 'POST',
+    body: { answers },
     auth: true,
   });
 }

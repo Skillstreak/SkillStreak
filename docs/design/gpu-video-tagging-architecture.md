@@ -1075,7 +1075,7 @@ ai/
     Dockerfile
 ```
 
-- Image `ghcr.io/issen007/skillstreak-clip-tagger`, SHA-tagged, built by a
+- Image `ghcr.io/skillstreak/skillstreak-clip-tagger`, SHA-tagged, built by a
   **new CI job that shares no step with `deploy`, `release`, or
   `internal-images`**. One image, no per-environment variants (Decision 9).
   `SERVICE_VERSION` build arg, reported at `/health`.
@@ -1118,7 +1118,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: clip-tagger
-          image: ghcr.io/issen007/skillstreak-clip-tagger:<sha>
+          image: ghcr.io/skillstreak/skillstreak-clip-tagger:<sha>
           args: ["--host", "0.0.0.0", "--port", "8080"]
           env:
             - name: SERVICE_VERSION

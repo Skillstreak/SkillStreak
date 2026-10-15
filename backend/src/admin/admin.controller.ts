@@ -37,6 +37,11 @@ import {
 } from './admin-session.service';
 import { AdminPlanningDocsService } from './admin-planning-docs.service';
 import {
+  AdminQuickFeedbackResponse,
+  AdminQuickFeedbackService,
+} from './admin-quick-feedback.service';
+import { QuickFeedbackQueryDto } from './dto/quick-feedback-query.dto';
+import {
   AdminPlanningResponse,
   toPlanningResponse,
 } from './admin-planning.view';
@@ -102,6 +107,7 @@ export class AdminController {
     private readonly adminBugReportsService: AdminBugReportsService,
     private readonly adminImprovementSuggestionsService: AdminImprovementSuggestionsService,
     private readonly adminPlanningDocsService: AdminPlanningDocsService,
+    private readonly adminQuickFeedbackService: AdminQuickFeedbackService,
   ) {}
 
   // §13/§2 — lets the console know it's signed in on first paint without
@@ -139,6 +145,14 @@ export class AdminController {
   async getUsageMetrics(): Promise<AdminUsageMetricsResponse> {
     const report = await this.usageMetricsService.collect();
     return toAdminUsageMetricsResponse(report);
+  }
+
+  // I-002 — anonymous weekly quick-feedback totals, whole app only.
+  @Get('feedback/quick')
+  getQuickFeedback(
+    @Query() query: QuickFeedbackQueryDto,
+  ): Promise<AdminQuickFeedbackResponse> {
+    return this.adminQuickFeedbackService.totals(query.week);
   }
 
   // Decision 6 — paginated, filterable by source / status_code range /

@@ -655,6 +655,44 @@ export class EvidenceClipAlreadyUsedException extends AppException {
   }
 }
 
+export class TrainingTimerNotUsableException extends AppException {
+  constructor() {
+    // docs/adr/0038 Decision 2. Same posture as EvidenceClipNotUsable:
+    // "no such timer", "not yours" and "older than 24 hours" are not
+    // distinguished, and the answer to each is "start a new timer".
+    super(
+      'training_timer_not_usable',
+      'That timer cannot be used for this session.',
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}
+
+export class TrainingTimerAlreadyUsedException extends AppException {
+  constructor() {
+    // A timer verifies one log, then is consumed — otherwise one 30-minute
+    // countdown could be logged again and again.
+    super(
+      'training_timer_already_used',
+      'That timer has already been used for another session.',
+      HttpStatus.CONFLICT,
+    );
+  }
+}
+
+export class TrainingTimerTooShortException extends AppException {
+  constructor() {
+    // ADR-0038 Decision 2: under one whole elapsed minute is rejected.
+    // Kept distinct from not-usable because it is the one timer failure
+    // the player can fix by simply carrying on — the timer stays open.
+    super(
+      'training_timer_too_short',
+      'Less than one minute has passed since the timer started.',
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}
+
 export class ContactChangeAlreadyConfirmedException extends AppException {
   constructor() {
     // A confirmed contact change is already inside its 24h grace period.
@@ -1174,6 +1212,29 @@ export class BugReportRateLimitedException extends AppException {
       'bug_report_rate_limited',
       'A few bug reports were already sent from this account recently; try again later.',
       HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}
+
+// --- I-002 (anonymous quick feedback) ---------------------------------------
+
+export class FeedbackAlreadyGivenException extends AppException {
+  constructor() {
+    // Upper-case code is the shared backend/frontend contract for I-002.
+    super(
+      'FEEDBACK_ALREADY_GIVEN',
+      'Quick feedback was already given this week.',
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}
+
+export class InvalidQuickFeedbackAnswersException extends AppException {
+  constructor() {
+    super(
+      'invalid_quick_feedback_answers',
+      'Each question may be answered once, with one of its own choices.',
+      HttpStatus.BAD_REQUEST,
     );
   }
 }

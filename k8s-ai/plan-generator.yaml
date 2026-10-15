@@ -44,7 +44,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: plan-generator
-          image: ghcr.io/issen007/skillstreak-clip-tagger:PLACEHOLDER_IMAGE_TAG
+          image: ghcr.io/skillstreak/skillstreak-clip-tagger:PLACEHOLDER_IMAGE_TAG
           imagePullPolicy: IfNotPresent
           command: ["/app/.venv/bin/python", "-m", "clip_tagger.plan_generator"]
           securityContext:
