@@ -1216,6 +1216,29 @@ export class BugReportRateLimitedException extends AppException {
   }
 }
 
+// --- I-002 (anonymous quick feedback) ---------------------------------------
+
+export class FeedbackAlreadyGivenException extends AppException {
+  constructor() {
+    // Upper-case code is the shared backend/frontend contract for I-002.
+    super(
+      'FEEDBACK_ALREADY_GIVEN',
+      'Quick feedback was already given this week.',
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}
+
+export class InvalidQuickFeedbackAnswersException extends AppException {
+  constructor() {
+    super(
+      'invalid_quick_feedback_answers',
+      'Each question may be answered once, with one of its own choices.',
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}
+
 export class BugReportNotFoundException extends AppException {
   constructor() {
     // A real, expected case rather than a defensive backstop: `player_id`
