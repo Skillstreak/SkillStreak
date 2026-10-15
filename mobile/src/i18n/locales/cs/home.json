@@ -326,5 +326,22 @@
     "notifTitle": "Čas vypršel! ⏱️",
     "notifBody": "Pěkná dřina! Otevři aplikaci a zapiš svůj trénink.",
     "rejected": "Časovač se tentokrát nedal použít. Zruš ho a zapiš trénink normálně — pořád se počítá."
+  },
+  "feedbackCard": {
+    "title": "Pomoz nám být lepší",
+    "answer": "Odpovědět (10 s)",
+    "notNow": "Teď ne"
+  },
+  "feedbackModal": {
+    "progress": "Otázka {{step}} ze 2",
+    "funQuestion": "Bavilo tě to dnes?",
+    "wantQuestion": "Čeho chceš víc?",
+    "fun": { "happy": "Bavilo", "meh": "Ujde to", "sad": "Nebavilo" },
+    "want": { "drills": "Cvičení", "challenges": "Výzvy", "badges": "Odznaky", "unsure": "Nevím" },
+    "skip": "Přeskočit",
+    "error": "Odeslání se nepovedlo. Zkus to znovu.",
+    "thanksHeading": "Díky!",
+    "thanksBody": "Pomáháš nám udělat aplikaci lepší.",
+    "thanksButton": "Hotovo"
   }
 }

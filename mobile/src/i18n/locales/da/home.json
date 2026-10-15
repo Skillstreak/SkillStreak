@@ -326,5 +326,22 @@
     "notifTitle": "Tiden er gået! ⏱️",
     "notifBody": "Godt kæmpet! Åbn appen og log dit pas.",
     "rejected": "Timeren kunne ikke bruges denne gang. Annullér timeren og log passet som normalt i stedet — det tæller stadig."
+  },
+  "feedbackCard": {
+    "title": "Hjælp os med at blive bedre",
+    "answer": "Svar (10 sek.)",
+    "notNow": "Ikke nu"
+  },
+  "feedbackModal": {
+    "progress": "Spørgsmål {{step}} af 2",
+    "funQuestion": "Var det sjovt i dag?",
+    "wantQuestion": "Hvad vil du have mere af?",
+    "fun": { "happy": "Sjovt", "meh": "Sådan lidt", "sad": "Ikke sjovt" },
+    "want": { "drills": "Øvelser", "challenges": "Udfordringer", "badges": "Mærker", "unsure": "Ved ikke" },
+    "skip": "Spring over",
+    "error": "Kunne ikke sende. Prøv igen.",
+    "thanksHeading": "Tak!",
+    "thanksBody": "Du hjælper os med at gøre appen bedre.",
+    "thanksButton": "Færdig"
   }
 }

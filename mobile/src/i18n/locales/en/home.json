@@ -326,5 +326,22 @@
     "notifTitle": "Time's up! ⏱️",
     "notifBody": "Great effort! Open the app to log your session.",
     "rejected": "The timer couldn't be used this time. Cancel the timer and log your session the normal way instead — it still counts."
+  },
+  "feedbackCard": {
+    "title": "Help us get better",
+    "answer": "Answer (10 sec)",
+    "notNow": "Not now"
+  },
+  "feedbackModal": {
+    "progress": "Question {{step}} of 2",
+    "funQuestion": "Was it fun today?",
+    "wantQuestion": "What do you want more of?",
+    "fun": { "happy": "Fun", "meh": "So-so", "sad": "Not fun" },
+    "want": { "drills": "Drills", "challenges": "Challenges", "badges": "Badges", "unsure": "Not sure" },
+    "skip": "Skip",
+    "error": "Couldn't send. Please try again.",
+    "thanksHeading": "Thanks!",
+    "thanksBody": "You're helping us make the app better.",
+    "thanksButton": "Done"
   }
 }

@@ -16,6 +16,8 @@ import { TimerCountdownScreen } from './components/TimerCountdownScreen';
 import type { TimerLogChoice } from './components/TimerCountdownScreen';
 import { SuccessOverlay } from './components/SuccessOverlay';
 import { GoalBonusTakeover } from './components/GoalBonusTakeover';
+import { FeedbackCard } from './components/FeedbackCard';
+import { FeedbackModal } from './components/FeedbackModal';
 import { Toast } from '../components/Toast';
 import { LoadingOrRetry } from '../components/LoadingOrRetry';
 import { LeaderboardScreen } from '../leaderboard/LeaderboardScreen';
@@ -27,6 +29,10 @@ import {
 } from '../api/endpoints';
 import { ApiError, isConsentRequiredError } from '../api/ApiError';
 import { clearSessionToken } from '../api/authStorage';
+import {
+  getQuickFeedbackHandledThisWeek,
+  setQuickFeedbackHandledThisWeek,
+} from '../api/localFlags';
 import { skipRemainderOfToday } from '../api/trainingReminder';
 import {
   activeTimerFromResponse,
@@ -170,6 +176,27 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   // added Fas 4.1 (docs/adr/0012-profile-page-and-contact-email-change.md),
   // reached via AppHeader's avatar circle.
   const [view, setView] = useState<'home' | 'leaderboard' | 'profile'>('home');
+
+  // I-002 — weekly quick-feedback card. Starts "handled" so the card never
+  // flashes before the local flag has been read.
+  const [feedbackHandled, setFeedbackHandled] = useState(true);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getQuickFeedbackHandledThisWeek().then((handled) => {
+      if (!cancelled) setFeedbackHandled(handled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleFeedbackHandled = () => {
+    setFeedbackOpen(false);
+    setFeedbackHandled(true);
+    void setQuickFeedbackHandledThisWeek();
+  };
 
   const hasLoadedOnce = useRef(false);
 
@@ -692,7 +719,20 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           effortRank={me.teamPool.effortRank}
           onPress={() => setView('leaderboard')}
         />
+
+        {isApproved && me.streak.alreadyLoggedToday && !feedbackHandled ? (
+          <FeedbackCard
+            onAnswer={() => setFeedbackOpen(true)}
+            onNotNow={handleFeedbackHandled}
+          />
+        ) : null}
       </View>
+
+      <FeedbackModal
+        visible={feedbackOpen}
+        onDismiss={handleFeedbackHandled}
+        onDone={handleFeedbackHandled}
+      />
 
       <EvidenceFallbackSheet
         visible={abandonedEvidenceLog !== null}

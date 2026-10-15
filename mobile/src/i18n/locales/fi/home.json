@@ -326,5 +326,22 @@
     "notifTitle": "Aika loppui! ⏱️",
     "notifBody": "Hienosti taisteltu! Avaa sovellus ja kirjaa harjoituksesi.",
     "rejected": "Ajastinta ei voitu käyttää tällä kertaa. Peru ajastin ja kirjaa harjoitus tavalliseen tapaan — se lasketaan silti."
+  },
+  "feedbackCard": {
+    "title": "Auta meitä paranemaan",
+    "answer": "Vastaa (10 s)",
+    "notNow": "Ei nyt"
+  },
+  "feedbackModal": {
+    "progress": "Kysymys {{step}}/2",
+    "funQuestion": "Oliko tänään hauskaa?",
+    "wantQuestion": "Mitä haluaisit lisää?",
+    "fun": { "happy": "Hauskaa", "meh": "Ihan ok", "sad": "Ei hauskaa" },
+    "want": { "drills": "Harjoitteita", "challenges": "Haasteita", "badges": "Merkkejä", "unsure": "En tiedä" },
+    "skip": "Ohita",
+    "error": "Lähetys ei onnistunut. Yritä uudelleen.",
+    "thanksHeading": "Kiitos!",
+    "thanksBody": "Autat meitä tekemään sovelluksesta paremman.",
+    "thanksButton": "Valmis"
   }
 }
