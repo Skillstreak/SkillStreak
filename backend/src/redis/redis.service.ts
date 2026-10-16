@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type Redis from 'ioredis';
+import {
+  ADULT_FEEDBACK_DAILY_CAP_MAX_PER_WINDOW,
+  ADULT_FEEDBACK_DAILY_CAP_WINDOW_SECONDS,
+} from '../adult-feedback/adult-feedback.constants';
 import { REDIS_CLIENT } from './redis.constants';
 
 // Everything here is a cache/accelerator over Postgres, per
@@ -135,6 +139,11 @@ function improvementSuggestionCooldownKey(playerId: string): string {
 
 function improvementSuggestionDailyCapKey(playerId: string): string {
   return `improvement-suggestion:${playerId}:daily-cap`;
+}
+
+// I-001 — adult feedback, own prefix so it cannot rate-limit other queues.
+function adultFeedbackDailyCapKey(playerId: string): string {
+  return `adult-feedback:${playerId}:daily-cap`;
 }
 
 function ptConsentRequestDailyCapKey(ptStaffAccountId: string): string {
@@ -898,6 +907,21 @@ export class RedisService {
     windowSeconds: number = BUG_REPORT_DAILY_CAP_WINDOW_SECONDS,
   ): Promise<boolean> {
     const key = bugReportDailyCapKey(playerId);
+    const count = await this.client.incr(key);
+    if (count === 1) {
+      await this.client.expire(key, windowSeconds);
+    }
+    return count <= maxPerWindow;
+  }
+
+  /** I-001: fixed-window per-account cap (5/day) on adult feedback mail.
+   * In Redis so the cap holds across API replicas. */
+  async tryClaimAdultFeedbackDailyCap(
+    playerId: string,
+    maxPerWindow: number = ADULT_FEEDBACK_DAILY_CAP_MAX_PER_WINDOW,
+    windowSeconds: number = ADULT_FEEDBACK_DAILY_CAP_WINDOW_SECONDS,
+  ): Promise<boolean> {
+    const key = adultFeedbackDailyCapKey(playerId);
     const count = await this.client.incr(key);
     if (count === 1) {
       await this.client.expire(key, windowSeconds);
