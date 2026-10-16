@@ -327,6 +327,23 @@
     "notifBody": "Bra kjempa! Åpne appen og logg økta di.",
     "rejected": "Timeren kunne ikke brukes denne gangen. Avbryt timeren og logg økta som vanlig i stedet — den teller likevel."
   },
+  "adultFeedback": {
+    "cardTitle": "Si hva du mener",
+    "cardButton": "Send tilbakemelding",
+    "heading": "Si hva du mener",
+    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Annet" },
+    "placeholder": "Skriv her",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Ikke skriv navn eller opplysninger om barn.",
+    "submit": "Send",
+    "cancel": "Avbryt",
+    "error": "Det gikk ikke å sende. Prøv igjen.",
+    "errorLimit": "Du har nådd dagens grense. Prøv igjen i morgen.",
+    "errorAdultsOnly": "Denne funksjonen er bare for voksenkontoer.",
+    "thanksHeading": "Takk!",
+    "thanksBody": "Det du skrev går til teamet. Skjermnavnet ditt følger ikke med.",
+    "thanksButton": "Ferdig"
+  },
   "feedbackCard": {
     "title": "Hjelp oss å bli bedre",
     "answer": "Svar (10 sek)",

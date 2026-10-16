@@ -327,6 +327,23 @@
     "notifBody": "Hienosti taisteltu! Avaa sovellus ja kirjaa harjoituksesi.",
     "rejected": "Ajastinta ei voitu käyttää tällä kertaa. Peru ajastin ja kirjaa harjoitus tavalliseen tapaan — se lasketaan silti."
   },
+  "adultFeedback": {
+    "cardTitle": "Kerro mielipiteesi",
+    "cardButton": "Lähetä palaute",
+    "heading": "Kerro mielipiteesi",
+    "kinds": { "idea": "Idea", "problem": "Ongelma", "other": "Muu" },
+    "placeholder": "Kirjoita tähän",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Älä kirjoita lasten nimiä tai tietoja.",
+    "submit": "Lähetä",
+    "cancel": "Peruuta",
+    "error": "Lähettäminen ei onnistunut. Yritä uudelleen.",
+    "errorLimit": "Päivän raja on täynnä. Yritä uudelleen huomenna.",
+    "errorAdultsOnly": "Tämä toiminto on vain aikuisten tileille.",
+    "thanksHeading": "Kiitos!",
+    "thanksBody": "Kirjoittamasi menee tiimille. Näyttönimesi ei lähde mukana.",
+    "thanksButton": "Valmis"
+  },
   "feedbackCard": {
     "title": "Auta meitä paranemaan",
     "answer": "Vastaa (10 s)",
