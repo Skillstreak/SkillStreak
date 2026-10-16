@@ -754,6 +754,23 @@ export function submitBugReport(
   });
 }
 
+export type AdultFeedbackKind = 'idea' | 'problem' | 'other';
+
+/** I-001 — POST /adult-feedback. Free text from an adult account, mailed to
+ * the team. The body is exactly kind + text: no screen name, no ids. The
+ * server re-checks the 18+ rule and answers 403 `adult_feedback_adults_only`
+ * otherwise; the client's own check only decides whether to show the card. */
+export function submitAdultFeedback(body: {
+  kind: AdultFeedbackKind;
+  text: string;
+}): Promise<unknown> {
+  return apiClient.request<unknown>('/adult-feedback', {
+    method: 'POST',
+    body,
+    auth: true,
+  });
+}
+
 /** ADR-0037 — the Tips tab's "send us an idea" form. Same authenticated,
  * fire-once shape as submitBugReport above; the response carries no reply
  * channel because the design has none. */

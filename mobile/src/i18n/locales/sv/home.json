@@ -327,6 +327,23 @@
     "notifBody": "Bra kämpat! Öppna appen och logga ditt pass.",
     "rejected": "Timern gick inte att använda den här gången. Avbryt timern och logga passet som vanligt i stället — det räknas ändå."
   },
+  "adultFeedback": {
+    "cardTitle": "Säg vad du tycker",
+    "cardButton": "Skicka feedback",
+    "heading": "Säg vad du tycker",
+    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Annat" },
+    "placeholder": "Skriv här",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Skriv inte namn eller uppgifter om barn.",
+    "submit": "Skicka",
+    "cancel": "Avbryt",
+    "error": "Det gick inte att skicka. Försök igen.",
+    "errorLimit": "Du har skickat max antal i dag. Försök igen i morgon.",
+    "errorAdultsOnly": "Den här funktionen är bara för vuxna konton.",
+    "thanksHeading": "Tack!",
+    "thanksBody": "Det du skrev går till teamet. Ditt skärmnamn följer inte med.",
+    "thanksButton": "Klart"
+  },
   "feedbackCard": {
     "title": "Hjälp oss bli bättre",
     "answer": "Svara (10 sek)",
