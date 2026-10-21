@@ -9,6 +9,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { securityHeaders } from './common/security-headers.middleware';
+import { createUiMetricsBodyLimit } from './ui-metrics/ui-metrics-body-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -143,6 +144,10 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization'],
     });
   }
+
+  // I-003: 10 kb body cap on the anonymous counts endpoint only. Must be
+  // registered here, before init adds Nest's own body parser.
+  app.use('/api/v1/ui-metrics/counts', createUiMetricsBodyLimit());
 
   // Cookie parsing for the staff_session/staff_auth_pending cookies (ADR-
   // 0023 Part B) — no secret passed to cookie-parser itself, since both

@@ -1014,6 +1014,17 @@ export class RedisService {
     };
   }
 
+  /** Stamps the last successful run of a scheduled job (epoch ms), no TTL.
+   * Lets a separate check notice a sweep that has silently stopped. */
+  async recordScheduledJobSuccess(jobName: string): Promise<void> {
+    await this.client.set(`scheduled-job-success:${jobName}`, String(Date.now()));
+  }
+
+  async getScheduledJobLastSuccess(jobName: string): Promise<number | null> {
+    const value = await this.client.get(`scheduled-job-success:${jobName}`);
+    return value === null ? null : Number(value);
+  }
+
   /**
    * Deletes a scheduled `@Cron` job's non-blocking try-lock (see
    * tryClaimScheduledJobRun/scheduledJobRunKey above), so the next
