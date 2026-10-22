@@ -44,6 +44,7 @@ import {
 import type { ActiveTimer } from '../api/trainingTimer';
 import { colors } from '../theme/colors';
 import { UploadFlow } from '../clips/upload/UploadFlow';
+import { trackButton } from '../api/uiMetricsClient';
 import type {
   ActivityType,
   ClickOnlyAllowance,
@@ -297,6 +298,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   /** docs/adr/0038 Decision 2 — the server starts the clock; the phone
    * only displays it. */
   const startTimer = async (activityType: ActivityType, plannedMinutes: number) => {
+    trackButton('button.start_timer');
     setSheetLoading(true);
     setSheetError(null);
     try {
@@ -380,6 +382,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   };
 
   const writeTrainingLog = async (body: CreateTrainingLogRequest) => {
+    trackButton('button.log_training');
     // A timed log is written from the countdown screen, so its loading and
     // error states belong there; everything else reports on the sheet.
     const fromTimer = body.timerId !== undefined;
@@ -798,7 +801,10 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           loading={timerLoading}
           errorText={timerError}
           onLog={handleTimerLog}
-          onDiscard={discardTimer}
+          onDiscard={() => {
+            trackButton('button.stop_timer');
+            discardTimer();
+          }}
         />
       ) : null}
 

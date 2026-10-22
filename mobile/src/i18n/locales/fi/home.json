@@ -293,6 +293,14 @@
     "a11yCategoryGroup": "Valitse mitä tapahtui",
     "a11yScreenGroup": "Valitse missä sovelluksessa se tapahtui"
   },
+  "anonymousStats": {
+    "heading": "Anonyymi klikkitilasto",
+    "body": "Auttaa meitä parantamaan sovellusta laskemalla painikkeiden painallukset ja näkymien käynnit täysin anonyymisti ilman henkilötietoja. Oletuksena pois päältä.",
+    "info": "Henkilötietoja tai laite-tunnisteita ei tallenneta.",
+    "confirmBody": "Haluatko ottaa anonyymin klikkitilaston käyttöön? Laskemme vain, kuinka usein painikkeita ja näkymiä käytetään, ilman henkilötietoja.",
+    "confirmNo": "Ei kiitos",
+    "confirmYes": "Ota käyttöön"
+  },
   "trainingReminder": {
     "heading": "Harjoitusmuistutus",
     "body": "Yksi ystävällinen muistutus päivässä. Sinä valitset milloin — eikä se tule koskaan illalla tai yöllä.",
