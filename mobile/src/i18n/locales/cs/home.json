@@ -293,6 +293,14 @@
     "a11yCategoryGroup": "Vyber, co se stalo",
     "a11yScreenGroup": "Vyber, kde v aplikaci se to stalo"
   },
+  "anonymousStats": {
+    "heading": "Anonymní statistika kliknutí",
+    "body": "Pomáhá nám zlepšovat aplikaci tím, že zcela anonymně počítá stisky tlačítek a návštěvy obrazovek, bez osobních údajů. Ve výchozím stavu vypnuto.",
+    "info": "Neukládají se žádné osobní údaje ani identifikátory zařízení.",
+    "confirmBody": "Chceš zapnout anonymní statistiku kliknutí? Počítáme jen, jak často se tlačítka a obrazovky používají, bez osobních údajů.",
+    "confirmNo": "Ne, děkuji",
+    "confirmYes": "Zapnout"
+  },
   "trainingReminder": {
     "heading": "Připomenutí tréninku",
     "body": "Jedno přátelské připomenutí denně. Ty si vybereš kdy — a nikdy nepřijde večer ani v noci.",

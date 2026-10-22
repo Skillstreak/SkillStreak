@@ -9,6 +9,16 @@ import { ChatScreen } from './chat/ChatScreen';
 import { ClipsScreen } from './clips/ClipsScreen';
 import { TipsScreen } from './tips/TipsScreen';
 import { TabBar, TabKey } from './navigation/TabBar';
+import { initUiMetrics, trackScreen, type UiCounterKey } from './api/uiMetricsClient';
+
+const TAB_METRIC_KEY: Record<TabKey, Extract<UiCounterKey, `screen.${string}`>> = {
+  home: 'screen.home',
+  clips: 'screen.shorts',
+  goal: 'screen.goals',
+  team: 'screen.team',
+  chat: 'screen.chat',
+  tips: 'screen.tips',
+};
 import { Toast } from './components/Toast';
 import { CaptainBanner } from './components/CaptainBanner';
 import {
@@ -335,6 +345,14 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
 
   // Manual tab-bar taps always land on G1's card, never on a stale 'detail'
   // left over from a previous "Se vem som är klar" shortcut tap.
+  // I-003: both are no-ops unless the opt-in is on.
+  useEffect(() => {
+    void initUiMetrics();
+  }, []);
+  useEffect(() => {
+    trackScreen(TAB_METRIC_KEY[activeTab]);
+  }, [activeTab]);
+
   const handleTabSelect = useCallback((tab: TabKey) => {
     if (tab === 'goal') setGoalTabInitialView('card');
     setActiveTab(tab);

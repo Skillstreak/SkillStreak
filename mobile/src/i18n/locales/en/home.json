@@ -293,6 +293,14 @@
     "a11yCategoryGroup": "Choose what happened",
     "a11yScreenGroup": "Choose where in the app it happened"
   },
+  "anonymousStats": {
+    "heading": "Anonymous click statistics",
+    "body": "Helps us improve the app by counting button presses and screen visits completely anonymously, with no personal data. Off by default.",
+    "info": "No personal data and no device IDs are saved.",
+    "confirmBody": "Do you want to turn on anonymous click statistics? We only count how often buttons and screens are used, with no personal data.",
+    "confirmNo": "No thanks",
+    "confirmYes": "Turn on"
+  },
   "trainingReminder": {
     "heading": "Training reminder",
     "body": "One friendly reminder a day. You choose when — and it never arrives in the evening or at night.",
