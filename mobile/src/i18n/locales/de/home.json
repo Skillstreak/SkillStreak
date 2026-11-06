@@ -327,6 +327,23 @@
     "notifBody": "Stark gekämpft! Öffne die App und trag dein Training ein.",
     "rejected": "Der Timer konnte diesmal nicht verwendet werden. Brich den Timer ab und trag dein Training stattdessen ganz normal ein — es zählt trotzdem."
   },
+  "adultFeedback": {
+    "cardTitle": "Sag uns, was du denkst",
+    "cardButton": "Feedback senden",
+    "heading": "Sag uns, was du denkst",
+    "kinds": { "idea": "Idee", "problem": "Problem", "other": "Sonstiges" },
+    "placeholder": "Hier schreiben",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Schreib keine Namen oder Angaben zu Kindern.",
+    "submit": "Senden",
+    "cancel": "Abbrechen",
+    "error": "Senden hat nicht geklappt. Versuch es noch einmal.",
+    "errorLimit": "Du hast das Tageslimit erreicht. Versuch es morgen wieder.",
+    "errorAdultsOnly": "Diese Funktion gibt es nur für Konten von Erwachsenen.",
+    "thanksHeading": "Danke!",
+    "thanksBody": "Dein Text geht an das Team. Dein Bildschirmname wird nicht mitgeschickt.",
+    "thanksButton": "Fertig"
+  },
   "feedbackCard": {
     "title": "Hilf uns, besser zu werden",
     "answer": "Antworten (10 Sek.)",

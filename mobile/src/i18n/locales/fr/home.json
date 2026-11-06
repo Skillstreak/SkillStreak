@@ -327,6 +327,23 @@
     "notifBody": "Bel effort ! Ouvre l'appli pour enregistrer ta séance.",
     "rejected": "Le minuteur n'a pas pu être utilisé cette fois. Annule le minuteur et enregistre ta séance normalement — elle compte quand même."
   },
+  "adultFeedback": {
+    "cardTitle": "Dis-nous ce que tu en penses",
+    "cardButton": "Envoyer un avis",
+    "heading": "Dis-nous ce que tu en penses",
+    "kinds": { "idea": "Idée", "problem": "Problème", "other": "Autre" },
+    "placeholder": "Écris ici",
+    "counter": "{{count}}/{{max}}",
+    "warning": "N'écris pas de noms ni d'informations sur des enfants.",
+    "submit": "Envoyer",
+    "cancel": "Annuler",
+    "error": "L'envoi a échoué. Réessaie.",
+    "errorLimit": "Tu as atteint la limite du jour. Réessaie demain.",
+    "errorAdultsOnly": "Cette fonction est réservée aux comptes d'adultes.",
+    "thanksHeading": "Merci !",
+    "thanksBody": "Ce que tu as écrit est transmis à l'équipe. Ton pseudo n'est pas joint.",
+    "thanksButton": "Terminé"
+  },
   "feedbackCard": {
     "title": "Aide-nous à nous améliorer",
     "answer": "Répondre (10 s)",

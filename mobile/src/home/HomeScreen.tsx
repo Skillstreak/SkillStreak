@@ -18,12 +18,15 @@ import { SuccessOverlay } from './components/SuccessOverlay';
 import { GoalBonusTakeover } from './components/GoalBonusTakeover';
 import { FeedbackCard } from './components/FeedbackCard';
 import { FeedbackModal } from './components/FeedbackModal';
+import { AdultFeedbackCard } from './components/AdultFeedbackCard';
+import { AdultFeedbackModal } from './components/AdultFeedbackModal';
 import { Toast } from '../components/Toast';
 import { LoadingOrRetry } from '../components/LoadingOrRetry';
 import { LeaderboardScreen } from '../leaderboard/LeaderboardScreen';
 import {
   getClickOnlyAllowance,
   getMe,
+  getProfile,
   postTrainingLog,
   postTrainingTimer,
 } from '../api/endpoints';
@@ -187,6 +190,25 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
     void getQuickFeedbackHandledThisWeek().then((handled) => {
       if (!cancelled) setFeedbackHandled(handled);
     });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // I-001 — adult free-text feedback. Hidden until the age is known, and
+  // stays hidden if the profile can't be fetched. Same arithmetic as the
+  // backend (only birth year is stored, so 18+ is year difference >= 19,
+  // which never errs toward showing it to a minor); the server re-checks.
+  const [isAdult, setIsAdult] = useState(false);
+  const [adultFeedbackOpen, setAdultFeedbackOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getProfile()
+      .then((profile) => {
+        if (!cancelled) setIsAdult(new Date().getFullYear() - profile.birthYear >= 19);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -726,7 +748,16 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
             onNotNow={handleFeedbackHandled}
           />
         ) : null}
+
+        {isAdult ? <AdultFeedbackCard onPress={() => setAdultFeedbackOpen(true)} /> : null}
       </View>
+
+      {isAdult ? (
+        <AdultFeedbackModal
+          visible={adultFeedbackOpen}
+          onClose={() => setAdultFeedbackOpen(false)}
+        />
+      ) : null}
 
       <FeedbackModal
         visible={feedbackOpen}
