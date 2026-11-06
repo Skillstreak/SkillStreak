@@ -20,6 +20,7 @@ import { ClipReportConfirmationSheet } from './components/ClipReportConfirmation
 import { ClipDeleteSheet } from './components/ClipDeleteSheet';
 import { ClipShareSheet } from './components/ClipShareSheet';
 import { UploadFlow } from './upload/UploadFlow';
+import { trackButton } from '../api/uiMetricsClient';
 import { BlockSheet } from '../chat/components/BlockSheet';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Toast } from '../components/Toast';
@@ -451,6 +452,7 @@ export function ClipsScreen({ teamId, viewerPlayerId, onOpened }: ClipsScreenPro
 
   const handleSharePublish = async () => {
     if (!shareTarget) return;
+    trackButton('button.share_clip');
     setShareSubmitting(true);
     setShareError(null);
     try {

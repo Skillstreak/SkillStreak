@@ -293,6 +293,14 @@
     "a11yCategoryGroup": "Elige qué pasó",
     "a11yScreenGroup": "Elige dónde en la app pasó"
   },
+  "anonymousStats": {
+    "heading": "Estadísticas de clics anónimas",
+    "body": "Nos ayuda a mejorar la app contando pulsaciones de botones y visitas a pantallas de forma totalmente anónima, sin datos personales. Desactivado por defecto.",
+    "info": "No se guardan datos personales ni identificadores de dispositivo.",
+    "confirmBody": "¿Quieres activar las estadísticas de clics anónimas? Solo contamos con qué frecuencia se usan los botones y las pantallas, sin datos personales.",
+    "confirmNo": "No, gracias",
+    "confirmYes": "Activar"
+  },
   "trainingReminder": {
     "heading": "Recordatorio de entrenamiento",
     "body": "Un recordatorio amable al día. Tú eliges cuándo, y nunca llega por la noche.",

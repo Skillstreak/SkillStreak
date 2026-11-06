@@ -293,6 +293,14 @@
     "a11yCategoryGroup": "Vælg hvad der skete",
     "a11yScreenGroup": "Vælg hvor i appen det skete"
   },
+  "anonymousStats": {
+    "heading": "Anonym klikstatistik",
+    "body": "Hjælper os med at forbedre appen ved at tælle knaptryk og skærmbesøg helt anonymt, uden personoplysninger. Slået fra som standard.",
+    "info": "Der gemmes ingen personoplysninger og ingen enheds-ID'er.",
+    "confirmBody": "Vil du slå anonym klikstatistik til? Vi tæller kun, hvor ofte knapper og skærme bruges, uden personoplysninger.",
+    "confirmNo": "Nej tak",
+    "confirmYes": "Slå til"
+  },
   "trainingReminder": {
     "heading": "Træningspåmindelse",
     "body": "En venlig påmindelse en gang om dagen. Du vælger hvornår — og den kommer aldrig om aftenen eller natten.",

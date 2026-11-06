@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import { V4PickClip } from './V4PickClip';
+import { trackButton } from '../../api/uiMetricsClient';
 import { V5CaptionChallenge } from './V5CaptionChallenge';
 import { V6UploadProgress } from './V6UploadProgress';
 import { V7Success } from './V7Success';
@@ -79,6 +80,7 @@ export function UploadFlow({ teamId, viewerPlayerId, onCancel, onConsentRevoked,
     return (
       <V4PickClip
         onPicked={(clip) => {
+          trackButton('button.create_clip');
           pickedClipRef.current = clip;
           const session = new ClipUploadSession(teamId, clip);
           sessionRef.current = session;
