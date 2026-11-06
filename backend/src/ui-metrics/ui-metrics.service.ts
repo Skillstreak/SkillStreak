@@ -94,11 +94,13 @@ export class UiMetricsService {
 
   /** Deletes rows older than the retention window. Returns rows removed. */
   async deleteExpired(): Promise<number> {
-    const [, affected] = (await this.counts.query(
+    // Typed via the generic, not an `as` cast: query<T = any>() leaves T as
+    // `any` under a cast, which no-unsafe-assignment/-return reject.
+    const [, affected] = await this.counts.query<[unknown, number]>(
       `DELETE FROM ui_click_count
        WHERE day < ${STOCKHOLM_TODAY_SQL} - $1::int`,
       [UI_METRICS_RETENTION_DAYS],
-    )) as [unknown, number];
+    );
     return affected;
   }
 }
