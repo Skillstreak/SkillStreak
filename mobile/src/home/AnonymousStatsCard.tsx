@@ -34,7 +34,7 @@ export function AnonymousStatsCard({
 
   const apply = (next: boolean) => {
     setEnabled(next);
-    void setAnonymousStatsEnabled(next);
+    void setAnonymousStatsEnabled(next).then(setEnabled);
   };
 
   const handleChange = (next: boolean) => {

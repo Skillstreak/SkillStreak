@@ -346,9 +346,10 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
   // Manual tab-bar taps always land on G1's card, never on a stale 'detail'
   // left over from a previous "Se vem som är klar" shortcut tap.
   // I-003: both are no-ops unless the opt-in is on.
+  // Per account: waits for the signed-in player's id (ensureIdentity).
   useEffect(() => {
-    void initUiMetrics();
-  }, []);
+    if (playerId) void initUiMetrics(playerId);
+  }, [playerId]);
   useEffect(() => {
     trackScreen(TAB_METRIC_KEY[activeTab]);
   }, [activeTab]);

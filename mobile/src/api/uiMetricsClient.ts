@@ -14,8 +14,11 @@ import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage'
  *
  * **Default is off, strictly.** While the flag is false nothing is
  * counted, nothing is held in memory and no request is made. The flag is
- * local to this device; the parent's choice (under 13, behind the
- * ParentalGate) is made in `AnonymousStatsCard`.
+ * stored **per account** (keyed by player id) and switched off on logout,
+ * so one person's opt-in never carries over to another child signing in on
+ * the same phone. The choice itself (under 13, behind the ParentalGate) is
+ * made in `AnonymousStatsCard`. The player id only names the local storage
+ * slot; it is never sent.
  *
  * Counts are uploaded when the app goes to the background and otherwise on
  * a randomised 4–6 minute timer, so uploads are not aligned across users.
@@ -39,37 +42,67 @@ export type UiCounterKey =
   | 'button.share_clip'
   | 'button.cheer';
 
-const STORAGE_KEY = 'skillstreak.anonymousStatsEnabled';
+const STORAGE_KEY_PREFIX = 'skillstreak.anonymousStatsEnabled.';
 // Server accepts count 1..1000 per key and at most 20 keys per call.
 const MAX_COUNT_PER_KEY = 1000;
 const MIN_INTERVAL_MS = 4 * 60 * 1000;
 const MAX_INTERVAL_MS = 6 * 60 * 1000;
 
 let enabled = false;
+// The signed-in account the flag belongs to. Null before AppShell knows who
+// is signed in and after logout — and while null, nothing can be enabled.
+let currentPlayerId: string | null = null;
 let counts = new Map<UiCounterKey, number>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 
+function storageKey(playerId: string): string {
+  return `${STORAGE_KEY_PREFIX}${playerId}`;
+}
+
 export async function loadAnonymousStatsEnabled(): Promise<boolean> {
+  const playerId = currentPlayerId;
+  if (!playerId) return false;
   try {
-    return (await secureGetItem(STORAGE_KEY)) === 'true';
+    return (await secureGetItem(storageKey(playerId))) === 'true';
   } catch {
     return false;
   }
 }
 
-/** Call once at startup so a previously saved opt-in takes effect. */
-export async function initUiMetrics(): Promise<void> {
-  applyEnabled(await loadAnonymousStatsEnabled());
+/** Call once the signed-in player is known, so that account's saved
+ * opt-in (and only that account's) takes effect. */
+export async function initUiMetrics(playerId: string): Promise<void> {
+  if (currentPlayerId !== playerId) applyEnabled(false);
+  currentPlayerId = playerId;
+  const saved = await loadAnonymousStatsEnabled();
+  // Logout or an account switch may have happened while reading.
+  if (currentPlayerId === playerId) applyEnabled(saved);
 }
 
-export async function setAnonymousStatsEnabled(next: boolean): Promise<void> {
-  if (next) {
-    await secureSetItem(STORAGE_KEY, 'true');
-  } else {
-    await secureDeleteItem(STORAGE_KEY);
+/** Logout: stop counting and forget whose flag was loaded. The stored
+ * per-account flag stays, so the same account finds it as it left it. */
+export function resetUiMetrics(): void {
+  currentPlayerId = null;
+  applyEnabled(false);
+}
+
+/** Returns the state actually applied — false when no account is known,
+ * so the switch can't show "on" while nothing is enabled. */
+export async function setAnonymousStatsEnabled(next: boolean): Promise<boolean> {
+  const playerId = currentPlayerId;
+  if (!playerId) {
+    applyEnabled(false);
+    return false;
   }
+  if (next) {
+    await secureSetItem(storageKey(playerId), 'true');
+  } else {
+    await secureDeleteItem(storageKey(playerId));
+  }
+  if (currentPlayerId !== playerId) return false;
   applyEnabled(next);
+  return next;
 }
 
 function applyEnabled(next: boolean): void {
