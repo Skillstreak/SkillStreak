@@ -1271,6 +1271,37 @@ export class ImprovementSuggestionRateLimitedException extends AppException {
   }
 }
 
+// I-001 — adult-only free-text feedback, forwarded by mail.
+export class AdultFeedbackAdultsOnlyException extends AppException {
+  constructor() {
+    super(
+      'adult_feedback_adults_only',
+      'This feature is only available to adult accounts.',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+}
+
+export class AdultFeedbackRateLimitedException extends AppException {
+  constructor() {
+    super(
+      'adult_feedback_rate_limited',
+      'Feedback was already sent from this account several times today; try again tomorrow.',
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}
+
+export class AdultFeedbackNotDeliveredException extends AppException {
+  constructor() {
+    super(
+      'adult_feedback_not_delivered',
+      'The feedback could not be sent right now; try again later.',
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+}
+
 export class ImprovementSuggestionNotFoundException extends AppException {
   constructor() {
     // A real, expected case rather than a defensive backstop: `player_id`

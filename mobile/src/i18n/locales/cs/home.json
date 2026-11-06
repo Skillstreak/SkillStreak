@@ -327,6 +327,23 @@
     "notifBody": "Pěkná dřina! Otevři aplikaci a zapiš svůj trénink.",
     "rejected": "Časovač se tentokrát nedal použít. Zruš ho a zapiš trénink normálně — pořád se počítá."
   },
+  "adultFeedback": {
+    "cardTitle": "Řekni nám, co si myslíš",
+    "cardButton": "Poslat zpětnou vazbu",
+    "heading": "Řekni nám, co si myslíš",
+    "kinds": { "idea": "Nápad", "problem": "Problém", "other": "Jiné" },
+    "placeholder": "Piš sem",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Nepiš jména ani údaje o dětech.",
+    "submit": "Odeslat",
+    "cancel": "Zrušit",
+    "error": "Odeslání se nepovedlo. Zkus to znovu.",
+    "errorLimit": "Dnešní limit je vyčerpán. Zkus to znovu zítra.",
+    "errorAdultsOnly": "Tato funkce je jen pro účty dospělých.",
+    "thanksHeading": "Díky!",
+    "thanksBody": "Co jsi napsal(a), jde týmu. Tvé zobrazované jméno se neposílá.",
+    "thanksButton": "Hotovo"
+  },
   "feedbackCard": {
     "title": "Pomoz nám být lepší",
     "answer": "Odpovědět (10 s)",

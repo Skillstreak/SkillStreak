@@ -327,6 +327,23 @@
     "notifBody": "Great effort! Open the app to log your session.",
     "rejected": "The timer couldn't be used this time. Cancel the timer and log your session the normal way instead — it still counts."
   },
+  "adultFeedback": {
+    "cardTitle": "Tell us what you think",
+    "cardButton": "Send feedback",
+    "heading": "Tell us what you think",
+    "kinds": { "idea": "Idea", "problem": "Problem", "other": "Other" },
+    "placeholder": "Write here",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Don't write names or details about children.",
+    "submit": "Send",
+    "cancel": "Cancel",
+    "error": "Couldn't send. Please try again.",
+    "errorLimit": "You've reached today's limit. Please try again tomorrow.",
+    "errorAdultsOnly": "This feature is only for adult accounts.",
+    "thanksHeading": "Thank you!",
+    "thanksBody": "What you wrote goes to the team. Your screen name is not included.",
+    "thanksButton": "Done"
+  },
   "feedbackCard": {
     "title": "Help us get better",
     "answer": "Answer (10 sec)",

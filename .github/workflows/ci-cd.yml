@@ -12,6 +12,15 @@ on:
   # doesn't cover this either without an `actions:write`-scoped token.
   workflow_dispatch:
 
+# Least privilege by default: every job gets a read-only token unless it
+# declares more. The jobs that push images or cut releases already carry
+# their own `permissions:` block, which replaces this one for that job.
+# The repo-level default is also read-only, but that is a setting outside
+# version control; this keeps the workflow safe if it is ever loosened,
+# and is what CodeQL's actions/missing-workflow-permissions asks for.
+permissions:
+  contents: read
+
 jobs:
   backend-test:
     name: Backend lint, build, test

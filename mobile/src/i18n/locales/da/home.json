@@ -327,6 +327,23 @@
     "notifBody": "Godt kæmpet! Åbn appen og log dit pas.",
     "rejected": "Timeren kunne ikke bruges denne gang. Annullér timeren og log passet som normalt i stedet — det tæller stadig."
   },
+  "adultFeedback": {
+    "cardTitle": "Sig, hvad du mener",
+    "cardButton": "Send feedback",
+    "heading": "Sig, hvad du mener",
+    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Andet" },
+    "placeholder": "Skriv her",
+    "counter": "{{count}}/{{max}}",
+    "warning": "Skriv ikke navne eller oplysninger om børn.",
+    "submit": "Send",
+    "cancel": "Annuller",
+    "error": "Det kunne ikke sendes. Prøv igen.",
+    "errorLimit": "Du har nået dagens grænse. Prøv igen i morgen.",
+    "errorAdultsOnly": "Denne funktion er kun til voksenkonti.",
+    "thanksHeading": "Tak!",
+    "thanksBody": "Det, du skrev, går til teamet. Dit skærmnavn følger ikke med.",
+    "thanksButton": "Færdig"
+  },
   "feedbackCard": {
     "title": "Hjælp os med at blive bedre",
     "answer": "Svar (10 sek.)",
