@@ -68,7 +68,11 @@ export class AccountLinkService {
   ): Promise<{ token: string; expiresAt: Date }> {
     const player = await this.players.findOne({
       where: { id: playerId },
-      select: { id: true, birthYear: true },
+      // `jurisdiction` must be selected: isSelfVerificationAge reads it,
+      // and an unselected column is `undefined`, which gets the strictest
+      // age everywhere (security audit, 2026-11-08 — every Swedish
+      // 13-15-year-old was being refused).
+      select: { id: true, birthYear: true, jurisdiction: true },
     });
     if (
       !player ||
