@@ -26,6 +26,7 @@ import {
 } from '../common/errors/exceptions';
 import { Player } from '../players/entities/player.entity';
 import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
+import { plainTextToHtml } from '../mail/templates/html-escape.util';
 import {
   PublicSharingConsent,
   PublicSharingConsentStatus,
@@ -1004,14 +1005,17 @@ export class PublicSharingConsentService {
   ): Promise<ConsentMailOutcome> {
     if (!to) return { handedOff: false, rejected: [], reason: 'no_recipient' };
     try {
-      // Plain text only for now: these are short, and an HTML body would
-      // need the same escaping and template review the consent-page
-      // templates already carry. Worth doing before this is exposed.
+      // The HTML part is the text, escaped. It used to be `html: text`
+      // verbatim (security audit, 2026-11-08) — and the text interpolates
+      // the child's own free-text screen name, so a screen name was
+      // rendered as markup in the parent's inbox, inside the very mail
+      // that asks them to approve their child's clips leaving the team.
+      // A forged "Godkänn" link there is a phishing page with our sender.
       const result = await this.mailService.sendMail({
         to,
         subject,
         text,
-        html: text,
+        html: plainTextToHtml(text),
         ...(correlation ?? {}),
       });
       if (!result.handedOff) {
