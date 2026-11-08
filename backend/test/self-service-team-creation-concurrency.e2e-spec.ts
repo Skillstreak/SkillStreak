@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -21,24 +21,23 @@ interface CreatePlayerBody {
   teamName: string;
   teamCreated: boolean;
   isCaptain: boolean;
+  inviteCode: string | null;
 }
 
 // Regression coverage for docs/adr/0009-self-service-team-creation.md
-// Decision 8's "the invite-code creation race — an explicit error, not a
-// silent fallback", mirroring how
-// captain-transfer-concurrency.e2e-spec.ts already covers the analogous
-// row-lock/idempotency race for captain transfer, and
-// training-logs-concurrency.e2e-spec.ts for training logs.
+// Decision 8 ("the invite-code creation race — an explicit error, not a
+// silent fallback"), revised for the 2026-11-08 amendment.
 //
-// The only way two POST /players calls can race to create the *same* team
-// is two independent onboarding sessions both seeing 404 for the identical
-// not-yet-existing invite code and both attempting to create it — the
-// unique constraint on team.invite_code (UQ_da387f0c2e17d1e1e09f2836adf)
-// is what actually decides the winner; TeamsService.createTeam's INSERT is
-// the only place that constraint can be hit via this feature.
+// Before that amendment, two signups typing the same not-yet-existing code
+// genuinely raced for it. Now the server generates every code, so two
+// concurrent signups get two codes and both succeed — the first test. The
+// unique constraint on team.invite_code still decides the outcome if two
+// *generated* codes ever collide, and that path must still fail cleanly
+// and roll back; the second test forces a collision to prove it.
 describe('Self-service team creation — invite-code race (e2e)', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
+  const runId = randomUUID().slice(0, 8);
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -63,118 +62,99 @@ describe('Self-service team creation — invite-code race (e2e)', () => {
     await app.close();
   });
 
-  it('two concurrent onboarding requests racing to create a team with the identical invite code: exactly one succeeds, the other gets 409 invite_code_taken_concurrently, and exactly one team/season/pot/captain is ever persisted', async () => {
-    const inviteCode = `RACE${randomUUID().slice(0, 8).toUpperCase()}`;
-
-    // `Promise.all` alone doesn't force a genuine race here: it just fires
-    // both requests without synchronizing them, so request A's entire
-    // check-transaction-insert-commit can finish before request B's own
-    // pre-transaction findByInviteCode check even runs — at which point B
-    // correctly (and harmlessly) sees "team already exists" and joins it,
-    // which isn't the DB-constraint race this test exists to cover. That
-    // made this test flaky (~1-in-5 locally). Gate findByInviteCode so
-    // neither call for this invite code can return until *both* have
-    // arrived, guaranteeing both requests observe "doesn't exist yet" and
-    // both attempt to create it — every run, deterministically.
-    const teamsService: TeamsService = app.get(TeamsService);
-    // Captured (bound) before jest.spyOn below overwrites the instance
-    // property. `Function.prototype.bind`'s built-in TS typing collapses
-    // to `any` for this method, hence the explicit cast back to the real
-    // signature.
-    const originalFindByInviteCode = teamsService.findByInviteCode.bind(
-      teamsService,
-    ) as (code: string, manager?: EntityManager) => Promise<Team | null>;
-    let arrivals = 0;
-    let releaseGate!: () => void;
-    const gate = new Promise<void>((resolve) => {
-      releaseGate = resolve;
-    });
-    const spy = jest
-      .spyOn(teamsService, 'findByInviteCode')
-      .mockImplementation(async (code: string, manager?: EntityManager) => {
-        if (code !== inviteCode) {
-          return originalFindByInviteCode(code, manager);
-        }
-        // Do the actual read immediately (don't delay the query itself —
-        // that's not the racy part), but withhold the *result* from the
-        // caller until both reads have resolved. Gating only the call (an
-        // earlier attempt) wasn't enough: DB round-trip time varies enough
-        // (observed 13ms vs 178ms for two reads started 5ms apart, likely
-        // connection-pool queueing) that the faster request could run its
-        // entire transaction to commit before the slower one's read even
-        // returned — by which point it correctly (but unhelpfully, for
-        // this test) saw the already-created team instead of racing.
-        const result = await originalFindByInviteCode(code, manager);
-        arrivals += 1;
-        if (arrivals >= 2) releaseGate();
-        await gate;
-        return result;
+  function signup(label: string, typedCode?: string) {
+    return request(app.getHttpServer())
+      .post('/api/v1/players')
+      .send({
+        ...(typedCode ? { inviteCode: typedCode } : {}),
+        teamName: `Race Team ${label} ${runId}`,
+        screenName: `Race${label}${randomUUID().slice(0, 6)}`,
+        avatarId: 'fox',
+        birthYear: 2014,
+        parentContact: `race-${label.toLowerCase()}-parent@example.com`,
       });
+  }
+
+  it('two concurrent signups typing the same unknown code both create their own team, with distinct generated codes', async () => {
+    const typedCode = `RACE${randomUUID().slice(0, 8).toUpperCase()}`;
+
+    const [a, b] = await Promise.all([
+      signup('A', typedCode),
+      signup('B', typedCode),
+    ]);
+
+    expect(a.status).toBe(201);
+    expect(b.status).toBe(201);
+    const bodyA = a.body as CreatePlayerBody;
+    const bodyB = b.body as CreatePlayerBody;
+    expect(bodyA.teamId).not.toBe(bodyB.teamId);
+    expect(bodyA.inviteCode).not.toBe(bodyB.inviteCode);
+    expect(bodyA.isCaptain && bodyB.isCaptain).toBe(true);
+    // Neither team got the typed code.
+    expect(
+      await dataSource
+        .getRepository(Team)
+        .count({ where: { inviteCode: typedCode } }),
+    ).toBe(0);
+  });
+
+  it('a generated-code collision fails one signup with 409 invite_code_taken_concurrently and persists nothing for it', async () => {
+    const forcedCode = `ZZ${randomUUID().slice(0, 6).toUpperCase()}`;
+    const teamsService: TeamsService = app.get(TeamsService);
+    // Both requests get the same "unused" code — the pre-insert uniqueness
+    // read cannot see the other's uncommitted row, so only the database
+    // constraint can decide, exactly the race Decision 8 is about.
+    const spy = jest
+      .spyOn(
+        teamsService as unknown as {
+          pickUnusedInviteCode: () => Promise<string>;
+        },
+        'pickUnusedInviteCode',
+      )
+      .mockResolvedValue(forcedCode);
 
     let responses: Array<{ status: number; body: unknown }>;
     try {
-      responses = await Promise.all([
-        request(app.getHttpServer())
-          .post('/api/v1/players')
-          .send({
-            inviteCode,
-            teamName: 'Race Team A',
-            screenName: `RaceA${randomUUID().slice(0, 6)}`,
-            avatarId: 'fox',
-            birthYear: 2014,
-            parentContact: 'race-a-parent@example.com',
-          }),
-        request(app.getHttpServer())
-          .post('/api/v1/players')
-          .send({
-            inviteCode,
-            teamName: 'Race Team B',
-            screenName: `RaceB${randomUUID().slice(0, 6)}`,
-            avatarId: 'fox',
-            birthYear: 2014,
-            parentContact: 'race-b-parent@example.com',
-          }),
-      ]);
+      responses = await Promise.all([signup('C'), signup('D')]);
     } finally {
       spy.mockRestore();
     }
 
     const succeeded = responses.filter((r) => r.status === 201);
     const failed = responses.filter((r) => r.status !== 201);
-
-    // Exactly one call wins the race; the loser fails outright rather than
-    // silently falling back to joining the winner's team (ADR-0009
-    // Decision 8 — rejected explicitly, not a "graceful" fallback).
     expect(succeeded).toHaveLength(1);
     expect(failed).toHaveLength(1);
+    expect(failed[0].status).toBe(409);
     expect((failed[0].body as ApiErrorBody).error.code).toBe(
       'invite_code_taken_concurrently',
     );
-    expect(failed[0].status).toBe(409);
 
-    const winnerBody = succeeded[0].body as CreatePlayerBody;
-    expect(winnerBody.teamCreated).toBe(true);
-    expect(winnerBody.isCaptain).toBe(true);
-    expect(['Race Team A', 'Race Team B']).toContain(winnerBody.teamName);
-
-    // Durable state after the race: exactly one team exists with this
-    // invite code — never two, and the loser's attempted team/season/pot
-    // never persisted (its whole transaction rolled back).
+    const winner = succeeded[0].body as CreatePlayerBody;
     const teams = await dataSource
       .getRepository(Team)
-      .find({ where: { inviteCode } });
+      .find({ where: { inviteCode: forcedCode } });
     expect(teams).toHaveLength(1);
-    expect(teams[0].id).toBe(winnerBody.teamId);
-    expect(teams[0].name).toBe(winnerBody.teamName);
+    expect(teams[0].id).toBe(winner.teamId);
 
-    const pots = await dataSource
-      .getRepository(TeamSeasonPot)
-      .find({ where: { teamId: winnerBody.teamId } });
-    expect(pots).toHaveLength(1);
-
+    // The loser's whole transaction rolled back: no second team, pot or
+    // captain anywhere.
+    const loserName =
+      winner.teamName === `Race Team C ${runId}`
+        ? `Race Team D ${runId}`
+        : `Race Team C ${runId}`;
+    expect(
+      await dataSource
+        .getRepository(Team)
+        .count({ where: { name: loserName } }),
+    ).toBe(0);
+    expect(
+      await dataSource
+        .getRepository(TeamSeasonPot)
+        .count({ where: { teamId: winner.teamId } }),
+    ).toBe(1);
     const players = await dataSource
       .getRepository(Player)
-      .find({ where: { teamId: winnerBody.teamId } });
+      .find({ where: { teamId: winner.teamId } });
     expect(players).toHaveLength(1);
     expect(players[0].isCaptain).toBe(true);
   });

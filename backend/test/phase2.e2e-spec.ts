@@ -446,6 +446,99 @@ describe('Phase 2 API (e2e)', () => {
     );
   });
 
+  // ADR-0009's 2026-11-08 amendment — captain-only invite-code rotation.
+  describe('Invite-code rotation', () => {
+    const GENERATED = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
+
+    it('the captain rotates the code: the old one stops working at once, the new one works, and the dashboard shows it', async () => {
+      const { teamId, inviteCode: oldCode } = await createTeamFixture();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+      const { sessionToken: memberToken } = await createTeamMember(teamId);
+
+      const rotated = await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+      const newCode = (rotated.body as { inviteCode: string }).inviteCode;
+      expect(newCode).toMatch(GENERATED);
+      expect(newCode).not.toBe(oldCode);
+
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/invite/${oldCode}`)
+        .expect(404);
+      const preview = await request(app.getHttpServer())
+        .get(`/api/v1/teams/invite/${newCode}`)
+        .expect(200);
+      expect((preview.body as { teamId: string }).teamId).toBe(teamId);
+
+      // Joining with the old code is refused too, not just the preview.
+      const join = await request(app.getHttpServer())
+        .post('/api/v1/players')
+        .send({
+          inviteCode: oldCode,
+          screenName: `Late${randomUUID().slice(0, 6)}`,
+          avatarId: 'fox',
+          birthYear: 2014,
+          parentContact: 'late-parent@example.com',
+        })
+        .expect(404);
+      expect((join.body as ApiErrorBody).error.code).toBe(
+        'invite_code_not_found',
+      );
+
+      const dashboard = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/dashboard`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+      expect((dashboard.body as { inviteCode: string }).inviteCode).toBe(
+        newCode,
+      );
+
+      // Existing members are unaffected: membership is team_id, not code.
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/dashboard`)
+        .set('Authorization', `Bearer ${memberToken}`)
+        .expect(200);
+    });
+
+    it('is captain-only: a member gets not_team_captain, a pending joiner team_join_approval_required, another team team_mismatch', async () => {
+      const { teamId, inviteCode } = await createTeamFixture();
+      await createCaptain(teamId);
+      const { sessionToken: memberToken } = await createTeamMember(teamId);
+      const { sessionToken: pendingToken } = await createTeamMember(
+        teamId,
+        ParentalConsentStatus.APPROVED,
+        TeamJoinStatus.PENDING,
+      );
+      const { teamId: otherTeamId } = await createTeamFixture();
+      const { sessionToken: otherCaptainToken } =
+        await createCaptain(otherTeamId);
+
+      const cases: Array<[string, string]> = [
+        [memberToken, 'not_team_captain'],
+        [pendingToken, 'team_join_approval_required'],
+        [otherCaptainToken, 'team_mismatch'],
+      ];
+      for (const [token, code] of cases) {
+        const response = await request(app.getHttpServer())
+          .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+          .set('Authorization', `Bearer ${token}`)
+          .expect(403);
+        expect((response.body as ApiErrorBody).error.code).toBe(code);
+      }
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+        .expect(401);
+
+      // Nothing rotated.
+      const team = await dataSource
+        .getRepository(Team)
+        .findOneByOrFail({ id: teamId });
+      expect(team.inviteCode).toBe(inviteCode);
+    });
+  });
+
   describe('Weekly-goal CRUD + state machine', () => {
     it('enforces active_goal_already_exists, challenge_target_frozen, invalid_challenge_transition, and the draft->active->cancelled path', async () => {
       const { teamId } = await createTeamFixture();

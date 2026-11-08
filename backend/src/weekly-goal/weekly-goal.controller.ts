@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentPlayerId } from '../auth/current-player-id.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
@@ -20,6 +21,7 @@ import {
 import { ListTeammatesQueryDto } from '../players/dto/list-teammates-query.dto';
 import { TransferCaptaincyDto } from '../players/dto/transfer-captaincy.dto';
 import { TeamJoinStatus } from '../players/team-join-status.enum';
+import { TeamsService } from '../teams/teams.service';
 import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
 import {
@@ -66,7 +68,31 @@ export class WeeklyGoalController {
   constructor(
     private readonly weeklyGoalService: WeeklyGoalService,
     private readonly playersService: PlayersService,
+    private readonly teamsService: TeamsService,
   ) {}
+
+  // ADR-0009's 2026-11-08 amendment — the captain replaces the team's
+  // invite code, and the old one stops working immediately (a code that
+  // leaked, was posted in a group chat, or was the guessable kind every
+  // team had before codes were generated). Captain-only via the same
+  // assertIsCaptainOfTeam every other captain action uses, which also
+  // requires the captain's own consent to be approved.
+  //
+  // Throttled per IP: rotation is a rare, deliberate act, and each one
+  // invalidates every printed or shared copy of the code, so a scripted
+  // loop against it is only ever a nuisance worth stopping.
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
+  @Post('invite-code/rotate')
+  @HttpCode(HttpStatus.OK)
+  async rotateInviteCode(
+    @Param('teamId') teamId: string,
+    @CurrentPlayerId() playerId: string,
+  ): Promise<{ inviteCode: string }> {
+    await this.playersService.assertIsCaptainOfTeam(playerId, teamId);
+    const inviteCode = await this.teamsService.rotateInviteCode(teamId);
+    return { inviteCode };
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('dashboard')
