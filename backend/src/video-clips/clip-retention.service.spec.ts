@@ -45,6 +45,33 @@ function buildService(overrides: { configValue?: string } = {}) {
 }
 
 describe('ClipRetentionService.sweepExpiredPublishedClips', () => {
+  // Security audit, 2026-11-08 — a published clip's row points at a
+  // server-only key; the upload key can be re-created by replaying the
+  // presigned PUT, and no row would ever reach it otherwise.
+  it('deletes both the published object and the upload key for a published clip', async () => {
+    const row = {
+      id: 'clip-1',
+      teamId: 'team-1',
+      mimeType: 'video/mp4',
+      storageKey: 'clips/team-1/clip-1.published-abc.mp4',
+    };
+    const { service, videoClipRepository, objectStorageService } =
+      buildService();
+    videoClipRepository.find.mockResolvedValue([row]);
+
+    await service.sweepExpiredPublishedClips();
+
+    expect(
+      objectStorageService.deleteObjectIfExists.mock.calls.map(
+        ([key]: [string]) => key,
+      ),
+    ).toEqual([
+      'clips/team-1/clip-1.published-abc.mp4',
+      'clips/team-1/clip-1.mp4',
+    ]);
+    expect(videoClipRepository.delete).toHaveBeenCalledWith({ id: 'clip-1' });
+  });
+
   it('queries published clips past expiresAt, deletes the object before the row, for each', async () => {
     const row = { id: 'clip-1', storageKey: 'clips/team-1/clip-1.mp4' };
     const { service, videoClipRepository, objectStorageService } =

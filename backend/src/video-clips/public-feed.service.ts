@@ -194,7 +194,10 @@ export class PublicFeedService {
           //
           // **An already-approved clip stays approved.** A clip's bytes
           // never change: there is no edit route, and the file is written
-          // once at upload. So a re-publish after an un-publish is the
+          // once, at complete, to a key no presigned PUT is ever minted for
+          // (clipPublishedStorageKey — before 2026-11-08 it went back to
+          // the client-writable upload key, and this was not actually
+          // true). So a re-publish after an un-publish is the
           // same video a person already watched, and sending it round
           // again would cost the operator time and the child a wait to
           // re-establish a fact that has not changed.

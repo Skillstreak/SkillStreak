@@ -3,6 +3,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { ObjectStorageService } from '../video-clips/object-storage.service';
 import { VideoProcessingService } from '../video-clips/video-processing.service';
+import { CLIP_MAX_FILE_SIZE_BYTES } from '../video-clips/video-clip.constants';
 import { readdir, readFile, mkdtemp, rm } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -149,7 +150,14 @@ export class ClipFrameSamplerService {
     // prevent. Now the only thing between the clip hitting disk and the
     // `try` is nothing at all.
     const outputDir = await mkdtemp(join(tmpdir(), 'clip-frames-'));
-    const buffer = await this.objectStorageService.getObjectBuffer(storageKey);
+    // Bounded like completeUpload's own download (security audit,
+    // 2026-11-08): a published clip was already checked against this cap,
+    // but an unbounded read would put the whole object in heap if that
+    // ever stopped being true, and on this pod that is an OOM.
+    const buffer = await this.objectStorageService.getObjectBuffer(
+      storageKey,
+      CLIP_MAX_FILE_SIZE_BYTES,
+    );
     const sourcePath = await this.videoProcessingService.writeTempFile(
       buffer,
       'src',

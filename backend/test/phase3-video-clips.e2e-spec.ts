@@ -11,6 +11,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/errors/http-exception.filter';
+import { ObjectStorageService } from '../src/video-clips/object-storage.service';
 import { PlayerTokenService } from '../src/auth/player-token.service';
 import { ParentalConsentStatus } from '../src/players/player-consent-status.enum';
 import { TeamJoinStatus } from '../src/players/team-join-status.enum';
@@ -675,6 +676,88 @@ describe('Fas 3: video clips & the team feed (e2e)', () => {
         clipId,
         acknowledged: true,
       });
+    }, 30_000);
+  });
+
+  // Security audit, 2026-11-08. The presigned PUT stays valid for five
+  // minutes and is reusable, and the stripped remux used to be written back
+  // to that same key — so the uploader could PUT the original, GPS-tagged
+  // file again after complete and every later playback URL served it.
+  describe('re-PUT after complete (security audit, 2026-11-08)', () => {
+    it('replaying the presigned PUT after publish cannot change what is served', async () => {
+      if (!ffmpegPresent) {
+        console.warn(
+          'ffmpeg/ffprobe not found on PATH — skipping the re-PUT bypass round trip.',
+        );
+        return;
+      }
+      const teamId = await createTeam();
+      const { sessionToken } = await createPlayer(teamId);
+      const clipBytes = await generateSyntheticClip();
+      expect((await readFormatTags(clipBytes)).location).toBeDefined();
+
+      const uploadResponse = await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/clips/upload-url`)
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .send({
+          mimeType: 'video/mp4',
+          fileSizeBytes: clipBytes.length,
+          durationSeconds: 1,
+        })
+        .expect(201);
+      const { clipId, uploadUrl } = uploadResponse.body as CreateUploadUrlBody;
+      const uploadKey = (
+        await dataSource
+          .getRepository(VideoClip)
+          .findOneOrFail({ where: { id: clipId } })
+      ).storageKey;
+
+      const put = () =>
+        fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'video/mp4' },
+          body: clipBytes,
+        });
+      expect((await put()).ok).toBe(true);
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/clips/${clipId}/complete`)
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .expect(200);
+
+      const row = await dataSource
+        .getRepository(VideoClip)
+        .findOneOrFail({ where: { id: clipId } });
+      expect(row.storageKey).not.toBe(uploadKey);
+
+      // The attack: same URL, original bytes, after publish.
+      expect((await put()).ok).toBe(true);
+
+      // A playback URL minted AFTER the replay still serves stripped bytes.
+      const feed = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/clips`)
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .expect(200);
+      const item = (feed.body as { clips: ClipFeedItemBody[] }).clips.find(
+        (c) => c.clipId === clipId,
+      );
+      expect(item).toBeDefined();
+      const served = await fetch((item as ClipFeedItemBody).playbackUrl);
+      expect(served.ok).toBe(true);
+      const tags = await readFormatTags(
+        Buffer.from(await served.arrayBuffer()),
+      );
+      expect(tags.location).toBeUndefined();
+      expect(tags.title).toBeUndefined();
+
+      // Deleting the clip takes the replayed upload-key object with it,
+      // rather than leaving an unreferenced unstripped copy in the bucket.
+      await request(app.getHttpServer())
+        .delete(`/api/v1/teams/${teamId}/clips/${clipId}`)
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .expect(200);
+      const storage = app.get(ObjectStorageService);
+      expect(await storage.headObject(uploadKey)).toBeNull();
+      expect(await storage.headObject(row.storageKey)).toBeNull();
     }, 30_000);
   });
 
