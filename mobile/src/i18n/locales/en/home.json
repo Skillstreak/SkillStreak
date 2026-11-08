@@ -120,6 +120,7 @@
     "contactChangeRateLimited": "You've already asked for a change recently — wait a bit before trying again.",
     "contactChangeGenericError": "Something went wrong. Check the details and try again.",
     "contactChangeConfirmedToast": "Confirmed! It takes effect in about {{hours}} hr. The old address can cancel it via the email we sent there.",
+    "contactChangeAppliedToast": "Done! The contact address has been changed.",
     "codeInvalid": "That code doesn't work anymore. Check you typed it right, or ask for a new one.",
     "codeGenericError": "Something went wrong. Check your connection and try again.",
     "erasureTeamInfoError": "Couldn't load team info. Try again.",

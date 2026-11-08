@@ -120,6 +120,7 @@
     "contactChangeRateLimited": "O změnu jsi nedávno už žádal/a — chvíli počkej, než to zkusíš znovu.",
     "contactChangeGenericError": "Něco se pokazilo. Zkontroluj údaj a zkus to znovu.",
     "contactChangeConfirmedToast": "Potvrzeno! Změna se projeví přibližně za {{hours}} h. Stará adresa může změnu zrušit přes e-mail, který jsme tam poslali.",
+    "contactChangeAppliedToast": "Hotovo! Kontaktní adresa byla změněna.",
     "codeInvalid": "Tenhle kód už nefunguje. Zkontroluj, jestli jsi ho napsal/a správně, nebo si vyžádej nový.",
     "codeGenericError": "Něco se pokazilo. Zkontroluj připojení a zkus to znovu.",
     "erasureTeamInfoError": "Nepodařilo se načíst informace o týmu. Zkus to znovu.",

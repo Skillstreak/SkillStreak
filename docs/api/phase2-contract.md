@@ -245,6 +245,15 @@ reuses `consent_token`/`consent_token_expires_at`, rate-limited per player
 (e.g. one reminder per 5 minutes — exact window still backend-developer's
 call).
 
+**Added 2026-11-08** (`docs/adr/0012`'s 2026-11-08 amendment): `409
+consent_reminder_blocked_pending_contact_change` while the target player
+has an unresolved contact-address change — requested with a live code, or
+confirmed and inside its grace period. Applies to the self-service and the
+captain path alike, and is checked before the cooldown is claimed. A
+reminder mints a new consent token, which would kill the link the parent
+already holds and, once the change applied, mail the new one to the new
+address; refusing keeps the parent's link intact for the whole window.
+
 **Flagged for security-reviewer** (carried from ADR-0005's Consequences):
 this now sends a real email nudge to a teammate's parent, triggered by
 another child rather than an adult coach. The mechanism/rate-limiting is

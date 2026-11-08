@@ -120,6 +120,7 @@
     "contactChangeRateLimited": "Du hast erst kürzlich eine Änderung angefragt — warte kurz, bevor du es noch mal versuchst.",
     "contactChangeGenericError": "Etwas ist schiefgelaufen. Prüf die Angabe, und versuch's noch mal.",
     "contactChangeConfirmedToast": "Bestätigt! Tritt in etwa {{hours}} Std. in Kraft. Die alte Adresse kann über die dorthin geschickte E-Mail widersprechen.",
+    "contactChangeAppliedToast": "Fertig! Die Kontaktadresse wurde geändert.",
     "codeInvalid": "Der Code funktioniert nicht mehr. Prüf, ob du ihn richtig eingegeben hast, oder fordere einen neuen an.",
     "codeGenericError": "Etwas ist schiefgelaufen. Prüf deine Verbindung, und versuch's noch mal.",
     "erasureTeamInfoError": "Team-Infos konnten nicht geladen werden. Versuch's noch mal.",

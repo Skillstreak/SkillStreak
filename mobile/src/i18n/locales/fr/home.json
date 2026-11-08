@@ -120,6 +120,7 @@
     "contactChangeRateLimited": "Tu as déjà demandé un changement récemment — attends un peu avant de réessayer.",
     "contactChangeGenericError": "Une erreur s'est produite. Vérifie l'information et réessaie.",
     "contactChangeConfirmedToast": "Confirmé ! Ça prend effet dans environ {{hours}} h. L'ancienne adresse peut annuler via l'e-mail qu'on lui a envoyé.",
+    "contactChangeAppliedToast": "C'est fait ! L'adresse de contact a été changée.",
     "codeInvalid": "Ce code ne fonctionne plus. Vérifie que tu l'as bien tapé, ou demandes-en un nouveau.",
     "codeGenericError": "Une erreur s'est produite. Vérifie ta connexion et réessaie.",
     "erasureTeamInfoError": "Impossible de charger les infos de l'équipe. Réessaie.",

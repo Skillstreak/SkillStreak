@@ -39,6 +39,7 @@
     "reminderSentToast": "Recordatorio enviado.",
     "consentNoLongerPendingToast": "Este jugador ya no está esperando aprobación.",
     "reminderErrorToast": "Algo salió mal. Inténtalo de nuevo.",
+    "reminderBlockedPendingContactChangeToast": "La dirección de contacto de este jugador se está cambiando. Podrás enviar un recordatorio cuando termine.",
     "reissueSentToast": "Se envió un código de acceso al padre, madre o tutor.",
     "reissueRateLimitedToast": "Acabamos de enviar un código: espera un minuto antes de enviar otro."
   },

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import {
   ConsentNotPendingException,
+  ConsentReminderBlockedPendingContactChangeException,
   ConsentReminderRateLimitedException,
 } from '../common/errors/exceptions';
 import { isSelfVerificationAge } from '../common/age/self-verification-age.util';
@@ -162,6 +163,29 @@ export class ConsentService {
 
     if (targetPlayer.parentalConsentStatus !== ParentalConsentStatus.PENDING) {
       throw new ConsentNotPendingException();
+    }
+
+    // docs/adr/0012's 2026-11-08 amendment — the security audit's chain
+    // ended here: redirect the parent contact to your own mailbox, confirm
+    // it from there, then remind yourself. Minting a token kills the link
+    // the parent already holds, and once the change applies the new one
+    // goes to the new address. So while a change is unresolved, no
+    // reminder at all — self-service or captain-triggered — rather than
+    // re-sending to the current address: a re-send would still replace
+    // the parent's link, which must survive the window untouched.
+    //
+    // First resolve a change whose grace period has already elapsed
+    // (getEffective's lazy apply). That change has taken effect by the
+    // rules this ADR accepts — including the residual of a parent who
+    // ignored the mail for 24h — so it must not keep blocking reminders
+    // merely because nothing has read the row since.
+    await this.playerPrivateInfoService.resolveDueContactChange(targetPlayerId);
+    if (
+      await this.playerPrivateInfoService.hasPendingContactChange(
+        targetPlayerId,
+      )
+    ) {
+      throw new ConsentReminderBlockedPendingContactChangeException();
     }
 
     // Claimed only after the checks above, so a captain who isn't
