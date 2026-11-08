@@ -9,7 +9,10 @@ import { tryClaimScheduledJobRunOrSkip } from '../common/scheduling/scheduled-jo
 import { RedisService } from '../redis/redis.service';
 import { VideoClip, VideoClipStatus } from './entities/video-clip.entity';
 import { ObjectStorageService } from './object-storage.service';
-import { DEFAULT_CLIP_PENDING_UPLOAD_TTL_MINUTES } from './video-clip.constants';
+import {
+  DEFAULT_CLIP_PENDING_UPLOAD_TTL_MINUTES,
+  clipObjectKeys,
+} from './video-clip.constants';
 import { positiveIntFromConfig } from '../error-log/error-log.util';
 
 // k8s/README.md's now-resolved "Scheduled-job races" note — a few minutes
@@ -161,7 +164,10 @@ export class ClipRetentionService {
         // Delete-if-exists (ADR-0010): most abandoned pending_upload rows
         // never got any bytes at all, so this is usually just the row
         // delete below.
-        await this.objectStorageService.deleteObjectIfExists(row.storageKey);
+        // Both keys a clip may own — see clipObjectKeys.
+        for (const key of clipObjectKeys(row)) {
+          await this.objectStorageService.deleteObjectIfExists(key);
+        }
         await this.videoClipRepository.delete({ id: row.id });
       } catch (error) {
         this.logger.warn(

@@ -1049,6 +1049,29 @@ describe('PublicSharingConsentService: security-review findings', () => {
     expect(sent.text).toContain(reviewCodeOf());
   });
 
+  // Security audit, 2026-11-08 — the HTML part was the text verbatim, and
+  // the text carries the child's free-text screen name.
+  it('escapes the screen name in the HTML part of the parent request mail', async () => {
+    const { service, mailService, players } = build();
+    players.findOne.mockResolvedValue({
+      screenName: '<a href="https://evil.example">Godkänn här</a>',
+    });
+
+    await service.request('p1');
+
+    const sent = mailService.sendMail.mock.calls[0][0] as {
+      html: string;
+      text: string;
+    };
+    expect(sent.html).not.toContain('<a ');
+    expect(sent.html).toContain(
+      '&lt;a href=&quot;https://evil.example&quot;&gt;Godkänn här&lt;/a&gt;',
+    );
+    // Line breaks survive as markup; the text part is untouched.
+    expect(sent.html).toContain('<br>');
+    expect(sent.text).toContain('<a href="https://evil.example">');
+  });
+
   it('refuses while a contact change is pending (finding 3)', async () => {
     // Otherwise a player repoints the parent contact at an address they
     // control, waits out the grace period, and approves their own consent.

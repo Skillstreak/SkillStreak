@@ -51,17 +51,31 @@ function build(
       ),
     delete: jest.fn().mockResolvedValue({ affected: 3 }),
   };
+  const row: Record<string, unknown> = {
+    id: PLAYER,
+    birthYear: opts.birthYear ?? thisYear - 20,
+    // Explicit, because the age this invariant turns on is GDPR Article
+    // 8's and that is 13 to 16 by country. A fixture with no
+    // jurisdiction gets the strictest age, which is correct behaviour
+    // and would make "allows exactly 13" fail for the right reason.
+    jurisdiction:
+      opts.jurisdiction === undefined ? Jurisdiction.SE : opts.jurisdiction,
+  };
   const players = {
-    findOne: jest.fn().mockResolvedValue({
-      id: PLAYER,
-      birthYear: opts.birthYear ?? thisYear - 20,
-      // Explicit, because the age this invariant turns on is GDPR Article
-      // 8's and that is 13 to 16 by country. A fixture with no
-      // jurisdiction gets the strictest age, which is correct behaviour
-      // and would make "allows exactly 13" fail for the right reason.
-      jurisdiction:
-        opts.jurisdiction === undefined ? Jurisdiction.SE : opts.jurisdiction,
-    }),
+    // Honours `select` the way TypeORM does — a column the query did not
+    // select is absent from the result. Returning the whole row regardless
+    // hid a real bug (security audit, 2026-11-08): createChallenge selected
+    // only id/birthYear, so `jurisdiction` was always undefined in
+    // production and every Swedish 13-15-year-old was refused.
+    findOne: jest.fn((options: { select?: Record<string, boolean> } = {}) =>
+      Promise.resolve(
+        options.select
+          ? Object.fromEntries(
+              Object.entries(row).filter(([key]) => options.select?.[key]),
+            )
+          : row,
+      ),
+    ),
   };
   const service = new AccountLinkService(
     links as never,

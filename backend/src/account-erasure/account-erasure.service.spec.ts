@@ -692,12 +692,20 @@ describe('AccountErasureService.executeTeamCascade', () => {
     const updateMock = jest.fn().mockResolvedValue(undefined);
     const { service, objectStorageService, redisService } = buildService({
       videoClipRepository: {
-        find: jest
-          .fn()
-          .mockResolvedValue([
-            { storageKey: 'clips/team-1/a.mp4' },
-            { storageKey: 'clips/team-1/b.mp4' },
-          ]),
+        find: jest.fn().mockResolvedValue([
+          {
+            id: 'a',
+            teamId: 'team-1',
+            mimeType: 'video/mp4',
+            storageKey: 'clips/team-1/a.published-x.mp4',
+          },
+          {
+            id: 'b',
+            teamId: 'team-1',
+            mimeType: 'video/mp4',
+            storageKey: 'clips/team-1/b.published-y.mp4',
+          },
+        ]),
       },
       manager: {
         getRepository: jest
@@ -708,7 +716,19 @@ describe('AccountErasureService.executeTeamCascade', () => {
 
     await service.executeTeamCascade('team-1', batchRows);
 
-    expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledTimes(2);
+    // Both keys per clip (security audit, 2026-11-08): the published
+    // object the row points at, and the client-writable upload key a
+    // replayed presigned PUT could have re-created after publish.
+    expect(
+      objectStorageService.deleteObjectIfExists.mock.calls.map(
+        ([key]: [string]) => key,
+      ),
+    ).toEqual([
+      'clips/team-1/a.published-x.mp4',
+      'clips/team-1/a.mp4',
+      'clips/team-1/b.published-y.mp4',
+      'clips/team-1/b.mp4',
+    ]);
     expect(deleteMock).toHaveBeenCalledWith({ id: 'team-1' });
     expect(redisService.removeFromLeaderboard).toHaveBeenCalledWith(
       'team-1',

@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { CLIP_MAX_FILE_SIZE_BYTES } from '../video-clips/video-clip.constants';
 import { ClipFrameSamplerService } from './clip-frame-sampler.service';
 
 /**
@@ -123,5 +124,28 @@ describe('the compiled-in fallback matches the shared contract', () => {
     );
     expect(contract.extraArgs).toEqual(['-an', '-map_metadata', '-1']);
     expect(contract.jpegQuality).toBe('3');
+  });
+});
+
+// Security audit, 2026-11-08 — the download was the one clip read in the
+// app with no ceiling, so a large object went into heap whole.
+describe('ClipFrameSamplerService.sample', () => {
+  it('bounds the object download at CLIP_MAX_FILE_SIZE_BYTES', async () => {
+    const tooBig = new Error('object exceeds maxBytes');
+    const objectStorageService = {
+      getObjectBuffer: jest.fn().mockRejectedValue(tooBig),
+    };
+    const videoProcessingService = { writeTempFile: jest.fn() };
+    const service = new ClipFrameSamplerService(
+      objectStorageService as never,
+      videoProcessingService as never,
+    );
+
+    await expect(service.sample('clips/t/c.mp4', 4)).rejects.toBe(tooBig);
+    expect(objectStorageService.getObjectBuffer).toHaveBeenCalledWith(
+      'clips/t/c.mp4',
+      CLIP_MAX_FILE_SIZE_BYTES,
+    );
+    expect(videoProcessingService.writeTempFile).not.toHaveBeenCalled();
   });
 });

@@ -19,7 +19,12 @@ import {
   TeamChatMessage,
 } from '../team-chat/entities/team-chat-message.entity';
 import { CLIP_MAX_FILE_SIZE_BYTES } from './video-clip.constants';
-import { VideoClip, VideoClipStatus } from './entities/video-clip.entity';
+import {
+  PublicClipReviewStatus,
+  VideoClip,
+  VideoClipStatus,
+} from './entities/video-clip.entity';
+import { ClipReport } from './entities/clip-report.entity';
 import { VideoClipsService } from './video-clips.service';
 
 // Chainable fake query builder, mirroring team-chat.service.spec.ts's
@@ -151,6 +156,7 @@ function buildService(
           getRepository: jest.fn((entity: unknown) => {
             if (entity === VideoClip) return transactionVideoClipRepository;
             if (entity === TeamChatMessage) return teamChatMessageRepository;
+            if (entity === ClipReport) return clipReportRepository;
             throw new Error(
               `Unexpected entity requested from the fake transaction manager: ${String(entity)}`,
             );
@@ -568,9 +574,56 @@ describe('VideoClipsService.completeUpload — security-review regressions', () 
       service.completeUpload('team-1', 'player-1', 'clip-1'),
     ).rejects.toBeInstanceOf(ClipNotFoundException);
 
+    // Both what this call wrote (the server-only stripped key) and the
+    // upload key.
+    const [[writtenKey]] = objectStorageService.putObjectBuffer.mock.calls as [
+      [string],
+    ];
+    expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
+      writtenKey,
+    );
     expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
       'clips/team-1/clip-1.mp4',
     );
+  });
+
+  // Security audit, 2026-11-08 — the stripped object is written before the
+  // publish transaction, so a transaction that throws must not leave it
+  // orphaned with no row pointing at it.
+  it('deletes the stripped object when the publish transaction throws, and leaves the row pending', async () => {
+    const {
+      service,
+      videoClipRepository,
+      transactionVideoClipRepository,
+      objectStorageService,
+    } = buildService();
+    videoClipRepository.findOne.mockResolvedValue(pendingClip());
+    const boom = new Error('db down');
+    transactionVideoClipRepository.update.mockRejectedValue(boom);
+
+    await expect(
+      service.completeUpload('team-1', 'player-1', 'clip-1'),
+    ).rejects.toBe(boom);
+
+    const [[writtenKey]] = objectStorageService.putObjectBuffer.mock.calls as [
+      [string],
+    ];
+    expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
+      writtenKey,
+    );
+  });
+
+  it('still answers published when deleting the original upload object fails afterwards', async () => {
+    const { service, videoClipRepository, objectStorageService } =
+      buildService();
+    videoClipRepository.findOne.mockResolvedValue(pendingClip());
+    objectStorageService.deleteObjectIfExists.mockRejectedValue(
+      new Error('minio blip'),
+    );
+
+    await expect(
+      service.completeUpload('team-1', 'player-1', 'clip-1'),
+    ).resolves.toMatchObject({ status: 'published' });
   });
 
   // Finding 7. tagged_player_id is ON DELETE SET NULL, so a teammate
@@ -818,18 +871,45 @@ describe('VideoClipsService.completeUpload', () => {
 
     const result = await service.completeUpload('team-1', 'player-1', 'clip-1');
 
+    // Security audit, 2026-11-08: the stripped remux goes to a fresh
+    // server-only key, NEVER back to the upload key — the presigned PUT
+    // for that key is still live after complete and can be replayed to
+    // put the original, GPS-tagged bytes back behind the playback URL.
+    const [[writtenKey]] = objectStorageService.putObjectBuffer.mock.calls as [
+      [string, Buffer, string],
+    ];
+    expect(writtenKey).not.toBe('clips/team-1/clip-1.mp4');
+    expect(writtenKey).toMatch(
+      /^clips\/team-1\/clip-1\.published-[0-9a-f-]{36}\.mp4$/,
+    );
     expect(objectStorageService.putObjectBuffer).toHaveBeenCalledWith(
-      'clips/team-1/clip-1.mp4',
+      writtenKey,
       expect.any(Buffer),
       'video/mp4',
     );
     // The publish status flip now happens inside dataSource.transaction
     // (ADR-0021 Decision 2), against the transaction-scoped repository, not
-    // the plain injected one.
+    // the plain injected one — and moves the row onto the new key in the
+    // same statement.
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     expect(transactionVideoClipRepository.update).toHaveBeenCalledWith(
       { id: 'clip-1', status: VideoClipStatus.PENDING_UPLOAD },
-      expect.objectContaining({ status: VideoClipStatus.PUBLISHED }),
+      expect.objectContaining({
+        status: VideoClipStatus.PUBLISHED,
+        storageKey: writtenKey,
+      }),
+    );
+    // The client-writable original is deleted, and playback is minted for
+    // the server-only key.
+    expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
+      'clips/team-1/clip-1.mp4',
+    );
+    expect(objectStorageService.deleteObjectIfExists).not.toHaveBeenCalledWith(
+      writtenKey,
+    );
+    expect(objectStorageService.createPresignedGetUrl).toHaveBeenCalledWith(
+      writtenKey,
+      expect.any(Number),
     );
     // No taggedPlayerId on this clip — no system chat message inserted.
     expect(teamChatMessageRepository.save).not.toHaveBeenCalled();
@@ -999,11 +1079,17 @@ describe('VideoClipsService.deleteClip', () => {
       id: 'clip-1',
       teamId: 'team-1',
       uploaderPlayerId: 'player-1',
-      storageKey: 'clips/team-1/clip-1.mp4',
+      mimeType: 'video/mp4',
+      storageKey: 'clips/team-1/clip-1.published-abc.mp4',
     });
 
     const result = await service.deleteClip('team-1', 'player-1', 'clip-1');
 
+    // Both keys (security audit, 2026-11-08): the published object, and the
+    // upload key a replayed presigned PUT may have re-created.
+    expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
+      'clips/team-1/clip-1.published-abc.mp4',
+    );
     expect(objectStorageService.deleteObjectIfExists).toHaveBeenCalledWith(
       'clips/team-1/clip-1.mp4',
     );
@@ -1062,7 +1148,8 @@ describe('VideoClipsService.reportClip', () => {
   });
 
   it('persists the report AND immediately hides the clip (ADR-0010 Decision 4 — the divergence from chat)', async () => {
-    const { service, videoClipRepository } = buildService();
+    const { service, videoClipRepository, transactionVideoClipRepository } =
+      buildService();
     videoClipRepository.findOne.mockResolvedValue(clip);
 
     const result = await service.reportClip('team-1', 'player-1', 'clip-1', {
@@ -1075,10 +1162,66 @@ describe('VideoClipsService.reportClip', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- jest's own matcher typing
       createdAt: expect.any(String),
     });
-    expect(videoClipRepository.update).toHaveBeenCalledWith(
+    expect(transactionVideoClipRepository.update).toHaveBeenCalledWith(
       { id: 'clip-1' },
-      { status: VideoClipStatus.HIDDEN },
+      {
+        status: VideoClipStatus.HIDDEN,
+        publishedPubliclyAt: null,
+        publicReviewStatus: undefined,
+      },
     );
+    expect(videoClipRepository.update).not.toHaveBeenCalled();
+  });
+
+  // Security audit, 2026-11-08. The hide used to set `status` alone, which
+  // on a publicly published clip violates
+  // CHK_video_clip_public_requires_published — the UPDATE threw after the
+  // report row had already committed, so the clip stayed public and every
+  // retry answered 409. The test/phase3 e2e proves it against the real
+  // CHECK; this pins the shape: one transaction, public flag cleared in
+  // the same statement as the hide.
+  it('clears publishedPubliclyAt and re-queues review in the same transactional update as the hide, for a publicly published clip', async () => {
+    const {
+      service,
+      videoClipRepository,
+      clipReportRepository,
+      dataSource,
+      transactionVideoClipRepository,
+    } = buildService();
+    videoClipRepository.findOne.mockResolvedValue({
+      ...clip,
+      publishedPubliclyAt: new Date('2026-11-01T10:00:00Z'),
+      publicReviewStatus: PublicClipReviewStatus.APPROVED,
+    });
+
+    await service.reportClip('team-1', 'player-1', 'clip-1', {
+      reason: 'bullying' as never,
+    });
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(clipReportRepository.save).toHaveBeenCalledTimes(1);
+    expect(transactionVideoClipRepository.update).toHaveBeenCalledWith(
+      { id: 'clip-1' },
+      {
+        status: VideoClipStatus.HIDDEN,
+        publishedPubliclyAt: null,
+        publicReviewStatus: PublicClipReviewStatus.PENDING,
+      },
+    );
+  });
+
+  it('propagates a failed hide out of the transaction rather than answering 201 with the report half-written', async () => {
+    const { service, videoClipRepository, transactionVideoClipRepository } =
+      buildService();
+    videoClipRepository.findOne.mockResolvedValue(clip);
+    const checkViolation = new Error('violates check constraint');
+    transactionVideoClipRepository.update.mockRejectedValue(checkViolation);
+
+    await expect(
+      service.reportClip('team-1', 'player-1', 'clip-1', {
+        reason: 'bullying' as never,
+      }),
+    ).rejects.toBe(checkViolation);
   });
 
   it("sends the best-effort notification email to the uploader's parent when the 24h cooldown allows it", async () => {

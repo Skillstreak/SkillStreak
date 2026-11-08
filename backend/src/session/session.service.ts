@@ -77,7 +77,11 @@ export class SessionService {
       requesterId,
       targetPlayer.teamId,
     );
-    const expiresAt = await this.performReissue(targetPlayer);
+    // ADR-0004's "lost phone" case: an authorized captain's request kills
+    // the old sessions now, not when someone eventually redeems.
+    const expiresAt = await this.performReissue(targetPlayer, {
+      invalidateExistingSessions: true,
+    });
     return { requested: true, expiresAt: expiresAt.toISOString() };
   }
 
@@ -105,7 +109,15 @@ export class SessionService {
             screenName,
           );
         if (targetPlayer) {
-          await this.performReissue(targetPlayer);
+          // NOT invalidating here (security audit, 2026-11-08). This
+          // endpoint needs no secret — an invite code is shared on purpose
+          // and screen names are on every roster — so a bump at request
+          // time let anyone log any child out, up to the daily cap. The
+          // old sessions die at redeem instead, which needs the code from
+          // the parent's inbox.
+          await this.performReissue(targetPlayer, {
+            invalidateExistingSessions: false,
+          });
         }
       }
     } catch (error) {
@@ -120,9 +132,10 @@ export class SessionService {
   /**
    * POST /players/session/redeem — no auth (the whole point: the caller
    * has no valid session). Validates the code (exists, unexpired, unused),
-   * nulls it (single-use), and issues a fresh JWT carrying the player's
-   * *current* tokenVersion. Unchanged by the 2026-07-27 redesign — only
-   * how the code *reaches* the player changed, not how it's redeemed.
+   * nulls it (single-use), bumps tokenVersion, and issues a fresh JWT
+   * carrying the bumped version — so every older session stops working at
+   * the moment this one is minted. The bump moved here from request time
+   * on 2026-11-08 (security audit): see requestReissueSelfService.
    */
   async redeem(code: string): Promise<SessionRedeemResponse> {
     return this.dataSource.transaction(async (manager) => {
@@ -133,10 +146,15 @@ export class SessionService {
       if (!player) {
         throw new InvalidOrExpiredCodeException();
       }
-      await this.playersService.clearSessionReissueCode(manager, player.id);
+      const newTokenVersion = player.tokenVersion + 1;
+      await this.playersService.consumeSessionReissueCode(
+        manager,
+        player.id,
+        newTokenVersion,
+      );
       const sessionToken = this.playerTokenService.issueFor(
         player.id,
-        player.tokenVersion,
+        newTokenVersion,
       );
       return { playerId: player.id, sessionToken };
     });
@@ -146,13 +164,17 @@ export class SessionService {
    * Shared by both trigger surfaces: claim the per-player cooldown (throws
    * SessionReissueRateLimitedException on failure — requestReissueSelfService
    * catches it into a silent/generic failure, triggerReissue lets it
-   * propagate), bump token_version + generate a fresh code inside the same
-   * row-locked transaction ADR-0004 Part 3 originally designed (unchanged),
+   * propagate), generate a fresh code — and bump token_version only when
+   * `invalidateExistingSessions` — inside the same row-locked transaction
+   * ADR-0004 Part 3 originally designed,
    * then best-effort email it to parent_contact. Returns the code's expiry
    * so triggerReissue can surface it to the (authorized) captain — the
    * code itself never leaves this method.
    */
-  private async performReissue(targetPlayer: Player): Promise<Date> {
+  private async performReissue(
+    targetPlayer: Player,
+    options: { invalidateExistingSessions: boolean },
+  ): Promise<Date> {
     // Two independent layers, checked in sequence (not parallel) so a
     // burst-blocked attempt never burns the daily budget — a security-
     // reviewer finding on this addendum's first cut: the burst cooldown
@@ -183,7 +205,9 @@ export class SessionService {
           manager,
           targetPlayer.id,
           {
-            newTokenVersion: locked.tokenVersion + 1,
+            ...(options.invalidateExistingSessions
+              ? { newTokenVersion: locked.tokenVersion + 1 }
+              : {}),
             code: generated.code,
             expiresAt: generated.expiresAt,
           },
@@ -204,9 +228,9 @@ export class SessionService {
     // a mail failure (or no parent contact on file, or SMTP unconfigured,
     // or parent_contact being a phone number — this app has no SMS
     // pipeline, a known pre-existing gap identical to consent's) must
-    // never fail the underlying reissue — the token_version bump and fresh
-    // code already succeeded, and are safe to leave in place for a future
-    // resend attempt.
+    // never fail the underlying reissue — the fresh code (and, on the
+    // captain path, the token_version bump) already succeeded, and is safe
+    // to leave in place for a future resend attempt.
     try {
       const parentContact =
         await this.playerPrivateInfoService.getParentContact(targetPlayer.id);

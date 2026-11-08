@@ -45,7 +45,11 @@ import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 import { DEFAULT_CLIP_FEED_LIMIT } from './dto/list-clips-query.dto';
 import { ReportClipDto } from './dto/report-clip.dto';
 import { ClipReport } from './entities/clip-report.entity';
-import { VideoClip, VideoClipStatus } from './entities/video-clip.entity';
+import {
+  PublicClipReviewStatus,
+  VideoClip,
+  VideoClipStatus,
+} from './entities/video-clip.entity';
 import { ObjectStorageService } from './object-storage.service';
 import { VideoProcessingService } from './video-processing.service';
 import {
@@ -59,6 +63,9 @@ import {
   CLIP_UPLOAD_URL_EXPIRES_SECONDS,
   ClipMimeType,
   DEFAULT_CLIP_RETENTION_DAYS,
+  clipObjectKeys,
+  clipPublishedStorageKey,
+  clipUploadStorageKey,
   extensionForMimeType,
 } from './video-clip.constants';
 import { positiveIntFromConfig } from '../error-log/error-log.util';
@@ -254,9 +261,7 @@ export class VideoClipsService {
     // would have produced. It also removes a write: one INSERT rather
     // than an INSERT plus an UPDATE.
     const clipId = randomUUID();
-    const storageKey = `clips/${teamId}/${clipId}.${extensionForMimeType(
-      dto.mimeType,
-    )}`;
+    const storageKey = clipUploadStorageKey(teamId, clipId, dto.mimeType);
 
     const clip = await this.videoClipRepository.save(
       this.videoClipRepository.create({
@@ -623,8 +628,17 @@ export class VideoClipsService {
 
       const strippedBytes =
         await this.videoProcessingService.readTempFile(outputPath);
+      // Written to a fresh server-only key, never back to the upload key —
+      // see clipPublishedStorageKey for the re-PUT bypass this closes.
+      const uploadKey = clip.storageKey;
+      const publishedKey = clipPublishedStorageKey(
+        teamId,
+        clip.id,
+        clip.mimeType as ClipMimeType,
+        randomUUID(),
+      );
       await this.objectStorageService.putObjectBuffer(
-        clip.storageKey,
+        publishedKey,
         strippedBytes,
         clip.mimeType,
       );
@@ -648,46 +662,47 @@ export class VideoClipsService {
       clip.caption = effectiveCaption;
       clip.taggedPlayerId = effectiveTag;
 
-      const lostRace = await this.dataSource.transaction(async (manager) => {
-        // `status: PENDING_UPLOAD` in the WHERE clause, and `affected`
-        // actually checked — security-reviewer finding, 2026-08-09. This
-        // update previously matched on id alone and ignored its result, so
-        // two things went wrong silently. A `complete` racing a delete (the
-        // child pressing "discard" during a background upload, or the
-        // hourly abandoned-upload sweep) would find 0 rows, commit an empty
-        // transaction, and still return 200 published with a working
-        // playback URL — for a clip whose row is gone and whose object this
-        // method had just re-created, leaving a file no retention sweep can
-        // ever reach, since both sweeps iterate rows. And two CONCURRENT
-        // completes would both match, both publish, and both post the
-        // challenge message, naming the tagged child twice in team chat.
-        const result = await manager.getRepository(VideoClip).update(
-          { id: clip.id, status: VideoClipStatus.PENDING_UPLOAD },
-          {
-            status: VideoClipStatus.PUBLISHED,
-            expiresAt,
-            caption: clip.caption,
-            taggedPlayerId: clip.taggedPlayerId,
-          },
+      let lostRace: boolean;
+      try {
+        lostRace = await this.publishInTransaction(
+          teamId,
+          clip,
+          publishedKey,
+          expiresAt,
         );
-        if (!result.affected) {
-          return true;
-        }
-        // Reads clip.taggedPlayerId, so it must run after the assignment
-        // above — otherwise a tag chosen during the background upload would
-        // publish without ever notifying the tagged teammate.
-        await this.postChallengeSystemMessageIfTagged(manager, teamId, clip);
-        return false;
-      });
+      } catch (error) {
+        // Nothing points at the stripped object if the publish did not
+        // commit; don't leave it behind.
+        await this.objectStorageService.deleteObjectIfExists(publishedKey);
+        throw error;
+      }
 
       if (lostRace) {
         // The row went away (or another request published it) while this
-        // one was remuxing. Remove the object this method re-uploaded a few
-        // lines above, so a deleted clip's bytes don't outlive it, and
-        // report the same 404 a fresh caller would get.
-        await this.objectStorageService.deleteObjectIfExists(clip.storageKey);
+        // one was remuxing. Remove what this call wrote, and the upload
+        // object too — a deleted clip's bytes must not outlive it, and a
+        // winning complete has already moved its row off the upload key.
+        await this.objectStorageService.deleteObjectIfExists(publishedKey);
+        await this.objectStorageService.deleteObjectIfExists(uploadKey);
         throw new ClipNotFoundException();
       }
+
+      // The client-writable original is unreferenced now. Best-effort: the
+      // clip is already published, a storage hiccup here must not turn
+      // that into an error, and every deletion path removes the upload key
+      // as well as the row's own (clipObjectKeys), so a leftover is still
+      // reclaimed with the clip.
+      try {
+        await this.objectStorageService.deleteObjectIfExists(uploadKey);
+      } catch (error) {
+        this.logger.warn(
+          `Clip ${clip.id}: published, but deleting the original upload ` +
+            `object failed; it is removed with the clip later: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+        );
+      }
+      clip.storageKey = publishedKey;
 
       const playbackUrl = await this.objectStorageService.createPresignedGetUrl(
         clip.storageKey,
@@ -714,6 +729,51 @@ export class VideoClipsService {
       // error into minutes of refused retries.
       await this.redisService.releaseClipProcessing(clip.id);
     }
+  }
+
+  /**
+   * The publish flip, extracted from completeUpload. Returns `true` when
+   * the conditional UPDATE matched nothing (lost a race), `false` when the
+   * clip is now published and points at `publishedKey`.
+   */
+  private publishInTransaction(
+    teamId: string,
+    clip: VideoClip,
+    publishedKey: string,
+    expiresAt: Date,
+  ): Promise<boolean> {
+    return this.dataSource.transaction(async (manager) => {
+      // `status: PENDING_UPLOAD` in the WHERE clause, and `affected`
+      // actually checked — security-reviewer finding, 2026-08-09. This
+      // update previously matched on id alone and ignored its result, so
+      // two things went wrong silently. A `complete` racing a delete (the
+      // child pressing "discard" during a background upload, or the
+      // hourly abandoned-upload sweep) would find 0 rows, commit an empty
+      // transaction, and still return 200 published with a working
+      // playback URL — for a clip whose row is gone and whose object this
+      // method had just re-created, leaving a file no retention sweep can
+      // ever reach, since both sweeps iterate rows. And two CONCURRENT
+      // completes would both match, both publish, and both post the
+      // challenge message, naming the tagged child twice in team chat.
+      const result = await manager.getRepository(VideoClip).update(
+        { id: clip.id, status: VideoClipStatus.PENDING_UPLOAD },
+        {
+          status: VideoClipStatus.PUBLISHED,
+          storageKey: publishedKey,
+          expiresAt,
+          caption: clip.caption,
+          taggedPlayerId: clip.taggedPlayerId,
+        },
+      );
+      if (!result.affected) {
+        return true;
+      }
+      // Reads clip.taggedPlayerId, so it must run after the assignment
+      // above — otherwise a tag chosen during the background upload would
+      // publish without ever notifying the tagged teammate.
+      await this.postChallengeSystemMessageIfTagged(manager, teamId, clip);
+      return false;
+    });
   }
 
   private logDurationDiscrepancyIfAny(
@@ -1011,7 +1071,9 @@ export class VideoClipsService {
       throw new NotYourClipException();
     }
 
-    await this.objectStorageService.deleteObjectIfExists(clip.storageKey);
+    for (const key of clipObjectKeys(clip)) {
+      await this.objectStorageService.deleteObjectIfExists(key);
+    }
     await this.videoClipRepository.delete({ id: clip.id });
 
     return { clipId, deleted: true };
@@ -1059,17 +1121,51 @@ export class VideoClipsService {
       throw new ClipReportRateLimitedException();
     }
 
+    // The report row and the hide commit together or not at all (security
+    // audit, 2026-11-08). They used to be two separate writes, and the
+    // hide set `status` alone — on a publicly published clip that
+    // violates CHK_video_clip_public_requires_published (a public clip
+    // must be `published`), so the UPDATE threw a 500 *after* the report
+    // row had committed. The clip stayed published, stayed in the public
+    // feed in front of strangers, and every retry hit the existing report
+    // and answered 409: a team report could never take a public clip down.
     let report: ClipReport;
     try {
-      report = await this.clipReportRepository.save(
-        this.clipReportRepository.create({
-          clipId,
-          reporterPlayerId: requesterId,
-          reportedUploaderPlayerId: clip.uploaderPlayerId,
-          reason: dto.reason,
-          note: dto.note ?? null,
-        }),
-      );
+      report = await this.dataSource.transaction(async (manager) => {
+        const reportRepository = manager.getRepository(ClipReport);
+        const saved = await reportRepository.save(
+          reportRepository.create({
+            clipId,
+            reporterPlayerId: requesterId,
+            reportedUploaderPlayerId: clip.uploaderPlayerId,
+            reason: dto.reason,
+            note: dto.note ?? null,
+          }),
+        );
+
+        // ADR-0010 Decision 4 — immediate, unconditional auto-hide. Not
+        // gated on the notification email below; the clip disappears from
+        // the feed on the next fetch regardless of whether it sends.
+        //
+        // Hiding also takes the clip out of the public feed, in the same
+        // statement, which is what the CHECK requires. The review status
+        // goes back to PENDING for the same reason PublicFeedService.report
+        // resets it: if an operator later restores the clip and the child
+        // re-publishes it, a person must look at it again rather than the
+        // earlier approval carrying a reported clip straight back to
+        // strangers.
+        await manager.getRepository(VideoClip).update(
+          { id: clipId },
+          {
+            status: VideoClipStatus.HIDDEN,
+            publishedPubliclyAt: null,
+            publicReviewStatus: clip.publishedPubliclyAt
+              ? PublicClipReviewStatus.PENDING
+              : clip.publicReviewStatus,
+          },
+        );
+        return saved;
+      });
     } catch (error) {
       if (isPostgresUniqueViolation(error, REPORT_UNIQUE_CONSTRAINT)) {
         // Backstop for a race between the pre-check above and this insert,
@@ -1078,14 +1174,6 @@ export class VideoClipsService {
       }
       throw error;
     }
-
-    // ADR-0010 Decision 4 — immediate, unconditional auto-hide. Not gated
-    // on anything below succeeding; the clip disappears from the feed on
-    // the next fetch regardless of whether the notification email sends.
-    await this.videoClipRepository.update(
-      { id: clipId },
-      { status: VideoClipStatus.HIDDEN },
-    );
 
     await this.sendReportNotificationBestEffort(teamId, clip.uploaderPlayerId);
 

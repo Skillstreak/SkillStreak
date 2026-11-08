@@ -1,8 +1,13 @@
 import { EntityManager } from 'typeorm';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { isSuccessorStillValid } from './successor-validation.util';
 
 function buildManager(options: {
-  target: { id: string; teamId: string } | null;
+  target: {
+    id: string;
+    teamId: string;
+    teamJoinStatus?: TeamJoinStatus;
+  } | null;
   activeErasureCount: number;
 }) {
   const playerRepository = {
@@ -61,9 +66,29 @@ describe('isSuccessorStillValid', () => {
     ).resolves.toBe(false);
   });
 
+  // Security audit, 2026-11-08 — a teamId-only check let a captain name a
+  // pending or rejected joiner as the successor who inherits the team.
+  it.each([TeamJoinStatus.PENDING, TeamJoinStatus.REJECTED])(
+    'returns false when the successor is on the team but their join is %s',
+    async (teamJoinStatus) => {
+      const { manager } = buildManager({
+        target: { id: successorId, teamId, teamJoinStatus },
+        activeErasureCount: 0,
+      });
+
+      await expect(
+        isSuccessorStillValid(manager, teamId, requesterId, successorId),
+      ).resolves.toBe(false);
+    },
+  );
+
   it('returns false when the successor is themselves currently mid-erasure', async () => {
     const { manager } = buildManager({
-      target: { id: successorId, teamId },
+      target: {
+        id: successorId,
+        teamId,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
+      },
       activeErasureCount: 1,
     });
 
@@ -74,7 +99,11 @@ describe('isSuccessorStillValid', () => {
 
   it('returns true for a still-valid, still-on-team, not-mid-erasure successor', async () => {
     const { manager, erasureRepository } = buildManager({
-      target: { id: successorId, teamId },
+      target: {
+        id: successorId,
+        teamId,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
+      },
       activeErasureCount: 0,
     });
 

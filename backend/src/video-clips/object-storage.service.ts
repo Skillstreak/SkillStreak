@@ -421,10 +421,10 @@ export class ObjectStorageService implements OnModuleInit {
   }
 
   /** Overwrites (or creates) the object at this key — used at `complete` to
-   * replace the client-uploaded original with the metadata-stripped remux,
-   * at the same storage_key (ADR-0010 Decision 3: "the remuxed file
-   * replaces the originally-uploaded object... the client-uploaded
-   * original is never itself exposed via a playback URL"). */
+   * write the metadata-stripped remux (ADR-0010 Decision 3: "the client-
+   * uploaded original is never itself exposed via a playback URL"). Since
+   * the 2026-11-08 security audit that is a fresh server-only key rather
+   * than the upload key — see `clipPublishedStorageKey`. */
   async putObjectBuffer(
     key: string,
     body: Buffer,

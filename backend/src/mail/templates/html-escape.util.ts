@@ -15,3 +15,15 @@ export function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+/**
+ * A plain-text mail body as an equivalent, escaped HTML part — for mail
+ * that is written as text and has no HTML template of its own. Escapes
+ * first, then turns line breaks into `<br>`, so nothing in the text (a
+ * child-chosen screen name, say) can become markup. Deliberately does not
+ * linkify: a URL inside user-authored text must not become a clickable
+ * link in a parent's inbox.
+ */
+export function plainTextToHtml(text: string): string {
+  return escapeHtml(text).replace(/\r?\n/g, '<br>\n');
+}
