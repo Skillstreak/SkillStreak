@@ -583,21 +583,29 @@ export class PlayersService {
   }
 
   /**
-   * ADR-0004 Part 3: the transactional write behind
-   * POST /players/:playerId/session-reissue — bumps token_version
-   * (invalidating every existing token for this player immediately) and
-   * stores a fresh session-reissue code + expiry in the same statement.
-   * Always takes a manager and the *new* tokenVersion explicitly (the
-   * caller has already read the current value under a row lock via
-   * findByIdForUpdate) rather than an atomic `+ 1` here, so the same
-   * pessimistic-write lock that guarantees "read current, then write
-   * current+1" is uncontended for the whole operation.
+   * ADR-0004 Part 3: the transactional write behind both session-reissue
+   * triggers — stores a fresh session-reissue code + expiry and, only when
+   * `newTokenVersion` is given, bumps token_version in the same statement
+   * (invalidating every existing token for this player immediately).
+   *
+   * The bump is optional since the 2026-11-08 security audit: the
+   * unauthenticated self-service trigger must not invalidate anything, or
+   * anyone holding a team's invite code could log any teammate out by
+   * screen name. That path leaves the bump to redemption
+   * (`consumeSessionReissueCode`). The captain-triggered path still bumps
+   * here — ADR-0004's "lost phone" case.
+   *
+   * Takes the *new* tokenVersion explicitly (the caller has already read
+   * the current value under a row lock via findByIdForUpdate) rather than
+   * an atomic `+ 1` here, so the same pessimistic-write lock that
+   * guarantees "read current, then write current+1" is uncontended for the
+   * whole operation.
    */
   async setSessionReissueCode(
     manager: EntityManager,
     playerId: string,
     fields: {
-      newTokenVersion: number;
+      newTokenVersion?: number;
       code: string;
       expiresAt: Date;
     },
@@ -605,7 +613,9 @@ export class PlayersService {
     await manager.getRepository(Player).update(
       { id: playerId },
       {
-        tokenVersion: fields.newTokenVersion,
+        ...(fields.newTokenVersion !== undefined
+          ? { tokenVersion: fields.newTokenVersion }
+          : {}),
         sessionReissueCode: fields.code,
         sessionReissueCodeExpiresAt: fields.expiresAt,
       },
@@ -656,17 +666,29 @@ export class PlayersService {
     return player;
   }
 
-  /** Single-use: nulls the code (and its expiry) once redeemed. */
-  async clearSessionReissueCode(
+  /**
+   * Redemption's write: single-use (nulls the code and its expiry) and
+   * bumps token_version in the same statement, so every session that
+   * existed before the code was redeemed stops working the moment the new
+   * one is minted. This is where the self-service path's invalidation
+   * happens (security audit, 2026-11-08) — at redeem, which needs the
+   * code from the parent's inbox, rather than at request, which needs
+   * nothing. Same "caller read the current value under a row lock" shape
+   * as setSessionReissueCode.
+   */
+  async consumeSessionReissueCode(
     manager: EntityManager,
     playerId: string,
+    newTokenVersion: number,
   ): Promise<void> {
-    await manager
-      .getRepository(Player)
-      .update(
-        { id: playerId },
-        { sessionReissueCode: null, sessionReissueCodeExpiresAt: null },
-      );
+    await manager.getRepository(Player).update(
+      { id: playerId },
+      {
+        tokenVersion: newTokenVersion,
+        sessionReissueCode: null,
+        sessionReissueCodeExpiresAt: null,
+      },
+    );
   }
 
   /**

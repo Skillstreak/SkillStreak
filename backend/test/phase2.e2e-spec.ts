@@ -874,6 +874,46 @@ describe('Phase 2 API (e2e)', () => {
           .send({ code })
           .expect(200);
       });
+
+      // Security audit, 2026-11-08. Needs no secret, so it must not be
+      // able to end a session: the bump used to happen here, letting
+      // anyone with a team's invite code log a child out by screen name.
+      it('a request alone leaves the existing session working; redeeming the code is what ends it', async () => {
+        const { teamId, inviteCode } = await createTeamFixture();
+        const { playerId, sessionToken: existingToken } =
+          await createTeamMember(teamId);
+        const { screenName } = await dataSource
+          .getRepository(Player)
+          .findOneOrFail({ where: { id: playerId } });
+
+        await request(app.getHttpServer())
+          .post('/api/v1/players/session/reissue-request')
+          .send({ inviteCode, screenName })
+          .expect(200);
+
+        await request(app.getHttpServer())
+          .get('/api/v1/players/me')
+          .set('Authorization', `Bearer ${existingToken}`)
+          .expect(200);
+
+        const code = await readReissueCode(playerId);
+        const redeemed = await request(app.getHttpServer())
+          .post('/api/v1/players/session/redeem')
+          .send({ code })
+          .expect(200);
+
+        await request(app.getHttpServer())
+          .get('/api/v1/players/me')
+          .set('Authorization', `Bearer ${existingToken}`)
+          .expect(401);
+        await request(app.getHttpServer())
+          .get('/api/v1/players/me')
+          .set(
+            'Authorization',
+            `Bearer ${(redeemed.body as { sessionToken: string }).sessionToken}`,
+          )
+          .expect(200);
+      });
     });
   });
 

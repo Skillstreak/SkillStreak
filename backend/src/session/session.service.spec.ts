@@ -14,7 +14,15 @@ function buildService(overrides: {
     findByIdForUpdate: jest.fn(),
     setSessionReissueCode: jest.fn(),
     findUniqueByTeamAndScreenName: jest.fn(),
+    findValidBySessionReissueCode: jest.fn(),
+    consumeSessionReissueCode: jest.fn(),
     ...overrides.playersService,
+  };
+  const playerTokenService = {
+    issueFor: jest.fn(
+      (playerId: string, tokenVersion: number) =>
+        `token:${playerId}:${tokenVersion}`,
+    ),
   };
   const redisService = {
     tryClaimSessionReissueCooldown: jest.fn().mockResolvedValue(true),
@@ -41,7 +49,7 @@ function buildService(overrides: {
   const service = new SessionService(
     dataSource as never,
     playersService as never,
-    undefined as never,
+    playerTokenService as never,
     playerPrivateInfoService as never,
     teamsService as never,
     redisService as never,
@@ -51,6 +59,7 @@ function buildService(overrides: {
   return {
     service,
     playersService,
+    playerTokenService,
     redisService,
     playerPrivateInfoService,
     teamsService,
@@ -251,5 +260,103 @@ describe('SessionService.requestReissueSelfService — the confirmed real "I alr
     ).resolves.toEqual({ requested: true });
     expect(playersService.setSessionReissueCode).toHaveBeenCalled();
     expect(mailService.sendMail).toHaveBeenCalledTimes(1);
+  });
+
+  // Security audit, 2026-11-08. This endpoint needs no secret (invite codes
+  // are shared on purpose, screen names are on every roster), and it used
+  // to bump token_version at request time — so anyone could log any child
+  // out, repeatedly up to the daily cap, without ever seeing the code.
+  it("does NOT bump token_version — a request alone must not end anyone's session", async () => {
+    const targetPlayer = {
+      id: 'target-1',
+      teamId: 'team-1',
+      screenName: 'FloorballStar15',
+      tokenVersion: 3,
+    };
+    const { service, playersService } = buildService({
+      teamsService: {
+        findByInviteCode: jest.fn().mockResolvedValue({ id: 'team-1' }),
+      },
+      playersService: {
+        findUniqueByTeamAndScreenName: jest
+          .fn()
+          .mockResolvedValue(targetPlayer),
+        findByIdForUpdate: jest.fn().mockResolvedValue(targetPlayer),
+      },
+    });
+
+    await service.requestReissueSelfService('TEAMCODE', 'FloorballStar15');
+
+    const [[, , fields]] = playersService.setSessionReissueCode.mock.calls as [
+      [unknown, string, Record<string, unknown>],
+    ];
+    expect(fields).not.toHaveProperty('newTokenVersion');
+    expect(fields).toEqual({
+      code: expect.any(String) as unknown,
+      expiresAt: expect.any(Date) as unknown,
+    });
+  });
+});
+
+describe("SessionService.triggerReissue — the captain path keeps ADR-0004's immediate invalidation", () => {
+  it('bumps token_version at request time (the "lost phone" case)', async () => {
+    const targetPlayer = {
+      id: 'target-1',
+      teamId: 'team-1',
+      screenName: 'FloorballStar15',
+      tokenVersion: 3,
+    };
+    const { service, playersService } = buildService({
+      playersService: {
+        findByIdOrThrow: jest.fn().mockResolvedValue(targetPlayer),
+        findByIdForUpdate: jest.fn().mockResolvedValue(targetPlayer),
+      },
+    });
+
+    await service.triggerReissue('captain-1', 'target-1');
+
+    expect(playersService.setSessionReissueCode).toHaveBeenCalledWith(
+      undefined,
+      'target-1',
+      expect.objectContaining({ newTokenVersion: 4 }),
+    );
+  });
+});
+
+describe('SessionService.redeem', () => {
+  it('bumps token_version as it consumes the code, and signs the new token with the bumped version', async () => {
+    const { service, playersService, playerTokenService } = buildService({
+      playersService: {
+        findValidBySessionReissueCode: jest
+          .fn()
+          .mockResolvedValue({ id: 'player-1', tokenVersion: 3 }),
+      },
+    });
+
+    const result = await service.redeem('CODE1234');
+
+    expect(playersService.consumeSessionReissueCode).toHaveBeenCalledWith(
+      undefined,
+      'player-1',
+      4,
+    );
+    expect(playerTokenService.issueFor).toHaveBeenCalledWith('player-1', 4);
+    expect(result).toEqual({
+      playerId: 'player-1',
+      sessionToken: 'token:player-1:4',
+    });
+  });
+
+  it('rejects an unknown or expired code without touching anything', async () => {
+    const { service, playersService } = buildService({
+      playersService: {
+        findValidBySessionReissueCode: jest.fn().mockResolvedValue(null),
+      },
+    });
+
+    await expect(service.redeem('NOPE')).rejects.toMatchObject({
+      code: 'invalid_or_expired_code',
+    });
+    expect(playersService.consumeSessionReissueCode).not.toHaveBeenCalled();
   });
 });
