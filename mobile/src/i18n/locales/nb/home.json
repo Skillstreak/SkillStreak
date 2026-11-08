@@ -120,6 +120,7 @@
     "contactChangeRateLimited": "Du har allerede bedt om en endring nylig — vent litt før du prøver igjen.",
     "contactChangeGenericError": "Noe gikk galt. Sjekk opplysningen, og prøv igjen.",
     "contactChangeConfirmedToast": "Bekreftet! Trer i kraft om ca. {{hours}} t. Den gamle adressen kan avbryte via mailen vi har sendt dit.",
+    "contactChangeAppliedToast": "Ferdig! Kontaktadressen er byttet.",
     "codeInvalid": "Den koden virker ikke lenger. Sjekk at du skrev den riktig, eller be om en ny.",
     "codeGenericError": "Noe gikk galt. Sjekk internettforbindelsen, og prøv igjen.",
     "erasureTeamInfoError": "Fikk ikke hentet laginformasjon. Prøv igjen.",

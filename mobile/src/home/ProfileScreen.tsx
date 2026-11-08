@@ -278,14 +278,22 @@ export function ProfileScreen({
       // the old address got a cancel link. Copy here must not imply it's
       // done already, or a real account owner would have no reason to
       // check that old inbox.
-      const appliesAtHours = Math.max(
-        1,
-        Math.round((new Date(result.appliesAt).getTime() - Date.now()) / 3_600_000),
-      );
+      //
+      // Exception (ADR-0012's 2026-11-08 amendment): when the current
+      // address had already approved, confirming applied it at once, and
+      // "takes effect in ~1 hr" would be wrong.
       setToastDurationMs(5000);
-      setToastMessage(
-        t('profileScreen.contactChangeConfirmedToast', { hours: appliesAtHours }),
-      );
+      if (result.applied) {
+        setToastMessage(t('profileScreen.contactChangeAppliedToast'));
+      } else {
+        const appliesAtHours = Math.max(
+          1,
+          Math.round((new Date(result.appliesAt).getTime() - Date.now()) / 3_600_000),
+        );
+        setToastMessage(
+          t('profileScreen.contactChangeConfirmedToast', { hours: appliesAtHours }),
+        );
+      }
       void fetchProfile();
     } catch (err) {
       if (err instanceof ApiError && err.code === 'invalid_or_expired_contact_change_code') {

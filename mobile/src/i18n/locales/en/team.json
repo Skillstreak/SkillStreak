@@ -39,6 +39,7 @@
     "reminderSentToast": "Reminder sent.",
     "consentNoLongerPendingToast": "This player is no longer waiting for approval.",
     "reminderErrorToast": "Something went wrong. Try again.",
+    "reminderBlockedPendingContactChangeToast": "This player's contact address is being changed. You can send a reminder once that's done.",
     "reissueSentToast": "A login code was sent to the parent/guardian.",
     "reissueRateLimitedToast": "A code was just sent — wait a minute before sending another."
   },

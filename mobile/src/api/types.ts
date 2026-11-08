@@ -355,6 +355,10 @@ export interface ConfirmContactChangeResponse {
   // the change immediately; it starts a 24h grace period the OLD address
   // can cancel from. See docs/adr/0012's addendum.
   appliesAt: string;
+  // docs/adr/0012's 2026-11-08 amendment — true when the current address
+  // had already approved the change, so confirming applied it at once.
+  // Optional because an API older than this client won't send it.
+  applied?: boolean;
 }
 
 export interface ConfirmContactChangeRequest {
