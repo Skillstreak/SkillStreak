@@ -19,7 +19,12 @@ import {
   TeamChatMessage,
 } from '../team-chat/entities/team-chat-message.entity';
 import { CLIP_MAX_FILE_SIZE_BYTES } from './video-clip.constants';
-import { VideoClip, VideoClipStatus } from './entities/video-clip.entity';
+import {
+  PublicClipReviewStatus,
+  VideoClip,
+  VideoClipStatus,
+} from './entities/video-clip.entity';
+import { ClipReport } from './entities/clip-report.entity';
 import { VideoClipsService } from './video-clips.service';
 
 // Chainable fake query builder, mirroring team-chat.service.spec.ts's
@@ -151,6 +156,7 @@ function buildService(
           getRepository: jest.fn((entity: unknown) => {
             if (entity === VideoClip) return transactionVideoClipRepository;
             if (entity === TeamChatMessage) return teamChatMessageRepository;
+            if (entity === ClipReport) return clipReportRepository;
             throw new Error(
               `Unexpected entity requested from the fake transaction manager: ${String(entity)}`,
             );
@@ -1062,7 +1068,8 @@ describe('VideoClipsService.reportClip', () => {
   });
 
   it('persists the report AND immediately hides the clip (ADR-0010 Decision 4 — the divergence from chat)', async () => {
-    const { service, videoClipRepository } = buildService();
+    const { service, videoClipRepository, transactionVideoClipRepository } =
+      buildService();
     videoClipRepository.findOne.mockResolvedValue(clip);
 
     const result = await service.reportClip('team-1', 'player-1', 'clip-1', {
@@ -1075,10 +1082,66 @@ describe('VideoClipsService.reportClip', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- jest's own matcher typing
       createdAt: expect.any(String),
     });
-    expect(videoClipRepository.update).toHaveBeenCalledWith(
+    expect(transactionVideoClipRepository.update).toHaveBeenCalledWith(
       { id: 'clip-1' },
-      { status: VideoClipStatus.HIDDEN },
+      {
+        status: VideoClipStatus.HIDDEN,
+        publishedPubliclyAt: null,
+        publicReviewStatus: undefined,
+      },
     );
+    expect(videoClipRepository.update).not.toHaveBeenCalled();
+  });
+
+  // Security audit, 2026-11-08. The hide used to set `status` alone, which
+  // on a publicly published clip violates
+  // CHK_video_clip_public_requires_published — the UPDATE threw after the
+  // report row had already committed, so the clip stayed public and every
+  // retry answered 409. The test/phase3 e2e proves it against the real
+  // CHECK; this pins the shape: one transaction, public flag cleared in
+  // the same statement as the hide.
+  it('clears publishedPubliclyAt and re-queues review in the same transactional update as the hide, for a publicly published clip', async () => {
+    const {
+      service,
+      videoClipRepository,
+      clipReportRepository,
+      dataSource,
+      transactionVideoClipRepository,
+    } = buildService();
+    videoClipRepository.findOne.mockResolvedValue({
+      ...clip,
+      publishedPubliclyAt: new Date('2026-11-01T10:00:00Z'),
+      publicReviewStatus: PublicClipReviewStatus.APPROVED,
+    });
+
+    await service.reportClip('team-1', 'player-1', 'clip-1', {
+      reason: 'bullying' as never,
+    });
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(clipReportRepository.save).toHaveBeenCalledTimes(1);
+    expect(transactionVideoClipRepository.update).toHaveBeenCalledWith(
+      { id: 'clip-1' },
+      {
+        status: VideoClipStatus.HIDDEN,
+        publishedPubliclyAt: null,
+        publicReviewStatus: PublicClipReviewStatus.PENDING,
+      },
+    );
+  });
+
+  it('propagates a failed hide out of the transaction rather than answering 201 with the report half-written', async () => {
+    const { service, videoClipRepository, transactionVideoClipRepository } =
+      buildService();
+    videoClipRepository.findOne.mockResolvedValue(clip);
+    const checkViolation = new Error('violates check constraint');
+    transactionVideoClipRepository.update.mockRejectedValue(checkViolation);
+
+    await expect(
+      service.reportClip('team-1', 'player-1', 'clip-1', {
+        reason: 'bullying' as never,
+      }),
+    ).rejects.toBe(checkViolation);
   });
 
   it("sends the best-effort notification email to the uploader's parent when the 24h cooldown allows it", async () => {

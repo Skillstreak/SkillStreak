@@ -45,7 +45,11 @@ import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 import { DEFAULT_CLIP_FEED_LIMIT } from './dto/list-clips-query.dto';
 import { ReportClipDto } from './dto/report-clip.dto';
 import { ClipReport } from './entities/clip-report.entity';
-import { VideoClip, VideoClipStatus } from './entities/video-clip.entity';
+import {
+  PublicClipReviewStatus,
+  VideoClip,
+  VideoClipStatus,
+} from './entities/video-clip.entity';
 import { ObjectStorageService } from './object-storage.service';
 import { VideoProcessingService } from './video-processing.service';
 import {
@@ -1059,17 +1063,51 @@ export class VideoClipsService {
       throw new ClipReportRateLimitedException();
     }
 
+    // The report row and the hide commit together or not at all (security
+    // audit, 2026-11-08). They used to be two separate writes, and the
+    // hide set `status` alone — on a publicly published clip that
+    // violates CHK_video_clip_public_requires_published (a public clip
+    // must be `published`), so the UPDATE threw a 500 *after* the report
+    // row had committed. The clip stayed published, stayed in the public
+    // feed in front of strangers, and every retry hit the existing report
+    // and answered 409: a team report could never take a public clip down.
     let report: ClipReport;
     try {
-      report = await this.clipReportRepository.save(
-        this.clipReportRepository.create({
-          clipId,
-          reporterPlayerId: requesterId,
-          reportedUploaderPlayerId: clip.uploaderPlayerId,
-          reason: dto.reason,
-          note: dto.note ?? null,
-        }),
-      );
+      report = await this.dataSource.transaction(async (manager) => {
+        const reportRepository = manager.getRepository(ClipReport);
+        const saved = await reportRepository.save(
+          reportRepository.create({
+            clipId,
+            reporterPlayerId: requesterId,
+            reportedUploaderPlayerId: clip.uploaderPlayerId,
+            reason: dto.reason,
+            note: dto.note ?? null,
+          }),
+        );
+
+        // ADR-0010 Decision 4 — immediate, unconditional auto-hide. Not
+        // gated on the notification email below; the clip disappears from
+        // the feed on the next fetch regardless of whether it sends.
+        //
+        // Hiding also takes the clip out of the public feed, in the same
+        // statement, which is what the CHECK requires. The review status
+        // goes back to PENDING for the same reason PublicFeedService.report
+        // resets it: if an operator later restores the clip and the child
+        // re-publishes it, a person must look at it again rather than the
+        // earlier approval carrying a reported clip straight back to
+        // strangers.
+        await manager.getRepository(VideoClip).update(
+          { id: clipId },
+          {
+            status: VideoClipStatus.HIDDEN,
+            publishedPubliclyAt: null,
+            publicReviewStatus: clip.publishedPubliclyAt
+              ? PublicClipReviewStatus.PENDING
+              : clip.publicReviewStatus,
+          },
+        );
+        return saved;
+      });
     } catch (error) {
       if (isPostgresUniqueViolation(error, REPORT_UNIQUE_CONSTRAINT)) {
         // Backstop for a race between the pre-check above and this insert,
@@ -1078,14 +1116,6 @@ export class VideoClipsService {
       }
       throw error;
     }
-
-    // ADR-0010 Decision 4 — immediate, unconditional auto-hide. Not gated
-    // on anything below succeeding; the clip disappears from the feed on
-    // the next fetch regardless of whether the notification email sends.
-    await this.videoClipRepository.update(
-      { id: clipId },
-      { status: VideoClipStatus.HIDDEN },
-    );
 
     await this.sendReportNotificationBestEffort(teamId, clip.uploaderPlayerId);
 

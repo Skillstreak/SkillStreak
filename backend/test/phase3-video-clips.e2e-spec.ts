@@ -27,6 +27,7 @@ import {
   ClipReportReason,
 } from '../src/video-clips/entities/clip-report.entity';
 import {
+  PublicClipReviewStatus,
   VideoClip,
   VideoClipStatus,
 } from '../src/video-clips/entities/video-clip.entity';
@@ -1118,6 +1119,44 @@ describe('Fas 3: video clips & the team feed (e2e)', () => {
         uploaderFeed.body as { clips: ClipFeedItemBody[] }
       ).clips.map((c) => c.clipId);
       expect(ids).not.toContain(clip.id);
+    });
+
+    // Security audit, 2026-11-08. Against the real
+    // CHK_video_clip_public_requires_published: the hide used to set
+    // `status` alone, the CHECK refused it with a 500 after the report
+    // row had already committed, the clip stayed in the public feed, and
+    // a retry answered 409 — a team report could never take it down.
+    it('hides a PUBLICLY published clip too: clears the public flag in the same write, and the report is not left half-done', async () => {
+      const teamId = await createTeam();
+      const { playerId: uploaderId } = await createPlayer(teamId);
+      const { playerId: reporterId, sessionToken: reporterToken } =
+        await createPlayer(teamId);
+      const clip = await createPublishedClip(teamId, uploaderId);
+      await dataSource.getRepository(VideoClip).update(
+        { id: clip.id },
+        {
+          publishedPubliclyAt: new Date(),
+          publicReviewStatus: PublicClipReviewStatus.APPROVED,
+        },
+      );
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/clips/${clip.id}/report`)
+        .set('Authorization', `Bearer ${reporterToken}`)
+        .send({ reason: ClipReportReason.APPEARS_WITHOUT_CONSENT })
+        .expect(201);
+
+      const row = await dataSource
+        .getRepository(VideoClip)
+        .findOneOrFail({ where: { id: clip.id } });
+      expect(row.status).toBe(VideoClipStatus.HIDDEN);
+      expect(row.publishedPubliclyAt).toBeNull();
+      expect(row.publicReviewStatus).toBe(PublicClipReviewStatus.PENDING);
+      expect(
+        await dataSource
+          .getRepository(ClipReport)
+          .count({ where: { clipId: clip.id, reporterPlayerId: reporterId } }),
+      ).toBe(1);
     });
 
     it("marks reportedByMe true only for the viewer's own report, never for someone else's, and never before the clip is hidden", async () => {
