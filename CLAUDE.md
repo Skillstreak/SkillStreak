@@ -297,9 +297,20 @@ Two consequences worth knowing before you plan a change:
   need `main` merged back into it before a PR will go green — which is
   the normal reason a PR that passed yesterday won't merge today.
 
-No review approval is required on either branch, so the "never merge to
-`main`" rule at the top of this section is still a policy this repo keeps
-by hand, not something GitHub enforces.
+**`main` requires one approving review; `review` requires none**
+(repository rulesets, checked 2026-11-06 — this section said neither
+branch needed one, which had gone stale). The catch is that every PR here
+is opened through `gh` as the project owner's own account, and GitHub
+never lets an author approve their own PR — so on a `review` → `main` PR
+that approval can never arrive, and the PR shows `BLOCKED` /
+`REVIEW_REQUIRED` with every check green. PR #138 sat for three weeks in
+exactly that state. The owner's admin role has `pull_request`-mode bypass
+on `main`, so the merge goes through the "bypass rules" checkbox in the
+merge box (or `gh pr merge N --merge --admin` from the owner's own shell).
+Say so when handing over the PR link — don't report it as waiting on a
+reviewer who does not exist. The "never merge to `main`" rule at the top
+of this section is unchanged and still kept by hand: the bypass is the
+owner's, not Claude Code's.
 
 ## Environment parity — every URL/link must match wherever it's deployed
 

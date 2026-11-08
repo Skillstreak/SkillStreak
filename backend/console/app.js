@@ -384,7 +384,12 @@
     var view = el('view');
     view.innerHTML = '<p class="muted">Loading…</p>';
     var parts = route.split('/');
-    var render = VIEWS[parts[0]];
+    /* Own keys only: the route comes from location.hash, so a link to
+     * `#constructor` or `#__proto__` must not resolve to something the
+     * object inherited rather than one of our views. */
+    var render = Object.prototype.hasOwnProperty.call(VIEWS, parts[0])
+      ? VIEWS[parts[0]]
+      : null;
     if (!render) { view.innerHTML = ''; return; }
     render(view, decodeURIComponent(parts[1] || ''));
     /* Views render asynchronously (they await an API call), so the
