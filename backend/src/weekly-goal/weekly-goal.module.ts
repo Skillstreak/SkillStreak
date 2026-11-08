@@ -5,6 +5,7 @@ import { Challenge } from '../challenges/entities/challenge.entity';
 import { Player } from '../players/entities/player.entity';
 import { PlayersModule } from '../players/players.module';
 import { Team } from '../teams/entities/team.entity';
+import { TeamsModule } from '../teams/teams.module';
 import { TeamPoolModule } from '../team-pool/team-pool.module';
 import { TrainingLogEntry } from '../training-logs/entities/training-log-entry.entity';
 import { WeeklyGoalController } from './weekly-goal.controller';
@@ -32,6 +33,11 @@ import { WeeklyGoalService } from './weekly-goal.service';
     AuthModule,
     PlayersModule,
     TeamPoolModule,
+    // ADR-0009's 2026-11-08 amendment — the captain's invite-code rotation
+    // route lives on this team-scoped controller, and the rotation itself
+    // belongs to TeamsService (the one place a team's code is ever
+    // written). No cycle: TeamsModule depends only on ModerationModule.
+    TeamsModule,
   ],
   controllers: [WeeklyGoalController],
   providers: [WeeklyGoalService],

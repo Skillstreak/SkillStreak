@@ -205,12 +205,15 @@ describe('Phase 2 API (e2e)', () => {
       })
       .expect(201);
     const { playerId, sessionToken } = response.body as CreatePlayerBody;
-    await dataSource
-      .getRepository(Player)
-      .update(
-        { id: playerId },
-        { parentalConsentStatus: ParentalConsentStatus.APPROVED },
-      );
+    // Both gates, out of band: a join the captain hasn't approved is not
+    // membership (2026-11-08), so "approved player" has to mean both.
+    await dataSource.getRepository(Player).update(
+      { id: playerId },
+      {
+        parentalConsentStatus: ParentalConsentStatus.APPROVED,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
+      },
+    );
     return { playerId, sessionToken };
   }
 
@@ -334,18 +337,83 @@ describe('Phase 2 API (e2e)', () => {
       expect((post.body as ApiErrorBody).error.code).toBe('team_mismatch');
     });
 
-    it('leaves a still-PENDING joiner exactly as before (open owner decision)', async () => {
-      const { teamId } = await createTeamFixture();
-      await createCaptain(teamId);
-      const { sessionToken } = await createTeamMember(
-        teamId,
-        ParentalConsentStatus.APPROVED,
-        TeamJoinStatus.PENDING,
-      );
+    // Owner decision 2026-11-08 (ADR-0007 / ADR-0009 amendments) — written
+    // to fail against the pre-fix code, where every read below was a 200.
+    it('a still-PENDING joiner sees no team content until the captain approves, then sees it', async () => {
+      const { teamId, inviteCode } = await createTeamFixture();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/chat/messages`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .send({ content: 'Träning kl 17 imorgon' })
+        .expect(201);
+      const { playerId: joinerId, sessionToken: joinerToken } =
+        await createTeamMember(
+          teamId,
+          ParentalConsentStatus.APPROVED,
+          TeamJoinStatus.PENDING,
+        );
+
+      const reads = [
+        'dashboard',
+        'roster',
+        'teammates',
+        'teammates?approvedOnly=true',
+        'weekly-goal',
+        'weekly-goal/history',
+        'leaderboard',
+        'chat/messages',
+        'clips',
+        'clips/challenges/pending',
+      ];
+      for (const path of reads) {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/teams/${teamId}/${path}`)
+          .set('Authorization', `Bearer ${joinerToken}`);
+        expect({ path, status: response.status }).toEqual({
+          path,
+          status: 403,
+        });
+        expect({
+          path,
+          code: (response.body as ApiErrorBody).error.code,
+        }).toEqual({ path, code: 'team_join_approval_required' });
+        const raw = JSON.stringify(response.body);
+        expect(raw).not.toContain(inviteCode);
+        expect(raw).not.toContain('Träning kl 17');
+      }
+
+      // Their own things still work, and carry nothing of the team's
+      // beyond its name and aggregate pool.
+      const me = await request(app.getHttpServer())
+        .get('/api/v1/players/me')
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
+      expect(JSON.stringify(me.body)).not.toContain(inviteCode);
+      expect(
+        (me.body as { player: { teamJoinStatus: string } }).player,
+      ).toMatchObject({ teamJoinStatus: 'pending' });
+      // (`/players/me/profile` is not exercised here: this file's fixture
+      // stores parent_contact unencrypted, which that route cannot decrypt.
+      // It never calls assertTeamMembership.)
+      await request(app.getHttpServer())
+        .get('/api/v1/players/me/erasure/status')
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
 
       await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/pending-joins/${joinerId}/approve`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+
+      const after = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/chat/messages`)
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
+      expect(JSON.stringify(after.body)).toContain('Träning kl 17');
+      await request(app.getHttpServer())
         .get(`/api/v1/teams/${teamId}/dashboard`)
-        .set('Authorization', `Bearer ${sessionToken}`)
+        .set('Authorization', `Bearer ${joinerToken}`)
         .expect(200);
     });
 
@@ -376,6 +444,99 @@ describe('Phase 2 API (e2e)', () => {
         expect(captain.isCaptain).toBe(true);
       },
     );
+  });
+
+  // ADR-0009's 2026-11-08 amendment — captain-only invite-code rotation.
+  describe('Invite-code rotation', () => {
+    const GENERATED = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
+
+    it('the captain rotates the code: the old one stops working at once, the new one works, and the dashboard shows it', async () => {
+      const { teamId, inviteCode: oldCode } = await createTeamFixture();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+      const { sessionToken: memberToken } = await createTeamMember(teamId);
+
+      const rotated = await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+      const newCode = (rotated.body as { inviteCode: string }).inviteCode;
+      expect(newCode).toMatch(GENERATED);
+      expect(newCode).not.toBe(oldCode);
+
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/invite/${oldCode}`)
+        .expect(404);
+      const preview = await request(app.getHttpServer())
+        .get(`/api/v1/teams/invite/${newCode}`)
+        .expect(200);
+      expect((preview.body as { teamId: string }).teamId).toBe(teamId);
+
+      // Joining with the old code is refused too, not just the preview.
+      const join = await request(app.getHttpServer())
+        .post('/api/v1/players')
+        .send({
+          inviteCode: oldCode,
+          screenName: `Late${randomUUID().slice(0, 6)}`,
+          avatarId: 'fox',
+          birthYear: 2014,
+          parentContact: 'late-parent@example.com',
+        })
+        .expect(404);
+      expect((join.body as ApiErrorBody).error.code).toBe(
+        'invite_code_not_found',
+      );
+
+      const dashboard = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/dashboard`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+      expect((dashboard.body as { inviteCode: string }).inviteCode).toBe(
+        newCode,
+      );
+
+      // Existing members are unaffected: membership is team_id, not code.
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/dashboard`)
+        .set('Authorization', `Bearer ${memberToken}`)
+        .expect(200);
+    });
+
+    it('is captain-only: a member gets not_team_captain, a pending joiner team_join_approval_required, another team team_mismatch', async () => {
+      const { teamId, inviteCode } = await createTeamFixture();
+      await createCaptain(teamId);
+      const { sessionToken: memberToken } = await createTeamMember(teamId);
+      const { sessionToken: pendingToken } = await createTeamMember(
+        teamId,
+        ParentalConsentStatus.APPROVED,
+        TeamJoinStatus.PENDING,
+      );
+      const { teamId: otherTeamId } = await createTeamFixture();
+      const { sessionToken: otherCaptainToken } =
+        await createCaptain(otherTeamId);
+
+      const cases: Array<[string, string]> = [
+        [memberToken, 'not_team_captain'],
+        [pendingToken, 'team_join_approval_required'],
+        [otherCaptainToken, 'team_mismatch'],
+      ];
+      for (const [token, code] of cases) {
+        const response = await request(app.getHttpServer())
+          .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+          .set('Authorization', `Bearer ${token}`)
+          .expect(403);
+        expect((response.body as ApiErrorBody).error.code).toBe(code);
+      }
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/invite-code/rotate`)
+        .expect(401);
+
+      // Nothing rotated.
+      const team = await dataSource
+        .getRepository(Team)
+        .findOneByOrFail({ id: teamId });
+      expect(team.inviteCode).toBe(inviteCode);
+    });
   });
 
   describe('Weekly-goal CRUD + state machine', () => {

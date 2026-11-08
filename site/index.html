@@ -1307,17 +1307,13 @@ footer .foot-row {
             <p class="wz-sub">Fråga din tränare om lagets kod.</p>
             <div class="wz-field">
               <label for="wzCode">Lagkod</label>
-              <input class="wz-input wz-code" id="wzCode" type="text" placeholder="T.ex. FALKEN24" maxlength="20" autocomplete="off">
+              <input class="wz-input wz-code" id="wzCode" type="text" placeholder="T.ex. K7MQ2XPA" maxlength="20" autocomplete="off">
             </div>
             <div class="wz-actions">
               <button class="btn btn-flame" id="wzCodeSubmit" style="width:100%">Hitta mitt lag</button>
             </div>
             <p class="wz-error" id="wzCodeError"></p>
-            <div class="wz-chip-row" id="wzCodeSuggestions"></div>
-            <button type="button" class="wz-generate-btn" id="wzCodeGenerate">🎲 Föreslå en lagkod åt mig</button>
-            <p class="wz-helper" style="text-align:center; margin-top:16px;">
-              Testa gärna koden <strong>FALKEN13</strong> för att se hur det ser ut att gå med i ett befintligt lag.
-            </p>
+            <button type="button" class="wz-generate-btn" id="wzStartNewTeam">✨ Starta ett nytt lag</button>
             <p class="wz-helper" style="text-align:center; margin-top:12px;">
               <a href="#" id="wzGoReturning" style="color:var(--flame-deep); font-weight:800;">Har du redan ett konto?</a>
             </p>
@@ -1328,7 +1324,7 @@ footer .foot-row {
             <p class="wz-sub">Ange lagets kod och ditt användarnamn, så skickar vi en inloggningskod till din (eller din förälders) e-post.</p>
             <div class="wz-field">
               <label for="wzReturningCode">Lagkod</label>
-              <input class="wz-input wz-code" id="wzReturningCode" type="text" placeholder="T.ex. FALKEN24" maxlength="20" autocomplete="off">
+              <input class="wz-input wz-code" id="wzReturningCode" type="text" placeholder="T.ex. K7MQ2XPA" maxlength="20" autocomplete="off">
             </div>
             <div class="wz-field">
               <label for="wzReturningName">Ditt användarnamn</label>
@@ -1365,13 +1361,12 @@ footer .foot-row {
             </button>
             <button class="wz-option-card" id="wzGoCreate">
               <span class="em">✨</span>
-              <span><strong>Vårt lag har ingen kod än</strong><span class="sub">Skapa ett nytt lag med den här koden</span></span>
+              <span><strong>Vi har inget lag här än</strong><span class="sub">Starta ett nytt lag — ni får en lagkod direkt</span></span>
             </button>
             <p class="wz-helper" style="text-align:center;">Osäker? Fråga din tränare innan du skapar ett nytt lag.</p>
           </div>
 
           <div class="wizard-step" data-step="nameTeam">
-            <span class="wz-code-chip" id="wzCreateCodeChip"></span>
             <h3>Namnge ditt nya lag</h3>
             <p class="wz-sub">Alla lagkompisar ser det här namnet.</p>
             <div class="wz-field">
@@ -1380,7 +1375,7 @@ footer .foot-row {
             </div>
             <button type="button" class="wz-generate-btn" id="wzTeamNameGenerate">🎲 Föreslå ett lagnamn åt mig</button>
             <div class="wz-actions">
-              <button class="btn btn-outline" data-back="notfound">Tillbaka</button>
+              <button class="btn btn-outline" data-back="code">Tillbaka</button>
               <button class="btn btn-flame" id="wzNameTeamSubmit">Nästa</button>
             </div>
             <p class="wz-error" id="wzNameTeamError"></p>
@@ -1388,7 +1383,7 @@ footer .foot-row {
 
           <div class="wizard-step" data-step="confirmCreate">
             <h3 id="wzConfirmCreateHeading"></h3>
-            <p class="wz-sub" id="wzConfirmCreateCode"></p>
+            <p class="wz-sub">Ni får lagets kod direkt när laget är skapat — dela den med lagkompisar så kan de gå med.</p>
             <p class="wz-sub">Ni kan bjuda in fler spelare med samma kod sen.</p>
             <div class="wz-actions">
               <button class="btn btn-outline" id="wzEditName">Byt namnet</button>
@@ -2602,44 +2597,18 @@ window.__beaconReady__ = (function () {
 
     var GENERIC_ERROR = 'Något gick fel just nu. Testa igen om en liten stund.';
 
-    // ---- Name/code generators & "taken" suggestion chips — used by the
-    // "🎲 Föreslå ... åt mig" buttons and by the invite_code_taken_concurrently
-    // / screen_name_taken_in_team conflict handlers further down. Word lists
-    // are generic, floorball-adjacent placeholders, not real club names, so
-    // a generated suggestion never accidentally reads as belonging to an
-    // existing real team.
+    // ---- Name generators & "taken" suggestion chips — used by the
+    // "🎲 Föreslå ... åt mig" buttons and by the screen_name_taken_in_team
+    // conflict handler further down. Word lists are generic, floorball-
+    // adjacent placeholders, not real club names, so a generated suggestion
+    // never accidentally reads as belonging to an existing real team.
+    //
+    // There is no team-CODE generator here any more (2026-11-08, ADR-0009's
+    // amendment): the server generates every new team's code, because a
+    // word-plus-two-digits code like FALKEN24 is exactly the guessable kind
+    // that let strangers find children's teams.
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function pickRandom(list) { return list[randomInt(0, list.length - 1)]; }
-
-    var CODE_WORDS = ['FALKEN', 'ÖRNEN', 'VARGEN', 'LEJONEN', 'TIGRARNA', 'BJÖRNARNA', 'RÄVARNA', 'HAJARNA', 'DRAKARNA', 'PANTRARNA', 'KOMETEN', 'BLIXTEN'];
-    function generateTeamCode() { return pickRandom(CODE_WORDS) + randomInt(10, 99); }
-    // Same word stem as the taken code (trailing digits stripped), new
-    // random suffix — close enough to recognize as "the code you tried",
-    // different enough to actually be free.
-    function suggestSimilarCodes(base) {
-      var stem = (base.replace(/[0-9]+$/, '') || base).toUpperCase();
-      var out = [];
-      var attempts = 0;
-      while (out.length < 5 && attempts < 20) {
-        attempts++;
-        var candidate = stem + randomInt(10, 99);
-        if (candidate !== base.toUpperCase() && out.indexOf(candidate) === -1) out.push(candidate);
-      }
-      return out;
-    }
-    // Confirms candidates against the real API (GET /teams/invite/:code —
-    // a 404 means available) rather than just hoping a randomly-generated
-    // string happens to be free, using the same endpoint the "code" step
-    // itself already calls.
-    function findAvailableCodes(candidates, wanted) {
-      return Promise.all(candidates.map(function (code) {
-        return apiCall('/api/v1/teams/invite/' + encodeURIComponent(code), { method: 'GET' })
-          .then(function () { return null; })
-          .catch(function (err) { return err.code === 'invite_code_not_found' ? code : null; });
-      })).then(function (results) {
-        return results.filter(Boolean).slice(0, wanted);
-      });
-    }
 
     var TEAM_NAME_PREFIXES = ['IBK', 'IK', 'FC', 'BK'];
     var TEAM_NAME_WORDS = ['Falken', 'Kometen', 'Blixten', 'Vargarna', 'Lejonen', 'Tigrarna', 'Björnarna', 'Hajarna', 'Drakarna', 'Pantrarna'];
@@ -2728,9 +2697,6 @@ window.__beaconReady__ = (function () {
       if (!code) { input.focus(); return; }
       void lookupCode(code, byId('wzCodeSubmit'));
     });
-    byId('wzCode').addEventListener('input', function () {
-      renderChips('wzCodeSuggestions', '', [], function () {});
-    });
 
     // ---- "Har du redan ett konto?" (docs/adr/0004-coach-auth-and-
     // session-reissue.md's 2026-07-27 addendum) — self-service session
@@ -2807,16 +2773,12 @@ window.__beaconReady__ = (function () {
       byId('wzCode').value = sharedCode;
       void lookupCode(sharedCode, byId('wzCodeSubmit'));
     })();
-    byId('wzCodeGenerate').addEventListener('click', function () {
-      var btn = byId('wzCodeGenerate');
-      setBusy(btn, true, 'Letar en ledig kod…');
-      findAvailableCodes([generateTeamCode(), generateTeamCode(), generateTeamCode()], 1)
-        .then(function (available) {
-          byId('wzCode').value = available[0] || generateTeamCode();
-          clearError('wzCodeError');
-          renderChips('wzCodeSuggestions', '', [], function () {});
-        })
-        .then(function () { setBusy(btn, false); });
+    // Starting a team needs no code typed first — the server generates it
+    // and the success step shows it (ADR-0009's 2026-11-08 amendment).
+    byId('wzStartNewTeam').addEventListener('click', function () {
+      clearError('wzCodeError');
+      state.inviteCode = '';
+      showStep('nameTeam');
     });
 
     // ---- Step: notfound
@@ -2827,7 +2789,6 @@ window.__beaconReady__ = (function () {
       input.select();
     });
     byId('wzGoCreate').addEventListener('click', function () {
-      byId('wzCreateCodeChip').textContent = 'Lagkod: ' + state.inviteCode;
       showStep('nameTeam');
     });
 
@@ -2841,7 +2802,6 @@ window.__beaconReady__ = (function () {
       clearError('wzNameTeamError');
       state.pendingTeamName = name;
       byId('wzConfirmCreateHeading').textContent = 'Skapa ' + name + '?';
-      byId('wzConfirmCreateCode').textContent = 'Lagkod: ' + state.inviteCode + ' — dela den med lagkompisar så de kan gå med senare.';
       showStep('confirmCreate');
     });
     byId('wzTeamNameGenerate').addEventListener('click', function () {
@@ -2993,13 +2953,15 @@ window.__beaconReady__ = (function () {
       clearError('wzParentError');
 
       var payload = {
-        inviteCode: state.inviteCode,
         screenName: state.screenName,
         avatarId: state.avatarId,
         birthYear: state.birthYear,
         parentContact: parentContact
       };
+      // Exactly one of the two: a new team sends only its name (the
+      // server generates the code), a join sends the code it looked up.
       if (state.isCreate) payload.teamName = state.pendingTeamName;
+      else payload.inviteCode = state.inviteCode;
 
       var btn = byId('wzParentSubmit');
       setBusy(btn, true, 'Skickar…');
@@ -3019,7 +2981,9 @@ window.__beaconReady__ = (function () {
               ? 'Du är lagets första spelare — och kapten! Vi har skickat en verifieringslänk till dig. Så fort du klickar på den kan du börja logga träningar och bjuda in lagkompisar.'
               : 'Du är lagets första spelare — och kapten! Så fort en förälder eller vårdnadshavare säger ja kan du börja logga träningar och bjuda in lagkompisar.';
             var chip = byId('wzSuccessCodeChip');
-            chip.textContent = 'Lagkod: ' + state.inviteCode + ' — dela den så fler kan gå med';
+            // The server-generated code, from the response — never what
+            // was typed earlier, which is not this team's code.
+            chip.textContent = 'Lagkod: ' + data.inviteCode + ' — dela den så fler kan gå med';
             chip.style.display = 'inline-block';
           } else {
             byId('wzSuccessEmoji').textContent = '✅';
@@ -3047,17 +3011,9 @@ window.__beaconReady__ = (function () {
             showError('wzCodeError', 'Lagkoden fungerar inte längre. Fråga din tränare om en ny kod.');
             showStep('code');
           } else if (err.code === 'invite_code_taken_concurrently') {
-            var takenCode = state.inviteCode;
-            byId('wzCode').value = '';
-            showError('wzCodeError', 'Åh nej — någon hann skapa ett lag med den koden precis före dig! Testa en annan kod, eller välj ett ledigt förslag nedan.');
-            showStep('code');
-            findAvailableCodes(suggestSimilarCodes(takenCode), 3).then(function (available) {
-              renderChips('wzCodeSuggestions', 'Lediga förslag:', available, function (code) {
-                byId('wzCode').value = code;
-                clearError('wzCodeError');
-                renderChips('wzCodeSuggestions', '', [], function () {});
-              });
-            });
+            // Two server-generated codes collided (not expected at ~40
+            // bits). Nothing the child typed is wrong — just try again.
+            showError('wzParentError', 'Något krånglade när laget skulle skapas. Tryck igen, så testar vi en gång till!');
           } else if (err.code === 'screen_name_taken_in_team') {
             showError('wzPlayerNameError', 'Det namnet är upptaget i laget — testa ett annat!');
             showStep('playerName');

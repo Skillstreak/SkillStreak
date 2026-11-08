@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Så fort det är klart låser vi upp knappen nedan!",
     "pausedBody": "En förälder eller vårdnadshavare har dragit tillbaka godkännandet. Prata med din tränare om du har frågor.",
     "refresh": "Kolla igen",
-    "refreshing": "Kollar..."
+    "refreshing": "Kollar...",
+    "teamTabsNote": "Lagets chatt, mål och lagsida öppnas så fort kaptenen har godkänt dig."
   },
   "profileScreen": {
     "loadError": "Kunde inte hämta din profil. Kolla din uppkoppling.",

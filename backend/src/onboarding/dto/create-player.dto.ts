@@ -8,6 +8,7 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { PlayerLocale } from '../../common/locale/player-locale.enum';
 import { trimString } from '../../common/validation/trim-string.transform';
@@ -65,11 +66,26 @@ const MAX_INVITE_CODE_LENGTH = 30;
 const MAX_TEAM_NAME_LENGTH = 60;
 
 export class CreatePlayerDto {
+  // Required to join, optional to create (ADR-0009's 2026-11-08
+  // amendment): the server now generates a new team's code, so a client
+  // creating a team has nothing to send here. `ValidateIf` rather than
+  // `IsOptional`, so that "neither inviteCode nor teamName" is still a 400
+  // for a missing code instead of slipping through to the service — and a
+  // code that *is* sent is still held to the same shape rules as before.
+  //
+  // An installed app built before that amendment still sends the code it
+  // typed (the one that 404'd) alongside `teamName`. That stays accepted
+  // and is simply not used as the new team's code — see
+  // OnboardingService.resolveTeam.
+  @ValidateIf(
+    (dto: CreatePlayerDto) =>
+      dto.teamName === undefined || dto.inviteCode !== undefined,
+  )
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()
   @MaxLength(MAX_INVITE_CODE_LENGTH)
-  inviteCode!: string;
+  inviteCode?: string;
 
   @IsString()
   @IsNotEmpty()

@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Jakmile to bude hotové, odemkneme tlačítko níže!",
     "pausedBody": "Rodič nebo zákonný zástupce svolení odvolal/a. Pokud máš otázky, promluv si s trenérem.",
     "refresh": "Zkontrolovat znovu",
-    "refreshing": "Kontroluje se..."
+    "refreshing": "Kontroluje se...",
+    "teamTabsNote": "Týmový chat, cíle a stránka týmu se otevřou, jakmile tě kapitán schválí."
   },
   "profileScreen": {
     "loadError": "Nepodařilo se načíst tvůj profil. Zkontroluj připojení.",

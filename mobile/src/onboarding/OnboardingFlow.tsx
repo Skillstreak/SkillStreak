@@ -52,7 +52,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
    * kept as one function so every error branch of `POST /players` is
    * handled in exactly one place. */
   const submitPlayer = async (current: OnboardingData) => {
-    if (!current.inviteCode || !current.avatarId || current.birthYear === null) {
+    // The create path has no code to send (ADR-0009's 2026-11-08
+    // amendment: the server generates it); the join path still needs one.
+    const hasTeamChoice = current.isCreatingTeam
+      ? Boolean(current.teamName)
+      : Boolean(current.inviteCode);
+    if (!hasTeamChoice || !current.avatarId || current.birthYear === null) {
       // Defensive only — the flow can't reach O5 without these set.
       return;
     }
@@ -60,7 +65,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setO5Error(null);
     try {
       const response = await createPlayer({
-        inviteCode: current.inviteCode,
         screenName: current.screenName,
         avatarId: current.avatarId,
         birthYear: current.birthYear,
@@ -70,17 +74,22 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         // INITIAL_ONBOARDING_DATA), so this is sent on every submit, not
         // conditionally like teamName below.
         locale: current.locale,
-        // Absent entirely for the join path — per the contract, that's
-        // what keeps this byte-for-byte the pre-ADR-0009 behavior.
+        // Exactly one of the two: the join path sends the code it looked
+        // up, the create path sends only the name. Whatever the player
+        // typed before choosing to create a team is not sent — the server
+        // generates the new team's code and returns it below.
         ...(current.isCreatingTeam && current.teamName
           ? { teamName: current.teamName }
-          : {}),
+          : { inviteCode: current.inviteCode }),
       });
       await setSessionToken(response.sessionToken);
       setData((prev) => ({
         ...prev,
         screenName: response.screenName,
         teamName: response.teamName,
+        // The founder's code comes from the server (Screen O6 shows it);
+        // a joiner keeps the code they typed.
+        inviteCode: response.inviteCode ?? prev.inviteCode,
         teamCreated: response.teamCreated,
         isCaptain: response.isCaptain,
       }));
@@ -93,30 +102,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       } else if (err instanceof ApiError && err.code === 'team_name_rejected_by_filter') {
         // Create path only (ADR-0009's response addendum) — non-judgmental
         // copy, same posture as team chat's message_rejected_by_filter.
-        // TeamsService.createTeam checks the team name AND the invite code
-        // against the same filter and throws this exact code either way
-        // (docs/adr/0009's Decision 5/backend implementation) — the client
-        // can't tell which field actually failed, so the copy deliberately
-        // names both possibilities and points at "Byt kod" rather than
-        // blaming the name alone, which would leave a kid whose *code* was
-        // the real problem stuck retyping an already-fine name.
+        // Since 2026-11-08 only the name can cause it: the code is
+        // generated server-side, and re-rolled there if it ever fails the
+        // filter.
         setTeamNameError(t('flow.teamNameRejected'));
         setFocusTeamName(true);
         setStep('O1a');
       } else if (err instanceof ApiError && err.code === 'invite_code_taken_concurrently') {
-        // Extremely rare race (ADR-0009 Decision 8) — the code is now
-        // genuinely gone. Input cleared, everything else (screen name,
-        // avatar, birth year, parent contact) stays in `data` untouched so
-        // the kid doesn't have to redo O3-O5 once a new code resolves.
-        setData((prev) => ({
-          ...prev,
-          inviteCode: '',
-          teamId: null,
-          isCreatingTeam: false,
-        }));
-        setO1Error(t('flow.codeTakenConcurrently'));
-        setSelectCodeOnO1(false);
-        setStep('O1');
+        // Since 2026-11-08 this means two server-generated codes collided
+        // (not expected at 40 bits) — nothing the child typed is wrong, so
+        // stay on O5 with everything kept and let them simply tap again.
+        setO5Error(t('flow.codeTakenConcurrently'));
       } else if (err instanceof ApiError && err.code === 'invite_code_not_found') {
         // Edge case: the code became invalid between O1 and now (e.g. a
         // coach retired it) — join path only, `teamName` absent.
@@ -197,6 +193,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             setStep('O1a');
           }}
           onReturningUser={() => setStep('RA1')}
+          onStartNewTeam={() => {
+            setO1Error(null);
+            setSelectCodeOnO1(false);
+            setData((prev) => ({ ...prev, inviteCode: '', teamId: null }));
+            setStep('O1a');
+          }}
         />
       );
 

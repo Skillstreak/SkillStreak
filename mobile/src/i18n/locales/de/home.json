@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Sobald das erledigt ist, schalten wir den Button unten frei!",
     "pausedBody": "Ein Elternteil oder Erziehungsberechtigter hat die Freigabe zurückgezogen. Sprich mit deinem Trainer, wenn du Fragen hast.",
     "refresh": "Nochmal prüfen",
-    "refreshing": "Wird geprüft..."
+    "refreshing": "Wird geprüft...",
+    "teamTabsNote": "Team-Chat, Ziele und die Teamseite öffnen sich, sobald der Kapitän dich bestätigt hat."
   },
   "profileScreen": {
     "loadError": "Dein Profil konnte nicht geladen werden. Prüf deine Verbindung.",

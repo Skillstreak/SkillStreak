@@ -74,6 +74,14 @@ interface ProfileScreenProps {
    * the version that goes stale.
    */
   isSelfVerification: boolean;
+  /**
+   * Whether the captain has approved this player's join. Until then every
+   * team route answers 403 (2026-11-08), and a pending joiner can be
+   * neither captain nor anyone's successor, so the erasure screen skips
+   * its team lookup rather than failing on it — erasure must always be
+   * reachable. Optional so a caller that predates it behaves as before.
+   */
+  teamJoinApproved?: boolean;
 }
 
 type ProfileView =
@@ -104,6 +112,7 @@ export function ProfileScreen({
   teamId,
   playerId,
   isSelfVerification,
+  teamJoinApproved = true,
 }: ProfileScreenProps) {
   const { t } = useTranslation('home');
   const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
@@ -292,8 +301,16 @@ export function ProfileScreen({
   // --- Fas 4.2 — account erasure handlers -------------------------------
 
   const fetchErasureTeamInfo = useCallback(async () => {
-    setErasureTeamInfoLoading(true);
     setErasureTeamInfoError(null);
+    // A not-yet-approved joiner is never captain, so there is no successor
+    // to pick and nothing to look up — and the lookup would 403.
+    if (!teamJoinApproved) {
+      setErasureViewerIsCaptain(false);
+      setErasureTeammateCount(0);
+      setErasureTeamInfoLoading(false);
+      return;
+    }
+    setErasureTeamInfoLoading(true);
     try {
       const [dashboard, teammatesResponse] = await Promise.all([
         getTeamDashboard(teamId),
@@ -303,12 +320,24 @@ export function ProfileScreen({
       setErasureTeammateCount(
         teammatesResponse.teammates.filter((teammate) => teammate.playerId !== playerId).length,
       );
-    } catch {
-      setErasureTeamInfoError(t('profileScreen.erasureTeamInfoError'));
+    } catch (err) {
+      // Same reasoning as the early return above, for a status that went
+      // stale between Home's fetch and this tap: the server says this
+      // player is not (or no longer) a member, so they are not a captain
+      // and erasure needs no successor. Never block erasure on it.
+      if (
+        err instanceof ApiError &&
+        (err.code === 'team_join_approval_required' || err.code === 'team_mismatch')
+      ) {
+        setErasureViewerIsCaptain(false);
+        setErasureTeammateCount(0);
+      } else {
+        setErasureTeamInfoError(t('profileScreen.erasureTeamInfoError'));
+      }
     } finally {
       setErasureTeamInfoLoading(false);
     }
-  }, [teamId, playerId, t]);
+  }, [teamId, playerId, t, teamJoinApproved]);
 
   const handleOpenErasureRequest = () => {
     setErasureSuccessorId(null);

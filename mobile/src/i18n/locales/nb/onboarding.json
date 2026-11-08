@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Hvilket lag spiller du for?",
-    "sub": "Spør treneren om lagets kode. Har dere ikke noe lag ennå? Finn på din egen kode, så hjelper vi deg å starte laget.",
-    "codePlaceholder": "F.eks. FALKEN24",
+    "sub": "Spør treneren din om lagets kode. Har dere ikke noe lag ennå? Start et nytt nedenfor.",
+    "codePlaceholder": "F.eks. K7MQ2XPA",
     "findTeamButton": "Finn laget mitt",
-    "returningUserButton": "Jeg har allerede en konto"
+    "returningUserButton": "Jeg har allerede en konto",
+    "startNewTeamButton": "Start et nytt lag"
   },
   "o1a": {
     "heading": "Vi fant ingen lag med koden {{inviteCode}}",
     "sub": "Er det et nytt lag? Gi det et navn, så oppretter vi det for deg.",
     "nameLabel": "Lagnavn",
     "namePlaceholder": "F.eks. IBK Falken G13",
-    "codeLabel": "Lagkode — del den med lagkameratene dine så de kan bli med",
-    "permanentTip": "Navnet og koden kan ikke endres senere, så dobbeltsjekk at alt stemmer!",
+    "permanentTip": "Navnet kan ikke endres senere, så dobbeltsjekk at det stemmer!",
     "createButton": "Opprett laget",
-    "wrongCode": "Jeg skrev nok feil kode"
+    "wrongCode": "Jeg skrev nok feil kode",
+    "headingNew": "Start et nytt lag",
+    "codeInfo": "Du får lagets kode så snart laget er opprettet — del den med lagkameratene dine så de kan bli med.",
+    "haveCode": "Jeg har en lagkode"
   },
   "o2": {
     "heading": "Blir du med i {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Det navnet er opptatt i laget — prøv et annet!",
-    "teamNameRejected": "Navnet eller lagkoden inneholdt ord som ikke funker her. Skriv om navnet, eller trykk «Bytt kode» over hvis det er koden.",
-    "codeTakenConcurrently": "Å nei — noen rakk å opprette et lag med den koden rett før deg! Prøv en annen kode, så ordner vi resten med en gang.",
+    "teamNameRejected": "Lagnavnet inneholdt ord som ikke funker her. Prøv et annet navn!",
+    "codeTakenConcurrently": "Noe gikk galt da laget skulle opprettes. Trykk igjen, så prøver vi en gang til!",
     "inviteCodeNotFound": "Den lagkoden virker ikke lenger. Spør treneren din om en ny kode.",
     "invalidParentContact": "Den kontaktinformasjonen ser ikke riktig ut — sjekk at det er en ekte e-postadresse eller et telefonnummer.",
     "invalidScreenName": "Det navnet funker ikke helt — prøv et annet!",

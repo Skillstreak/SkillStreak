@@ -21,7 +21,14 @@
     "challengeAckedToast": "Výzva od {{screenName}} je označena jako zhlédnutá.",
     "challengeAckErrorToast": "Výzvu se nepodařilo označit jako zhlédnutou. Zkus to znovu.",
     "captainTransferredToast": "Kapitánství bylo předáno hráči {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Odkaz zkopírován!"
+    "linkCopiedToast": "Odkaz zkopírován!",
+    "rotateButton": "🔄 Změnit kód týmu",
+    "rotateConfirmTitle": "Změnit kód týmu?",
+    "rotateConfirmBody": "Starý kód okamžitě přestane fungovat, i když je vytištěný nebo sdílený. Kdo už je v týmu, zůstává — ale kdo se chce přidat, potřebuje nový kód.",
+    "rotateConfirmCancel": "Zrušit",
+    "rotateConfirmConfirm": "Změnit kód",
+    "rotateSuccessToast": "Nový kód týmu: {{inviteCode}}",
+    "rotateErrorToast": "Kód se teď nepodařilo změnit. Zkus to znovu."
   },
   "k2": {
     "heading": "Tým podrobně",

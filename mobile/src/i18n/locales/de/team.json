@@ -21,7 +21,14 @@
     "challengeAckedToast": "Die Herausforderung von {{screenName}} ist als gesehen markiert.",
     "challengeAckErrorToast": "Die Herausforderung konnte nicht als gesehen markiert werden. Versuch es nochmal.",
     "captainTransferredToast": "Die Kapitänsrolle wurde an {{newCaptainScreenName}} übergeben. 👑",
-    "linkCopiedToast": "Link kopiert!"
+    "linkCopiedToast": "Link kopiert!",
+    "rotateButton": "🔄 Teamcode ändern",
+    "rotateConfirmTitle": "Teamcode ändern?",
+    "rotateConfirmBody": "Der alte Code funktioniert sofort nicht mehr, auch wenn er ausgedruckt oder geteilt wurde. Wer schon im Team ist, bleibt drin — aber wer noch beitreten will, braucht den neuen Code.",
+    "rotateConfirmCancel": "Abbrechen",
+    "rotateConfirmConfirm": "Code ändern",
+    "rotateSuccessToast": "Neuer Teamcode: {{inviteCode}}",
+    "rotateErrorToast": "Der Code konnte gerade nicht geändert werden. Versuch es noch mal."
   },
   "k2": {
     "heading": "Team im Detail",

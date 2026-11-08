@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Heti kun se on hoidettu, avaamme alla olevan napin!",
     "pausedBody": "Vanhempi tai huoltaja on perunut hyväksyntänsä. Juttele valmentajasi kanssa, jos sinulla on kysyttävää.",
     "refresh": "Tarkista uudelleen",
-    "refreshing": "Tarkistetaan..."
+    "refreshing": "Tarkistetaan...",
+    "teamTabsNote": "Joukkueen chat, tavoitteet ja joukkuesivu avautuvat heti, kun kapteeni on hyväksynyt sinut."
   },
   "profileScreen": {
     "loadError": "Profiiliasi ei saatu ladattua. Tarkista verkkoyhteytesi.",

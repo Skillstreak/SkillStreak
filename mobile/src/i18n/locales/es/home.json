@@ -111,7 +111,8 @@
     "suffixConsentOnly": "¡En cuanto esté hecho, desbloquearemos el botón de abajo!",
     "pausedBody": "Un padre, una madre o un tutor ha retirado su autorización. Habla con tu entrenador si tienes dudas.",
     "refresh": "Volver a comprobar",
-    "refreshing": "Comprobando..."
+    "refreshing": "Comprobando...",
+    "teamTabsNote": "El chat del equipo, los objetivos y la página del equipo se abren en cuanto el capitán te apruebe."
   },
   "profileScreen": {
     "loadError": "No se pudo cargar tu perfil. Revisa tu conexión.",

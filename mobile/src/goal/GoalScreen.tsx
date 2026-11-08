@@ -25,6 +25,9 @@ interface GoalScreenProps {
    * specific state" pattern K1's "Hantera veckans mål" shortcut already
    * uses. Defaults to 'card', the normal tab-bar entry point. */
   initialView?: 'card' | 'detail';
+  /** Called on `403 team_join_approval_required` — the shell then shows
+   * its waiting card (2026-11-08: a pending join sees no team content). */
+  onTeamJoinApprovalRequired?: () => void;
 }
 
 type GoalViewState = 'card' | 'builder' | 'history' | 'detail';
@@ -33,7 +36,11 @@ type GoalViewState = 'card' | 'builder' | 'history' | 'detail';
  * status-dependent actions, per docs/adr/0015-weekly-goal-per-player-completion.md
  * and docs/design/phase2.10-per-player-goal-flows.md. Self-contained fetch
  * on mount, same pattern as HomeScreen/TeamScreen. */
-export function GoalScreen({ teamId, initialView = 'card' }: GoalScreenProps) {
+export function GoalScreen({
+  teamId,
+  initialView = 'card',
+  onTeamJoinApprovalRequired,
+}: GoalScreenProps) {
   const { t } = useTranslation('goal');
   const [data, setData] = useState<CurrentGoalResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,12 +61,16 @@ export function GoalScreen({ teamId, initialView = 'card' }: GoalScreenProps) {
       setData(response);
       setLoadError(null);
       setActivateBlocked(false);
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'team_join_approval_required') {
+        onTeamJoinApprovalRequired?.();
+        return;
+      }
       setLoadError(t('g1.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [teamId, t]);
+  }, [teamId, t, onTeamJoinApprovalRequired]);
 
   useEffect(() => {
     void fetchGoal();

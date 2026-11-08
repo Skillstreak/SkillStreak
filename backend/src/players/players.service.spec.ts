@@ -7,6 +7,7 @@ import {
   CaptainTransferToSelfException,
   NotTeamCaptainException,
   PlayerNotFoundException,
+  TeamJoinApprovalRequiredException,
   TeamMismatchException,
 } from '../common/errors/exceptions';
 import { AccountErasureStatus } from '../account-erasure/entities/account-erasure-request.entity';
@@ -636,18 +637,45 @@ describe('PlayersService.assertTeamMembership', () => {
     ).rejects.toBeInstanceOf(TeamMismatchException);
   });
 
-  // PENDING is an open owner decision — this fix must not change it.
-  it.each([TeamJoinStatus.APPROVED, TeamJoinStatus.PENDING])(
-    'still admits a %s player on this team (PENDING posture unchanged)',
-    async (teamJoinStatus) => {
-      const player = { id: playerId, teamId, teamJoinStatus };
-      const service = buildService(player);
+  // Owner decision 2026-11-08 (ADR-0007 / ADR-0009 amendments): a join the
+  // captain has not approved yet is not membership. Distinct 403 code, so
+  // the client can show its waiting state rather than "wrong team".
+  it('rejects a still-PENDING joiner with team_join_approval_required', async () => {
+    const service = buildService({
+      id: playerId,
+      teamId,
+      teamJoinStatus: TeamJoinStatus.PENDING,
+    });
 
-      await expect(
-        service.assertTeamMembership(playerId, teamId),
-      ).resolves.toEqual(player);
-    },
-  );
+    await expect(
+      service.assertTeamMembership(playerId, teamId),
+    ).rejects.toBeInstanceOf(TeamJoinApprovalRequiredException);
+  });
+
+  it('a PENDING player asking about a foreign team still gets team_mismatch', async () => {
+    const service = buildService({
+      id: playerId,
+      teamId: 'other-team',
+      teamJoinStatus: TeamJoinStatus.PENDING,
+    });
+
+    await expect(
+      service.assertTeamMembership(playerId, teamId),
+    ).rejects.toBeInstanceOf(TeamMismatchException);
+  });
+
+  it('admits an APPROVED player on this team', async () => {
+    const player = {
+      id: playerId,
+      teamId,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
+    const service = buildService(player);
+
+    await expect(
+      service.assertTeamMembership(playerId, teamId),
+    ).resolves.toEqual(player);
+  });
 });
 
 describe('PlayersService.assertIsCaptainOfTeam', () => {
@@ -665,7 +693,13 @@ describe('PlayersService.assertIsCaptainOfTeam', () => {
       undefined as never,
       undefined as never,
     );
-    jest.spyOn(service, 'findByIdOrThrow').mockResolvedValue(player as never);
+    // A captain's own join is always APPROVED (createShell auto-approves
+    // the founder; a transfer target must already be approved), and
+    // assertTeamMembership now requires it.
+    jest.spyOn(service, 'findByIdOrThrow').mockResolvedValue({
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+      ...player,
+    } as never);
     return service;
   }
 
@@ -732,7 +766,7 @@ describe('PlayersService.assertIsCaptainOfTeam', () => {
 
     await expect(
       service.assertIsCaptainOfTeam(playerId, teamId),
-    ).resolves.toEqual(player);
+    ).resolves.toEqual({ ...player, teamJoinStatus: TeamJoinStatus.APPROVED });
   });
 });
 

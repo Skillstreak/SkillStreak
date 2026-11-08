@@ -33,6 +33,9 @@ function uniqueScreenName(prefix: string): string {
   return `${prefix}${randomUUID().slice(0, 6)}`;
 }
 
+// common/crypto/human-code.util.ts's alphabet and length.
+const GENERATED_INVITE_CODE = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
+
 function uniqueInviteCode(prefix: string): string {
   return `${prefix}${randomUUID().slice(0, 8).toUpperCase()}`;
 }
@@ -135,7 +138,14 @@ describe('Fas 2.9: self-service team creation (e2e)', () => {
         .getRepository(Team)
         .findOneOrFail({ where: { id: body.teamId } });
       expect(team.name).toBe(teamName);
-      expect(team.inviteCode).toBe(inviteCode);
+      // Server-generated (ADR-0009's 2026-11-08 amendment, superseding
+      // Decision 3): the code the client typed is NOT the team's code, and
+      // the generated one is returned so the founder can share it.
+      expect(team.inviteCode).toMatch(GENERATED_INVITE_CODE);
+      expect(team.inviteCode).not.toBe(inviteCode);
+      expect((body as { inviteCode: string | null }).inviteCode).toBe(
+        team.inviteCode,
+      );
 
       const player = await dataSource
         .getRepository(Player)
@@ -160,13 +170,57 @@ describe('Fas 2.9: self-service team creation (e2e)', () => {
       expect(season.label).toMatch(/^\d{4}$/);
       expect(season.startDate <= season.endDate).toBe(true);
 
-      // The invite code they typed is the team's permanent one — not
-      // regenerated (ADR-0009 Decision 3).
+      // The generated code finds the team — typed in lower case, as a
+      // child might — and the typed one does not.
       const previewResponse = await request(app.getHttpServer())
-        .get(`/api/v1/teams/invite/${inviteCode}`)
+        .get(`/api/v1/teams/invite/${team.inviteCode.toLowerCase()}`)
         .expect(200);
       expect((previewResponse.body as { teamId: string }).teamId).toBe(
         body.teamId,
+      );
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/invite/${inviteCode}`)
+        .expect(404);
+    });
+
+    it('creates a team with no inviteCode at all (the current client sends none)', async () => {
+      const response = await postPlayers({
+        teamName: 'Kodlösa Kometerna',
+        screenName: uniqueScreenName('NoCode'),
+        avatarId: 'fox',
+        birthYear: 2014,
+        parentContact: 'no-code-parent@example.com',
+      }).expect(201);
+      const body = response.body as CreatePlayerBody & {
+        inviteCode: string | null;
+      };
+      expect(body.teamCreated).toBe(true);
+      expect(body.inviteCode).toMatch(GENERATED_INVITE_CODE);
+    });
+
+    it('still 400s when neither inviteCode nor teamName is sent', async () => {
+      const response = await postPlayers({
+        screenName: uniqueScreenName('Neither'),
+        avatarId: 'fox',
+        birthYear: 2014,
+        parentContact: 'neither-parent@example.com',
+      }).expect(400);
+      expect((response.body as ApiErrorBody).error.code).toBe(
+        'validation_error',
+      );
+    });
+
+    it('a joiner gets inviteCode: null — the code is only returned to the team founder', async () => {
+      const { inviteCode } = await createExistingTeamFixture();
+      const response = await postPlayers({
+        inviteCode,
+        screenName: uniqueScreenName('Joiner'),
+        avatarId: 'fox',
+        birthYear: 2014,
+        parentContact: 'joiner-parent@example.com',
+      }).expect(201);
+      expect((response.body as { inviteCode: string | null }).inviteCode).toBe(
+        null,
       );
     });
 
@@ -192,13 +246,15 @@ describe('Fas 2.9: self-service team creation (e2e)', () => {
       expect(team).toBeNull();
     });
 
-    it("rejects an invite code that itself fails the content-safety filter with 422 (ACTION_PLAN.md's Phase 2.9 decision to check both fields)", async () => {
-      // "idiot" embedded in the invite code, not just the name. Suffixed
-      // with digits, not hex letters (unlike a raw randomUUID slice) — the
-      // filter's word-boundary check (keyword-match.util.ts) requires the
-      // banned word not be directly adjacent to another *letter*, so a
-      // letter suffix would make this flaky (matches only when the random
-      // suffix happens to start with a digit).
+    // Replaces the old "rejects an invite code that fails the filter" test:
+    // a typed code is no longer persisted (ADR-0009's 2026-11-08
+    // amendment), so a rude one is simply discarded — the child who typed
+    // it is not blocked from creating their team, and it never becomes
+    // the code their teammates repeat.
+    it('discards a typed invite code that fails the content-safety filter instead of persisting it', async () => {
+      // Suffixed with digits, not hex letters — the filter's word-boundary
+      // check (keyword-match.util.ts) needs the banned word not adjacent to
+      // another letter.
       const inviteCode = `IDIOT${Math.floor(100000 + Math.random() * 900000)}`;
 
       const response = await postPlayers({
@@ -208,16 +264,15 @@ describe('Fas 2.9: self-service team creation (e2e)', () => {
         avatarId: 'fox',
         birthYear: 2014,
         parentContact: 'bad-code-parent@example.com',
-      }).expect(422);
+      }).expect(201);
 
-      expect((response.body as ApiErrorBody).error.code).toBe(
-        'team_name_rejected_by_filter',
-      );
-
-      const team = await dataSource
-        .getRepository(Team)
-        .findOne({ where: { inviteCode } });
-      expect(team).toBeNull();
+      const team = await dataSource.getRepository(Team).findOneOrFail({
+        where: { id: (response.body as CreatePlayerBody).teamId },
+      });
+      expect(team.inviteCode).toMatch(GENERATED_INVITE_CODE);
+      expect(
+        await dataSource.getRepository(Team).findOne({ where: { inviteCode } }),
+      ).toBeNull();
     });
 
     it('a freshly self-created captain (own consent still pending) is blocked from captain-gated actions with 403 captain_consent_required, and can act once approved', async () => {

@@ -57,6 +57,12 @@ interface CreatePlayerResult {
   consentStatus: ParentalConsentStatus;
   isSelfVerification: boolean;
   teamJoinStatus: TeamJoinStatus;
+  // The new team's server-generated code — non-null only when this request
+  // created the team, so the founder can be shown the code they now need
+  // to share. A joiner already has the code they typed, and returning the
+  // team's code to someone the captain hasn't approved is exactly what the
+  // dashboard gate exists to stop.
+  inviteCode: string | null;
   sessionToken: string;
 }
 
@@ -90,9 +96,11 @@ export class OnboardingService {
    * create-a-team path instead, resolved inside the transaction below.
    */
   async createPlayer(dto: CreatePlayerDto): Promise<CreatePlayerResult> {
-    const existingTeam = await this.teamsService.findByInviteCode(
-      dto.inviteCode,
-    );
+    // A missing inviteCode is only possible with teamName present (the
+    // DTO's ValidateIf) — the create path, which needs no lookup.
+    const existingTeam = dto.inviteCode
+      ? await this.teamsService.findByInviteCode(dto.inviteCode)
+      : null;
     if (!existingTeam && !dto.teamName) {
       // Unchanged Phase 1 behavior: no team, and the client hasn't opted
       // into creating one.
@@ -226,6 +234,7 @@ export class OnboardingService {
         consentStatus: result.player.parentalConsentStatus,
         isSelfVerification: selfVerification,
         teamJoinStatus: result.player.teamJoinStatus,
+        inviteCode: result.teamCreated ? result.team.inviteCode : null,
         sessionToken: this.playerTokenService.issueFor(
           result.player.id,
           result.player.tokenVersion,
@@ -263,9 +272,12 @@ export class OnboardingService {
     let team: Team;
     try {
       team = await this.teamsService.createTeam(manager, {
-        // dto.teamName is guaranteed present here — see createPlayer.
+        // dto.teamName is guaranteed present here — see createPlayer. Any
+        // dto.inviteCode is deliberately not passed on: the server
+        // generates the code (ADR-0009's 2026-11-08 amendment), and an
+        // older app that still sends the code it typed gets a generated
+        // one regardless, returned as `inviteCode` in the response.
         name: dto.teamName as string,
-        inviteCode: dto.inviteCode,
       });
     } catch (error) {
       if (

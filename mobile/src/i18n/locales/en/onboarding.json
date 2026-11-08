@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Which team do you play for?",
-    "sub": "Ask your coach for the team's code. No team yet? Make up your own code and we'll help you start one.",
-    "codePlaceholder": "E.g. FALKEN24",
+    "sub": "Ask your coach for the team's code. No team yet? Start a new one below.",
+    "codePlaceholder": "E.g. K7MQ2XPA",
     "findTeamButton": "Find my team",
-    "returningUserButton": "I already have an account"
+    "returningUserButton": "I already have an account",
+    "startNewTeamButton": "Start a new team"
   },
   "o1a": {
     "heading": "We couldn't find a team with the code {{inviteCode}}",
     "sub": "Is it a new team? Give it a name and we'll create it for you.",
     "nameLabel": "Team name",
     "namePlaceholder": "e.g. IBK Falcons U13",
-    "codeLabel": "Team code — share it with your teammates so they can join",
-    "permanentTip": "The name and the code can't be changed later, so double-check they're right!",
+    "permanentTip": "The name can't be changed later, so double-check it's right!",
     "createButton": "Create the team",
-    "wrongCode": "I think I typed the code wrong"
+    "wrongCode": "I think I typed the code wrong",
+    "headingNew": "Start a new team",
+    "codeInfo": "You'll get the team's code as soon as the team is created — share it with your teammates so they can join.",
+    "haveCode": "I have a team code"
   },
   "o2": {
     "heading": "Joining {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "That name is already taken on the team — try another one!",
-    "teamNameRejected": "The name or team code contained words that don't work here. Rewrite the name, or tap \"Change code\" above if that's the problem.",
-    "codeTakenConcurrently": "Oh no — someone else created a team with that code just before you! Try another code, and we'll sort out the rest right away.",
+    "teamNameRejected": "The team name contained words that don't work here. Try another name!",
+    "codeTakenConcurrently": "Something went wrong creating the team. Tap again and we'll give it another go!",
     "inviteCodeNotFound": "That team code doesn't work anymore. Ask your coach for a new one.",
     "invalidParentContact": "That contact info doesn't look right — check that it's a real email address or phone number.",
     "invalidScreenName": "That name doesn't quite work — try another one!",

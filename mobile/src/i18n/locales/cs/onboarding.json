@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Za jaký tým hraješ?",
-    "sub": "Zeptej se trenéra na kód týmu. Ještě žádný tým nemáte? Vymysli si vlastní kód a my ti pomůžeme tým založit.",
-    "codePlaceholder": "Např. FALKEN24",
+    "sub": "Zeptej se trenéra na kód týmu. Ještě nemáte tým? Založ nový níže.",
+    "codePlaceholder": "Např. K7MQ2XPA",
     "findTeamButton": "Najít můj tým",
-    "returningUserButton": "Už mám účet"
+    "returningUserButton": "Už mám účet",
+    "startNewTeamButton": "Založit nový tým"
   },
   "o1a": {
     "heading": "Nenašli jsme tým s kódem {{inviteCode}}",
     "sub": "Je to nový tým? Dej mu jméno a my ho pro tebe založíme.",
     "nameLabel": "Název týmu",
     "namePlaceholder": "Např. IBK Falken U13",
-    "codeLabel": "Kód týmu — sdílej ho se spoluhráči, aby se mohli přidat",
-    "permanentTip": "Název ani kód už později nepůjde změnit, tak si to radši zkontroluj!",
+    "permanentTip": "Název později nejde změnit, tak si ho radši dvakrát zkontroluj!",
     "createButton": "Založit tým",
-    "wrongCode": "Asi jsem napsal kód špatně"
+    "wrongCode": "Asi jsem napsal kód špatně",
+    "headingNew": "Založ nový tým",
+    "codeInfo": "Kód týmu dostaneš hned, jak bude tým vytvořený — pošli ho spoluhráčům, ať se můžou přidat.",
+    "haveCode": "Mám kód týmu"
   },
   "o2": {
     "heading": "Připojuješ se k {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Tohle jméno je v týmu už obsazené — zkus jiné!",
-    "teamNameRejected": "Název nebo kód týmu obsahoval slova, která tady nejdou použít. Přepiš název, nebo klepni nahoře na „Změnit kód“, pokud je problém v kódu.",
-    "codeTakenConcurrently": "Jejda — někdo stihl vytvořit tým s tímto kódem těsně před tebou! Zkus jiný kód, zbytek hned zařídíme.",
+    "teamNameRejected": "Název týmu obsahoval slova, která tu nejdou. Zkus jiný název!",
+    "codeTakenConcurrently": "Při vytváření týmu se něco pokazilo. Klepni znovu a zkusíme to ještě jednou!",
     "inviteCodeNotFound": "Tenhle kód týmu už nefunguje. Zeptej se trenéra na nový kód.",
     "invalidParentContact": "Tenhle kontakt nevypadá správně — zkontroluj, že je to platná e-mailová adresa nebo telefonní číslo.",
     "invalidScreenName": "Tohle jméno úplně nefunguje — zkus jiné!",

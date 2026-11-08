@@ -21,7 +21,14 @@
     "challengeAckedToast": "Utfordringen fra {{screenName}} er merket som sett.",
     "challengeAckErrorToast": "Kunne ikke merke utfordringen som sett. Prøv igjen.",
     "captainTransferredToast": "Kapteinsrollen er overført til {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Lenke kopiert!"
+    "linkCopiedToast": "Lenke kopiert!",
+    "rotateButton": "🔄 Bytt lagkode",
+    "rotateConfirmTitle": "Bytte lagkode?",
+    "rotateConfirmBody": "Den gamle koden slutter å virke med en gang, selv om den er skrevet ut eller delt. Alle som allerede er med på laget påvirkes ikke — men den som skal bli med trenger den nye koden.",
+    "rotateConfirmCancel": "Avbryt",
+    "rotateConfirmConfirm": "Bytt kode",
+    "rotateSuccessToast": "Ny lagkode: {{inviteCode}}",
+    "rotateErrorToast": "Kunne ikke bytte koden akkurat nå. Prøv igjen."
   },
   "k2": {
     "heading": "Laget i detalj",

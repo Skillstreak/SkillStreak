@@ -23,6 +23,9 @@ interface CreatePlayerResponse {
   // Added 2026-07-27 for captain approval of new team joins — see
   // PlayersController's identical field for the post-signup case.
   teamJoinStatus: string;
+  // ADR-0009's 2026-11-08 amendment — the server-generated code of a team
+  // this request created; null when joining an existing team.
+  inviteCode: string | null;
   sessionToken: string;
 }
 
