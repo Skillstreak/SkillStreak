@@ -21,7 +21,14 @@
     "challengeAckedToast": "Le défi de {{screenName}} est marqué comme vu.",
     "challengeAckErrorToast": "Impossible de marquer le défi comme vu. Réessaie.",
     "captainTransferredToast": "Le brassard de capitaine a été transmis à {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Lien copié !"
+    "linkCopiedToast": "Lien copié !",
+    "rotateButton": "🔄 Changer le code d'équipe",
+    "rotateConfirmTitle": "Changer le code d'équipe ?",
+    "rotateConfirmBody": "L'ancien code cesse de fonctionner tout de suite, même s'il est imprimé ou partagé. Ceux qui sont déjà dans l'équipe restent — mais ceux qui veulent la rejoindre auront besoin du nouveau code.",
+    "rotateConfirmCancel": "Annuler",
+    "rotateConfirmConfirm": "Changer le code",
+    "rotateSuccessToast": "Nouveau code d'équipe : {{inviteCode}}",
+    "rotateErrorToast": "Impossible de changer le code pour l'instant. Réessaie."
   },
   "k2": {
     "heading": "Équipe en détail",

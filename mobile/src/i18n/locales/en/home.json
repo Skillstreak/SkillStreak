@@ -111,7 +111,8 @@
     "suffixConsentOnly": "As soon as that's done, we'll unlock the button below!",
     "pausedBody": "A parent or guardian has withdrawn their approval. Talk to your coach if you have questions.",
     "refresh": "Check again",
-    "refreshing": "Checking..."
+    "refreshing": "Checking...",
+    "teamTabsNote": "Team chat, goals and the team page open as soon as the captain approves you."
   },
   "profileScreen": {
     "loadError": "Couldn't load your profile. Check your connection.",

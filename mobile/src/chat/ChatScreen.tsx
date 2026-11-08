@@ -66,6 +66,9 @@ interface ChatScreenProps {
    * app's existing tab-switch mechanism (mirrors `HomeScreen`'s
    * `onNavigateToGoalTab` shape). */
   onGoToClipsTab: () => void;
+  /** Called on `403 team_join_approval_required` — the shell then shows
+   * its waiting card (2026-11-08: a pending join sees no team content). */
+  onTeamJoinApprovalRequired?: () => void;
 }
 
 const POLL_INTERVAL_MS = 5000;
@@ -111,7 +114,13 @@ interface ClipReportConfirmationState {
  * backgrounding. No backward pagination exists in the contract — this is a
  * rolling window of the most recent messages, not a searchable archive
  * (deliberate, per the flow doc's judgment call 11). */
-export function ChatScreen({ teamId, viewerPlayerId, onOpened, onGoToClipsTab }: ChatScreenProps) {
+export function ChatScreen({
+  teamId,
+  viewerPlayerId,
+  onOpened,
+  onGoToClipsTab,
+  onTeamJoinApprovalRequired,
+}: ChatScreenProps) {
   const { t } = useTranslation('chat');
   const [hasSeenIntro, setHasSeenIntroState] = useState<boolean | null>(null);
   const [consentStatus, setConsentStatus] = useState<ConsentStatus | null>(null);
@@ -209,10 +218,14 @@ export function ChatScreen({ teamId, viewerPlayerId, onOpened, onGoToClipsTab }:
       trackClipSeen(response.messages);
       setMessages(response.messages);
       setLoadError(null);
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'team_join_approval_required') {
+        onTeamJoinApprovalRequired?.();
+        return;
+      }
       setLoadError(t('ch1.loadError'));
     }
-  }, [teamId, t]);
+  }, [teamId, t, onTeamJoinApprovalRequired]);
 
   // Re-fetches the most recent window on every tick — not an incremental
   // `after` cursor — so an already-rendered message's `clip` (and

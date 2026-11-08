@@ -599,6 +599,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
         teamId={me.team.teamId}
         playerId={me.player.id}
         isSelfVerification={me.player.isSelfVerification}
+        teamJoinApproved={me.player.teamJoinStatus === 'approved'}
       />
     );
   }
@@ -734,13 +735,19 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           onPress={isApproved ? handleOpenSheet : () => undefined}
         />
 
-        <TeamPoolCard
-          pointsTotal={me.teamPool.pointsTotal}
-          rank={me.teamPool.rank}
-          teamCount={me.teamPool.teamCount}
-          effortRank={me.teamPool.effortRank}
-          onPress={() => setView('leaderboard')}
-        />
+        {/* Hidden until the captain approves the join (2026-11-08): the
+            leaderboard it opens is a team route the server refuses a
+            pending joiner, and the team's standing isn't theirs to see
+            yet. Consent still pending with an approved join keeps it. */}
+        {me.player.teamJoinStatus === 'approved' ? (
+          <TeamPoolCard
+            pointsTotal={me.teamPool.pointsTotal}
+            rank={me.teamPool.rank}
+            teamCount={me.teamPool.teamCount}
+            effortRank={me.teamPool.effortRank}
+            onPress={() => setView('leaderboard')}
+          />
+        ) : null}
 
         {isApproved && me.streak.alreadyLoggedToday && !feedbackHandled ? (
           <FeedbackCard

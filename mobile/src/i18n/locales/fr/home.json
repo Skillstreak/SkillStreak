@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Dès que c'est réglé, on débloque le bouton ci-dessous !",
     "pausedBody": "Un parent ou un tuteur légal a retiré son autorisation. Parles-en à ton entraîneur si tu as des questions.",
     "refresh": "Vérifier à nouveau",
-    "refreshing": "Vérification..."
+    "refreshing": "Vérification...",
+    "teamTabsNote": "Le chat de l'équipe, les objectifs et la page de l'équipe s'ouvrent dès que le capitaine t'a accepté."
   },
   "profileScreen": {
     "loadError": "Impossible de charger ton profil. Vérifie ta connexion.",

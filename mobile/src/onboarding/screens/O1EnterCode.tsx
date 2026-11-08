@@ -30,6 +30,10 @@ interface O1EnterCodeProps {
   /** docs/adr/0004-coach-auth-and-session-reissue.md's 2026-07-27 addendum
    * — the confirmed real "I already have an account" gap. */
   onReturningUser: () => void;
+  /** ADR-0009's 2026-11-08 amendment — the server generates a new team's
+   * code, so starting a team no longer needs a made-up code typed first.
+   * Goes straight to Screen O1a. */
+  onStartNewTeam: () => void;
 }
 
 export function O1EnterCode({
@@ -39,6 +43,7 @@ export function O1EnterCode({
   onFound,
   onNotFound,
   onReturningUser,
+  onStartNewTeam,
 }: O1EnterCodeProps) {
   const { t } = useTranslation('onboarding');
   const [code, setCode] = useState(initialCode);
@@ -124,6 +129,8 @@ export function O1EnterCode({
         label={t('o1.returningUserButton')}
         onPress={onReturningUser}
       />
+      <View style={styles.returningUserSpacer} />
+      <SecondaryButton label={t('o1.startNewTeamButton')} onPress={onStartNewTeam} />
     </ScreenContainer>
   );
 }

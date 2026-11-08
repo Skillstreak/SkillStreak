@@ -273,6 +273,13 @@ export function ClipsScreen({ teamId, viewerPlayerId, onOpened }: ClipsScreenPro
         setLoadError(null);
         return;
       }
+      // Since 2026-11-08 the join gate is checked first server-side, so a
+      // not-yet-approved joiner gets this code rather than consent's.
+      if (err instanceof ApiError && err.code === 'team_join_approval_required') {
+        setTeamJoinStatus('pending');
+        setLoadError(null);
+        return;
+      }
       setLoadError(t('v2.loadError'));
     } finally {
       setManualRefreshing(false);

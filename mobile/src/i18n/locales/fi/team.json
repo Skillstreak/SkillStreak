@@ -21,7 +21,14 @@
     "challengeAckedToast": "Haaste käyttäjältä {{screenName}} on merkitty nähdyksi.",
     "challengeAckErrorToast": "Haastetta ei voitu merkitä nähdyksi. Yritä uudelleen.",
     "captainTransferredToast": "Kapteeniuus on siirretty pelaajalle {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Linkki kopioitu!"
+    "linkCopiedToast": "Linkki kopioitu!",
+    "rotateButton": "🔄 Vaihda joukkuekoodi",
+    "rotateConfirmTitle": "Vaihdetaanko joukkuekoodi?",
+    "rotateConfirmBody": "Vanha koodi lakkaa toimimasta heti, vaikka se olisi tulostettu tai jaettu. Joukkueessa jo olevat eivät kärsi tästä — mutta liittyvät tarvitsevat uuden koodin.",
+    "rotateConfirmCancel": "Peruuta",
+    "rotateConfirmConfirm": "Vaihda koodi",
+    "rotateSuccessToast": "Uusi joukkuekoodi: {{inviteCode}}",
+    "rotateErrorToast": "Koodia ei voitu vaihtaa juuri nyt. Yritä uudelleen."
   },
   "k2": {
     "heading": "Joukkue tarkemmin",

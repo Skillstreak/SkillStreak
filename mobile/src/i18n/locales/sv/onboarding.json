@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Vilket lag kör du för?",
-    "sub": "Fråga din tränare om lagets kod. Har ni inget lag än? Hitta på en egen kod, så hjälper vi dig starta laget.",
-    "codePlaceholder": "T.ex. FALKEN24",
+    "sub": "Fråga din tränare om lagets kod. Har ni inget lag än? Starta ett nytt nedan.",
+    "codePlaceholder": "T.ex. K7MQ2XPA",
     "findTeamButton": "Hitta mitt lag",
-    "returningUserButton": "Jag har redan ett konto"
+    "returningUserButton": "Jag har redan ett konto",
+    "startNewTeamButton": "Starta ett nytt lag"
   },
   "o1a": {
     "heading": "Vi hittade inget lag med koden {{inviteCode}}",
     "sub": "Är det ett nytt lag? Ge det ett namn så skapar vi det åt dig.",
     "nameLabel": "Lagnamn",
     "namePlaceholder": "T.ex. IBK Falken P13",
-    "codeLabel": "Lagkod — dela den med dina lagkompisar så kan de gå med",
-    "permanentTip": "Namnet och koden går inte att ändra sen, så dubbelkolla att allt stämmer!",
+    "permanentTip": "Namnet går inte att ändra sen, så dubbelkolla att det stämmer!",
     "createButton": "Skapa laget",
-    "wrongCode": "Jag skrev nog fel kod"
+    "wrongCode": "Jag skrev nog fel kod",
+    "headingNew": "Starta ett nytt lag",
+    "codeInfo": "Du får lagets kod så fort laget är skapat — dela den med dina lagkompisar så kan de gå med.",
+    "haveCode": "Jag har en lagkod"
   },
   "o2": {
     "heading": "Ansluter du till {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Det namnet är upptaget i laget — testa ett annat!",
-    "teamNameRejected": "Namnet eller lagkoden innehöll ord som inte funkar här. Skriv om namnet, eller tryck \"Byt kod\" ovan om det är koden.",
-    "codeTakenConcurrently": "Åh nej — någon hann skapa ett lag med den koden precis före dig! Testa en annan kod, så ordnar vi resten direkt.",
+    "teamNameRejected": "Lagnamnet innehöll ord som inte funkar här. Testa ett annat namn!",
+    "codeTakenConcurrently": "Något krånglade när laget skulle skapas. Tryck igen, så testar vi en gång till!",
     "inviteCodeNotFound": "Lagkoden fungerar inte längre. Fråga din tränare om en ny kod.",
     "invalidParentContact": "Den kontaktuppgiften ser inte rätt ut — kolla att det är en riktig e-postadress eller ett telefonnummer.",
     "invalidScreenName": "Det namnet fungerar inte riktigt — testa ett annat!",
