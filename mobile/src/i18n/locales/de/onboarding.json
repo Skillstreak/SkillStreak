@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Für welches Team spielst du?",
-    "sub": "Frag deine Trainerin oder deinen Trainer nach dem Team-Code. Noch kein Team? Denk dir einen eigenen Code aus — wir helfen dir, das Team zu gründen.",
-    "codePlaceholder": "Z. B. FALKEN24",
+    "sub": "Frag deinen Trainer nach dem Teamcode. Noch kein Team? Gründe unten ein neues.",
+    "codePlaceholder": "Z. B. K7MQ2XPA",
     "findTeamButton": "Mein Team finden",
-    "returningUserButton": "Ich habe schon ein Konto"
+    "returningUserButton": "Ich habe schon ein Konto",
+    "startNewTeamButton": "Neues Team gründen"
   },
   "o1a": {
     "heading": "Wir haben kein Team mit dem Code {{inviteCode}} gefunden",
     "sub": "Ist es ein neues Team? Gib ihm einen Namen, dann legen wir es für dich an.",
     "nameLabel": "Teamname",
     "namePlaceholder": "z. B. IBK Falken U13",
-    "codeLabel": "Team-Code — teile ihn mit deinen Teamkolleginnen und -kollegen, damit sie mitmachen können",
-    "permanentTip": "Name und Code lassen sich später nicht mehr ändern — prüf also lieber zweimal!",
+    "permanentTip": "Der Name kann später nicht geändert werden, also prüf lieber zweimal, ob er stimmt!",
     "createButton": "Team anlegen",
-    "wrongCode": "Ich habe den Code wohl falsch geschrieben"
+    "wrongCode": "Ich habe den Code wohl falsch geschrieben",
+    "headingNew": "Gründe ein neues Team",
+    "codeInfo": "Du bekommst den Teamcode, sobald das Team erstellt ist — teile ihn mit deinen Mitspielern, damit sie beitreten können.",
+    "haveCode": "Ich habe einen Teamcode"
   },
   "o2": {
     "heading": "Trittst du {{teamName}} bei?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Dieser Name ist im Team schon vergeben — probier einen anderen!",
-    "teamNameRejected": "Der Name oder der Team-Code enthielt Wörter, die hier nicht erlaubt sind. Schreib den Namen neu, oder tippe oben auf „Code ändern“, falls es am Code liegt.",
-    "codeTakenConcurrently": "Oh nein — jemand hat kurz vor dir schon ein Team mit diesem Code erstellt! Probier einen anderen Code, den Rest erledigen wir sofort.",
+    "teamNameRejected": "Der Teamname enthielt Wörter, die hier nicht gehen. Versuch einen anderen Namen!",
+    "codeTakenConcurrently": "Beim Erstellen des Teams ist etwas schiefgegangen. Tipp noch mal, dann versuchen wir es erneut!",
     "inviteCodeNotFound": "Dieser Team-Code funktioniert nicht mehr. Frag deinen Trainer nach einem neuen Code.",
     "invalidParentContact": "Diese Kontaktangabe sieht nicht richtig aus — prüf, ob es eine echte E-Mail-Adresse oder Telefonnummer ist.",
     "invalidScreenName": "Dieser Name funktioniert nicht ganz — probier einen anderen!",

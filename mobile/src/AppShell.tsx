@@ -11,6 +11,7 @@ import { TipsScreen } from './tips/TipsScreen';
 import { TabBar, TabKey } from './navigation/TabBar';
 import { Toast } from './components/Toast';
 import { CaptainBanner } from './components/CaptainBanner';
+import { TeamJoinWaitingView } from './team/TeamJoinWaitingView';
 import {
   getChatMessages,
   getClips,
@@ -28,6 +29,7 @@ import {
   setLastSeenBonusAwardedAt,
 } from './api/localFlags';
 import { ApiError } from './api/ApiError';
+import type { ConsentStatus, TeamJoinStatus } from './api/types';
 import { rearmReminder } from './api/trainingReminder';
 import i18n from './i18n';
 import { colors } from './theme/colors';
@@ -112,24 +114,54 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
   const suppressNextCaptainBanner = useRef(false);
   const hasRunOnce = useRef(false);
 
+  // The two gates a player passes before the team's own content opens up
+  // (2026-11-08, ADR-0009's amendment): until the captain approves the
+  // join, every `/teams/:teamId/...` route answers 403
+  // `team_join_approval_required`. Chat, Mål and Laget show the waiting
+  // card instead of mounting a screen whose every fetch would fail; Home
+  // and Klipp already branch on these themselves.
+  const [joinGate, setJoinGate] = useState<{
+    consentStatus: ConsentStatus;
+    isSelfVerification: boolean;
+    teamJoinStatus: TeamJoinStatus;
+  } | null>(null);
+  const [joinGateRefreshing, setJoinGateRefreshing] = useState(false);
+  // Read inside `ensureIdentity` without making it a dependency — a
+  // pending join must re-ask the server on every foreground, an approved
+  // one never needs to again (approval does not go back to pending).
+  const joinApprovedRef = useRef(false);
+
   const ensureIdentity = useCallback(async (): Promise<{
     teamId: string;
     playerId: string;
+    joinApproved: boolean;
   } | null> => {
-    if (teamId && playerId) return { teamId, playerId };
+    if (teamId && playerId && joinApprovedRef.current) {
+      return { teamId, playerId, joinApproved: true };
+    }
     try {
       const me = await getMe();
+      const firstLoad = teamId === null;
       setTeamId(me.team.teamId);
       setPlayerId(me.player.id);
+      const joinApproved = me.player.teamJoinStatus === 'approved';
+      joinApprovedRef.current = joinApproved;
+      setJoinGate({
+        consentStatus: me.player.consentStatus,
+        isSelfVerification: me.player.isSelfVerification,
+        teamJoinStatus: me.player.teamJoinStatus,
+      });
       // ADR-0014 Decision 2 — the post-auth "server value is source of
       // truth" flip. `ensureIdentity` is the one call every AppShell mount
       // already makes, so this is the actual restore point for a
       // returning player's saved locale (the device guess in
       // `src/i18n/deviceLocale.ts` only matters pre-auth, at Screen O0).
       // Fire-and-forget — a locale switch has no loading state of its own
-      // and shouldn't block the rest of this fetch.
-      void i18n.changeLanguage(me.player.locale);
-      return { teamId: me.team.teamId, playerId: me.player.id };
+      // and shouldn't block the rest of this fetch. Only on the first
+      // load: a pending player's re-checks must not undo an in-session
+      // language change.
+      if (firstLoad) void i18n.changeLanguage(me.player.locale);
+      return { teamId: me.team.teamId, playerId: me.player.id, joinApproved };
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         onSessionInvalid();
@@ -262,6 +294,9 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
   const runForegroundChecks = useCallback(async () => {
     const identity = await ensureIdentity();
     if (!identity) return;
+    // Every check below reads a team route that 403s for a pending join —
+    // nothing to show, so nothing to ask.
+    if (!identity.joinApproved) return;
     await Promise.all([
       checkForCatchUp(identity.teamId),
       checkForCaptainBanner(identity.teamId),
@@ -340,6 +375,41 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
     setActiveTab(tab);
   }, []);
 
+  // The waiting card's "check again" — re-asks `GET /players/me`, and once
+  // the captain has approved, runs the foreground checks the gate skipped.
+  const handleJoinGateRefresh = useCallback(async () => {
+    setJoinGateRefreshing(true);
+    try {
+      await runForegroundChecks();
+    } finally {
+      setJoinGateRefreshing(false);
+    }
+  }, [runForegroundChecks]);
+
+  // A tab screen got `403 team_join_approval_required` although this shell
+  // believed the join was approved. Approval never goes back to pending,
+  // so this is only reachable with a stale shell state — trust the server
+  // and show the waiting card rather than the screen's generic error.
+  const handleTeamJoinApprovalRequired = useCallback(() => {
+    joinApprovedRef.current = false;
+    setJoinGate((prev) => ({
+      consentStatus: prev?.consentStatus ?? 'approved',
+      isSelfVerification: prev?.isSelfVerification ?? false,
+      teamJoinStatus: 'pending',
+    }));
+  }, []);
+
+  const joinLocked = joinGate !== null && joinGate.teamJoinStatus !== 'approved';
+  const joinWaiting = joinGate ? (
+    <TeamJoinWaitingView
+      consentStatus={joinGate.consentStatus}
+      isSelfVerification={joinGate.isSelfVerification}
+      teamJoinStatus={joinGate.teamJoinStatus}
+      onRefresh={() => void handleJoinGateRefresh()}
+      refreshing={joinGateRefreshing}
+    />
+  ) : null;
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -351,12 +421,15 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
         ) : null}
 
         {activeTab === 'chat' ? (
-          teamId && playerId ? (
+          joinLocked ? (
+            joinWaiting
+          ) : teamId && playerId ? (
             <ChatScreen
               teamId={teamId}
               viewerPlayerId={playerId}
               onOpened={() => setChatUnread(false)}
               onGoToClipsTab={() => setActiveTab('clips')}
+              onTeamJoinApprovalRequired={handleTeamJoinApprovalRequired}
             />
           ) : (
             <View style={styles.centered}>
@@ -380,8 +453,14 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
         ) : null}
 
         {activeTab === 'goal' ? (
-          teamId ? (
-            <GoalScreen teamId={teamId} initialView={goalTabInitialView} />
+          joinLocked ? (
+            joinWaiting
+          ) : teamId ? (
+            <GoalScreen
+              teamId={teamId}
+              initialView={goalTabInitialView}
+              onTeamJoinApprovalRequired={handleTeamJoinApprovalRequired}
+            />
           ) : (
             <View style={styles.centered}>
               <ActivityIndicator color={colors.flame} size="large" />
@@ -390,7 +469,9 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
         ) : null}
 
         {activeTab === 'team' ? (
-          teamId && playerId ? (
+          joinLocked ? (
+            joinWaiting
+          ) : teamId && playerId ? (
             <TeamScreen
               teamId={teamId}
               viewerPlayerId={playerId}
@@ -398,6 +479,7 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
               onSeeGoalDetail={handleSeeGoalDetail}
               onCaptainTransferred={handleCaptainTransferred}
               onChallengesChanged={setTeamChallengesPending}
+              onTeamJoinApprovalRequired={handleTeamJoinApprovalRequired}
             />
           ) : (
             <View style={styles.centered}>

@@ -21,7 +21,14 @@
     "challengeAckedToast": "Udfordringen fra {{screenName}} er markeret som set.",
     "challengeAckErrorToast": "Kunne ikke markere udfordringen som set. Prøv igen.",
     "captainTransferredToast": "Anførerskabet er overdraget til {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Link kopieret!"
+    "linkCopiedToast": "Link kopieret!",
+    "rotateButton": "🔄 Skift holdkode",
+    "rotateConfirmTitle": "Skifte holdkode?",
+    "rotateConfirmBody": "Den gamle kode holder op med at virke med det samme, også hvis den er printet eller delt. Alle, der allerede er på holdet, påvirkes ikke — men den, der skal være med, skal bruge den nye kode.",
+    "rotateConfirmCancel": "Annuller",
+    "rotateConfirmConfirm": "Skift kode",
+    "rotateSuccessToast": "Ny holdkode: {{inviteCode}}",
+    "rotateErrorToast": "Kunne ikke skifte koden lige nu. Prøv igen."
   },
   "k2": {
     "heading": "Holdet i detaljer",

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ChallengeClipModal } from './components/ChallengeClipModal';
@@ -15,6 +15,8 @@ import { TeamPoolCard } from '../home/components/TeamPoolCard';
 import { LeaderboardScreen } from '../leaderboard/LeaderboardScreen';
 import { GoalCard } from '../goal/components/GoalCard';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SecondaryButton } from '../components/SecondaryButton';
+import { ApiError } from '../api/ApiError';
 import { Toast } from '../components/Toast';
 import { LoadingOrRetry } from '../components/LoadingOrRetry';
 import {
@@ -25,6 +27,7 @@ import {
   getTeamDashboard,
   getTeammates,
   rejectTeamJoin,
+  rotateInviteCode,
 } from '../api/endpoints';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
@@ -60,6 +63,9 @@ interface TeamScreenProps {
    * "tell the parent directly, don't wait for the next foreground poll"
    * idiom as `onCaptainTransferred` above. */
   onChallengesChanged: (hasPending: boolean) => void;
+  /** Called on `403 team_join_approval_required` — the shell then shows
+   * its waiting card (2026-11-08: a pending join sees no team content). */
+  onTeamJoinApprovalRequired?: () => void;
 }
 
 type TeamViewState = 'summary' | 'roster' | 'captain-transfer' | 'leaderboard';
@@ -76,6 +82,7 @@ export function TeamScreen({
   onSeeGoalDetail,
   onCaptainTransferred,
   onChallengesChanged,
+  onTeamJoinApprovalRequired,
 }: TeamScreenProps) {
   const { t } = useTranslation('team');
   const [dashboard, setDashboard] = useState<TeamDashboardResponse | null>(null);
@@ -93,6 +100,7 @@ export function TeamScreen({
   const [pendingChallenges, setPendingChallenges] = useState<PendingChallengeEntry[]>([]);
   const [activeChallenge, setActiveChallenge] = useState<PendingChallengeEntry | null>(null);
   const [ackingClipId, setAckingClipId] = useState<string | null>(null);
+  const [rotatingCode, setRotatingCode] = useState(false);
 
   // "Fire both, render when both resolve" — one extra request, not a
   // second visible loading state, per the flow doc's Screen K1 note.
@@ -133,12 +141,16 @@ export function TeamScreen({
       } else {
         setPendingJoins([]);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'team_join_approval_required') {
+        onTeamJoinApprovalRequired?.();
+        return;
+      }
       setLoadError(t('k1.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [teamId, t, onChallengesChanged]);
+  }, [teamId, t, onChallengesChanged, onTeamJoinApprovalRequired]);
 
   useEffect(() => {
     void fetchAll();
@@ -172,6 +184,30 @@ export function TeamScreen({
       setDecidingPlayerId(null);
       setDecidingAction(null);
     }
+  };
+
+  const doRotateCode = async () => {
+    setRotatingCode(true);
+    try {
+      const { inviteCode } = await rotateInviteCode(teamId);
+      setDashboard((prev) => (prev ? { ...prev, inviteCode } : prev));
+      setToastMessage(t('k1.rotateSuccessToast', { inviteCode }));
+    } catch {
+      setToastMessage(t('k1.rotateErrorToast'));
+    } finally {
+      setRotatingCode(false);
+    }
+  };
+
+  const handleRotateCode = () => {
+    Alert.alert(t('k1.rotateConfirmTitle'), t('k1.rotateConfirmBody'), [
+      { text: t('k1.rotateConfirmCancel'), style: 'cancel' },
+      {
+        text: t('k1.rotateConfirmConfirm'),
+        style: 'destructive',
+        onPress: () => void doRotateCode(),
+      },
+    ]);
   };
 
   const dropChallenge = (clipId: string) => {
@@ -372,6 +408,16 @@ export function TeamScreen({
           <Text style={styles.inviteCodeLabel}>{t('k1.inviteCodeLabel')}</Text>
           <Text style={styles.inviteCode}>{dashboard.inviteCode}</Text>
           <PrimaryButton label={t('k1.inviteButton')} onPress={() => setInviteSheetOpen(true)} />
+          {/* ADR-0009's 2026-11-08 amendment — captain-only; the server
+              enforces that too. Behind a confirmation because it breaks
+              every copy of the old code already handed out. */}
+          {dashboard.viewerIsCaptain ? (
+            <SecondaryButton
+              label={t('k1.rotateButton')}
+              onPress={handleRotateCode}
+              loading={rotatingCode}
+            />
+          ) : null}
         </View>
 
         {/* Screen CAP1 (docs/design/phase8-pt-flows.md §8) — captain-only.

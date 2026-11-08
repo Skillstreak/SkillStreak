@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Hvilket hold spiller du for?",
-    "sub": "Spørg din træner om holdets kode. Har I ikke et hold endnu? Find selv på en kode, så hjælper vi dig med at starte holdet.",
-    "codePlaceholder": "F.eks. FALKEN24",
+    "sub": "Spørg din træner om holdets kode. Har I ikke et hold endnu? Start et nyt nedenfor.",
+    "codePlaceholder": "F.eks. K7MQ2XPA",
     "findTeamButton": "Find mit hold",
-    "returningUserButton": "Jeg har allerede en konto"
+    "returningUserButton": "Jeg har allerede en konto",
+    "startNewTeamButton": "Start et nyt hold"
   },
   "o1a": {
     "heading": "Vi fandt ikke et hold med koden {{inviteCode}}",
     "sub": "Er det et nyt hold? Giv det et navn, så opretter vi det for dig.",
     "nameLabel": "Holdnavn",
     "namePlaceholder": "F.eks. IBK Falken U13",
-    "codeLabel": "Holdkode — del den med dine holdkammerater, så de kan være med",
-    "permanentTip": "Navnet og koden kan ikke ændres senere, så dobbelttjek at det hele passer!",
+    "permanentTip": "Navnet kan ikke ændres senere, så dobbelttjek, at det er rigtigt!",
     "createButton": "Opret holdet",
-    "wrongCode": "Jeg skrev nok koden forkert"
+    "wrongCode": "Jeg skrev nok koden forkert",
+    "headingNew": "Start et nyt hold",
+    "codeInfo": "Du får holdets kode, så snart holdet er oprettet — del den med dine holdkammerater, så de kan være med.",
+    "haveCode": "Jeg har en holdkode"
   },
   "o2": {
     "heading": "Tilslutter du dig {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Det navn er allerede optaget på holdet — prøv et andet!",
-    "teamNameRejected": "Navnet eller holdkoden indeholdt ord, der ikke virker her. Skriv navnet om, eller tryk på \"Skift kode\" ovenfor, hvis det er koden.",
-    "codeTakenConcurrently": "Åh nej — nogen nåede at oprette et hold med den kode lige før dig! Prøv en anden kode, så ordner vi resten med det samme.",
+    "teamNameRejected": "Holdnavnet indeholdt ord, der ikke virker her. Prøv et andet navn!",
+    "codeTakenConcurrently": "Noget gik galt, da holdet skulle oprettes. Tryk igen, så prøver vi en gang til!",
     "inviteCodeNotFound": "Den holdkode virker ikke længere. Spørg din træner om en ny kode.",
     "invalidParentContact": "De kontaktoplysninger ser ikke rigtige ud — tjek, at det er en rigtig e-mailadresse eller et telefonnummer.",
     "invalidScreenName": "Det navn virker ikke helt rigtigt — prøv et andet!",

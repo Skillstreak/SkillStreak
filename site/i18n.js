@@ -246,10 +246,7 @@
       'Fråga din tränare om lagets kod.': 'Ask your coach for the team’s code.',
       'Lagkod': 'Team code',
       'Hitta mitt lag': 'Find my team',
-      '🎲 Föreslå en lagkod åt mig': '🎲 Suggest a team code for me',
-      'Testa gärna koden': 'Feel free to try the code',
-      'för att se hur det ser ut att gå med i ett befintligt lag.':
-        'to see what joining an existing team looks like.',
+      '✨ Starta ett nytt lag': '✨ Start a new team',
       'Har du redan ett konto?': 'Already have an account?',
       'Ditt användarnamn': 'Your username',
       'Tillbaka': 'Back',
@@ -262,8 +259,9 @@
       'Ingen fara — välj det som stämmer för dig:': 'No problem — pick whichever fits:',
       'Jag skrev nog fel': 'I probably typed it wrong',
       'Testa koden igen': 'Try the code again',
-      'Vårt lag har ingen kod än': 'Our team does not have a code yet',
-      'Skapa ett nytt lag med den här koden': 'Create a new team with this code',
+      'Vi har inget lag här än': 'We do not have a team here yet',
+      'Starta ett nytt lag — ni får en lagkod direkt':
+        'Start a new team — you get a team code right away',
       'Osäker? Fråga din tränare innan du skapar ett nytt lag.':
         'Not sure? Ask your coach before creating a new team.',
       'Namnge ditt nya lag': 'Name your new team',
@@ -271,6 +269,8 @@
       'Lagnamn': 'Team name',
       '🎲 Föreslå ett lagnamn åt mig': '🎲 Suggest a team name for me',
       'Nästa': 'Next',
+      'Ni får lagets kod direkt när laget är skapat — dela den med lagkompisar så kan de gå med.':
+        'You get the team code as soon as the team is created — share it with your teammates so they can join.',
       'Ni kan bjuda in fler spelare med samma kod sen.':
         'You can invite more players with the same code later.',
       'Byt namnet': 'Change the name',

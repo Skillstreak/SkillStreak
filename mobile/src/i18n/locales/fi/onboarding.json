@@ -6,20 +6,23 @@
   },
   "o1": {
     "heading": "Missä joukkueessa pelaat?",
-    "sub": "Kysy valmentajalta joukkueen koodi. Eikö joukkuetta ole vielä? Keksi oma koodi, niin autamme sinua perustamaan sen.",
-    "codePlaceholder": "Esim. FALKEN24",
+    "sub": "Kysy valmentajaltasi joukkueen koodia. Eikö joukkuetta ole vielä? Aloita uusi alta.",
+    "codePlaceholder": "Esim. K7MQ2XPA",
     "findTeamButton": "Etsi joukkueeni",
-    "returningUserButton": "Minulla on jo tili"
+    "returningUserButton": "Minulla on jo tili",
+    "startNewTeamButton": "Aloita uusi joukkue"
   },
   "o1a": {
     "heading": "Emme löytäneet joukkuetta koodilla {{inviteCode}}",
     "sub": "Onko kyseessä uusi joukkue? Anna sille nimi, niin luomme sen puolestasi.",
     "nameLabel": "Joukkueen nimi",
     "namePlaceholder": "Esim. IBK Falken P13",
-    "codeLabel": "Joukkuekoodi — jaa se joukkuekavereillesi, jotta hekin pääsevät mukaan",
-    "permanentTip": "Nimeä ja koodia ei voi muuttaa myöhemmin, joten tarkista että ne ovat oikein!",
+    "permanentTip": "Nimeä ei voi muuttaa myöhemmin, joten tarkista, että se on oikein!",
     "createButton": "Luo joukkue",
-    "wrongCode": "Taisin kirjoittaa koodin väärin"
+    "wrongCode": "Taisin kirjoittaa koodin väärin",
+    "headingNew": "Aloita uusi joukkue",
+    "codeInfo": "Saat joukkueen koodin heti, kun joukkue on luotu — jaa se joukkuekavereillesi, niin he voivat liittyä.",
+    "haveCode": "Minulla on joukkuekoodi"
   },
   "o2": {
     "heading": "Liitytkö joukkueeseen {{teamName}}?",
@@ -88,8 +91,8 @@
   },
   "flow": {
     "screenNameTaken": "Se nimi on jo varattu joukkueessa — kokeile jotain muuta!",
-    "teamNameRejected": "Nimi tai joukkuekoodi sisälsi sanoja, jotka eivät käy täällä. Kirjoita nimi uudelleen tai napauta yllä \"Vaihda koodi\", jos ongelma on koodissa.",
-    "codeTakenConcurrently": "Voi ei — joku ehti luoda joukkueen sillä koodilla juuri ennen sinua! Kokeile toista koodia, niin hoidamme loput heti.",
+    "teamNameRejected": "Joukkueen nimessä oli sanoja, jotka eivät käy täällä. Kokeile toista nimeä!",
+    "codeTakenConcurrently": "Joukkueen luomisessa meni jokin pieleen. Napauta uudelleen, niin yritetään vielä kerran!",
     "inviteCodeNotFound": "Tuo joukkuekoodi ei enää toimi. Kysy valmentajaltasi uusi koodi.",
     "invalidParentContact": "Tuo yhteystieto ei näytä oikealta — tarkista, että se on oikea sähköpostiosoite tai puhelinnumero.",
     "invalidScreenName": "Tuo nimi ei oikein toimi — kokeile jotain muuta!",

@@ -111,7 +111,8 @@
     "suffixConsentOnly": "Så snart det er klaret, låser vi knappen nedenfor op!",
     "pausedBody": "En forælder eller værge har trukket godkendelsen tilbage. Snak med din træner, hvis du har spørgsmål.",
     "refresh": "Tjek igen",
-    "refreshing": "Tjekker..."
+    "refreshing": "Tjekker...",
+    "teamTabsNote": "Holdets chat, mål og holdside åbner, så snart kaptajnen har godkendt dig."
   },
   "profileScreen": {
     "loadError": "Kunne ikke hente din profil. Tjek din forbindelse.",

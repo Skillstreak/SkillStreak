@@ -343,6 +343,16 @@ export function getTeammates(
 // --- Fas 4 additions: captain approval for new team joins -------------------
 // docs/adr/0009-self-service-team-creation.md's 2026-07-27 addendum.
 
+/** POST /teams/:teamId/invite-code/rotate — captain-only (ADR-0009's
+ * 2026-11-08 amendment). Replaces the team's invite code; the old one
+ * stops working immediately. Members already on the team are unaffected. */
+export function rotateInviteCode(teamId: string): Promise<{ inviteCode: string }> {
+  return apiClient.request<{ inviteCode: string }>(
+    `/teams/${encodeURIComponent(teamId)}/invite-code/rotate`,
+    { method: 'POST' },
+  );
+}
+
 /** GET /teams/:teamId/pending-joins — auth required, captain-gated
  * server-side (`403 not_team_captain`). Backs Laget's "Väntar på
  * godkännande" section. */

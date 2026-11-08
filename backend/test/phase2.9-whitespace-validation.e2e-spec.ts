@@ -126,6 +126,8 @@ describe('Fas 2.9: whitespace-only inviteCode/teamName validation (e2e)', () => 
       .getRepository(Team)
       .findOneOrFail({ where: { id: body.teamId } });
     expect(team.name).toBe('Trimmed Team');
-    expect(team.inviteCode).toBe(rawInviteCode.trim());
+    // The typed code is no longer persisted at all (ADR-0009's 2026-11-08
+    // amendment) — the team gets a generated one, untouched by whitespace.
+    expect(team.inviteCode).toMatch(/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/);
   });
 });

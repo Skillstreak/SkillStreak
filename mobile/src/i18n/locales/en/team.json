@@ -21,7 +21,14 @@
     "challengeAckedToast": "The challenge from {{screenName}} is marked as seen.",
     "challengeAckErrorToast": "Couldn't mark the challenge as seen. Try again.",
     "captainTransferredToast": "The captaincy has been handed over to {{newCaptainScreenName}}. 👑",
-    "linkCopiedToast": "Link copied!"
+    "linkCopiedToast": "Link copied!",
+    "rotateButton": "🔄 Change team code",
+    "rotateConfirmTitle": "Change the team code?",
+    "rotateConfirmBody": "The old code stops working right away, even if it's printed or shared somewhere. Everyone already on the team stays — but anyone who still wants to join needs the new code.",
+    "rotateConfirmCancel": "Cancel",
+    "rotateConfirmConfirm": "Change code",
+    "rotateSuccessToast": "New team code: {{inviteCode}}",
+    "rotateErrorToast": "Couldn't change the code right now. Try again."
   },
   "k2": {
     "heading": "Full team list",

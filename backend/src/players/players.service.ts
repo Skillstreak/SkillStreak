@@ -21,6 +21,7 @@ import {
 } from '../account-erasure/entities/account-erasure-request.entity';
 import { ParentalConsentStatus } from './player-consent-status.enum';
 import { TeamJoinStatus } from './team-join-status.enum';
+import { assertTeamJoinApproved } from './player-access.util';
 import { Player } from './entities/player.entity';
 import { StreakSaverEvent } from './entities/streak-saver-event.entity';
 import { StreakSaverEventType } from './streak-saver-event-type.enum';
@@ -269,10 +270,24 @@ export class PlayersService {
    * where it is enforced. Same `team_mismatch` as a foreign team: to the
    * team, a rejected joiner is a non-member.
    *
-   * PENDING is deliberately unchanged — whether a not-yet-approved joiner
-   * may read chat text is an open owner decision, not this check's to
-   * make. Content gated on approval (clips, posting) is asserted
-   * separately by each caller via `assertTeamJoinApproved`.
+   * A PENDING join is not membership either (owner decision, 2026-11-08,
+   * ADR-0007 / ADR-0009 amendments). Until the captain approves, a joiner
+   * is someone who typed a code — CLAUDE.md's "their own **verified**
+   * team" is exactly the step they have not passed. Before this, a
+   * pending account read chat text, the teammate list, the dashboard
+   * (invite code included), weekly goals and the leaderboard. It is
+   * enforced here rather than at each caller for the same reason as the
+   * REJECTED case: every team-scoped read and write funnels through this
+   * method, and a gate each caller must remember is the shape that let
+   * the public feed ship without one (see player-access.util.ts).
+   *
+   * PENDING gets `team_join_approval_required` (403), not `team_mismatch`:
+   * unlike a rejected or foreign account, this player *is* waiting on this
+   * team, and the client shows its waiting state for that exact code.
+   *
+   * What a pending player keeps is everything that is their own and
+   * nothing that is the team's: `GET /players/me`, their own profile,
+   * consent status and account erasure. None of those call this method.
    */
   async assertTeamMembership(
     playerId: string,
@@ -285,6 +300,7 @@ export class PlayersService {
     ) {
       throw new TeamMismatchException();
     }
+    assertTeamJoinApproved(player.teamJoinStatus);
     return player;
   }
 

@@ -17,6 +17,7 @@ import {
 import { PlayerPrivateInfo } from '../player-private-info/entities/player-private-info.entity';
 import { Player } from '../players/entities/player.entity';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { Team } from '../teams/entities/team.entity';
 import { TeamCoach } from '../teams/entities/team-coach.entity';
 import { Season } from '../team-pool/entities/season.entity';
@@ -64,9 +65,12 @@ async function run(): Promise<void> {
   const privateInfoRepo = dataSource.getRepository(PlayerPrivateInfo);
   const consentRecordRepo = dataSource.getRepository(ParentalConsentRecord);
 
-  let team = await teamRepo.findOne({
-    where: { inviteCode: SEED_INVITE_CODE },
-  });
+  // The RotateHumanChosenInviteCodes migration replaces FALKEN13 on any
+  // database that existed before it, so fall back to the team name —
+  // otherwise a re-run would create a second "IBK Falken P13".
+  let team =
+    (await teamRepo.findOne({ where: { inviteCode: SEED_INVITE_CODE } })) ??
+    (await teamRepo.findOne({ where: { name: SEED_TEAM_NAME } }));
 
   if (!team) {
     let coach = await coachRepo.findOne({
@@ -133,6 +137,16 @@ async function run(): Promise<void> {
   const existingCaptain = await playerRepo.findOne({
     where: { teamId: team.id, isCaptain: true },
   });
+  // A captain must be APPROVED: every captain route now goes through the
+  // team-join gate, and the column defaults to PENDING. Repairs databases
+  // seeded before this line existed.
+  if (
+    existingCaptain &&
+    existingCaptain.teamJoinStatus !== TeamJoinStatus.APPROVED
+  ) {
+    existingCaptain.teamJoinStatus = TeamJoinStatus.APPROVED;
+    await playerRepo.save(existingCaptain);
+  }
   if (!existingCaptain) {
     const captain = await playerRepo.save(
       playerRepo.create({
@@ -141,6 +155,7 @@ async function run(): Promise<void> {
         avatarId: SEED_CAPTAIN_AVATAR_ID,
         birthYear: SEED_CAPTAIN_BIRTH_YEAR,
         parentalConsentStatus: ParentalConsentStatus.APPROVED,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
         isCaptain: true,
       }),
     );
@@ -170,7 +185,7 @@ async function run(): Promise<void> {
     );
   }
 
-  console.log(`\nSeed complete. Invite code for the app: ${SEED_INVITE_CODE}`);
+  console.log(`\nSeed complete. Invite code for the app: ${team.inviteCode}`);
 
   await dataSource.destroy();
 }
