@@ -258,13 +258,31 @@ export class PlayersService {
    * Conventions section): the requesting player must belong to the team
    * named in the URL. Shared by every Phase 2 team-scoped endpoint so the
    * check lives in exactly one place, per that doc's implementer note.
+   *
+   * A captain-REJECTED join is not membership (security audit,
+   * 2026-11-08). `decideTeamJoin` only flips `teamJoinStatus` and leaves
+   * `teamId` pointing at the team, so before this check a rejected
+   * stranger who had once typed the invite code kept reading chat text,
+   * the teammate list, the dashboard (invite code included), weekly goals
+   * and the leaderboard — the captain's "no" changed nothing they could
+   * see. Every team-scoped read and write funnels through here, so this is
+   * where it is enforced. Same `team_mismatch` as a foreign team: to the
+   * team, a rejected joiner is a non-member.
+   *
+   * PENDING is deliberately unchanged — whether a not-yet-approved joiner
+   * may read chat text is an open owner decision, not this check's to
+   * make. Content gated on approval (clips, posting) is asserted
+   * separately by each caller via `assertTeamJoinApproved`.
    */
   async assertTeamMembership(
     playerId: string,
     teamId: string,
   ): Promise<Player> {
     const player = await this.findByIdOrThrow(playerId);
-    if (player.teamId !== teamId) {
+    if (
+      player.teamId !== teamId ||
+      player.teamJoinStatus === TeamJoinStatus.REJECTED
+    ) {
       throw new TeamMismatchException();
     }
     return player;
@@ -426,7 +444,17 @@ export class PlayersService {
     // findByIdForUpdate already throws PlayerNotFoundException if
     // newCaptainPlayerId doesn't exist at all.
     const target = await this.findByIdForUpdate(manager, newCaptainPlayerId);
-    if (target.teamId !== teamId) {
+    // A PENDING or REJECTED joiner is not yet (or never will be) a team
+    // member, so is "not on this team" for captaincy (security audit,
+    // 2026-11-08): captaincy grants approving joins, the invite code and
+    // the roster, and handing that to an account the captain never
+    // approved — or explicitly rejected — would undo the join gate
+    // entirely. Same generic code as a foreign-team target so the client
+    // needs no new error branch.
+    if (
+      target.teamId !== teamId ||
+      target.teamJoinStatus !== TeamJoinStatus.APPROVED
+    ) {
       throw new CaptainTransferTargetNotOnTeamException();
     }
     // docs/adr/0013-account-erasure.md Decision 4 (security-reviewer
@@ -808,9 +836,16 @@ export class PlayersService {
       ? manager.getRepository(AccountErasureRequest)
       : this.accountErasureRequestRepository;
 
+    // Approved joiners only: flipCaptaincy refuses a non-approved target
+    // (security audit, 2026-11-08), so offering one here would make every
+    // nightly erasure sweep throw on the same row forever — and crowning
+    // a joiner the captain never approved is the bug that check closes.
     const qb = playerRepository
       .createQueryBuilder('player')
       .where('player.team_id = :teamId', { teamId })
+      .andWhere('player.team_join_status = :approved', {
+        approved: TeamJoinStatus.APPROVED,
+      })
       .orderBy('player.created_at', 'ASC');
     if (excludePlayerIds.length > 0) {
       qb.andWhere('player.id NOT IN (:...excludePlayerIds)', {

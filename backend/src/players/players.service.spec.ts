@@ -40,7 +40,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: boolean;
       parentalConsentStatus?: ParentalConsentStatus;
     };
-    target: { id: string; teamId: string; isCaptain: boolean } | null;
+    target: {
+      id: string;
+      teamId: string;
+      isCaptain: boolean;
+      teamJoinStatus: TeamJoinStatus;
+    } | null;
     onTargetSave?: () => void | never;
     // docs/adr/0013-account-erasure.md Decision 4 — defaults to "no active
     // erasure request", i.e. the pre-ADR-0013 behavior for every existing
@@ -114,7 +119,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.APPROVED,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ requester, target });
 
     const result = await service.transferCaptaincy(
@@ -140,7 +150,12 @@ describe('PlayersService.transferCaptaincy', () => {
       teamId: 'other-team',
       isCaptain: true,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ requester, target });
 
     await expect(
@@ -150,7 +165,12 @@ describe('PlayersService.transferCaptaincy', () => {
 
   it('rejects with not_team_captain when the requester is not the current captain — this is the race the row lock closes', async () => {
     const requester = { id: requesterId, teamId, isCaptain: false };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ requester, target });
 
     await expect(
@@ -193,13 +213,41 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.APPROVED,
     };
-    const target = { id: targetId, teamId: 'other-team', isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId: 'other-team',
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ requester, target });
 
     await expect(
       service.transferCaptaincy(teamId, requesterId, targetId),
     ).rejects.toBeInstanceOf(CaptainTransferTargetNotOnTeamException);
   });
+
+  // Security audit, 2026-11-08 — the target check used to be teamId-only,
+  // so a captain could hand the team (join approvals, invite code, roster)
+  // to a joiner they had never approved, or had explicitly rejected.
+  it.each([TeamJoinStatus.PENDING, TeamJoinStatus.REJECTED])(
+    'rejects with captain_transfer_target_not_on_team when the target is on the team but their join is %s',
+    async (teamJoinStatus) => {
+      const requester = {
+        id: requesterId,
+        teamId,
+        isCaptain: true,
+        parentalConsentStatus: ParentalConsentStatus.APPROVED,
+      };
+      const target = { id: targetId, teamId, isCaptain: false, teamJoinStatus };
+      const { service, save } = buildService({ requester, target });
+
+      await expect(
+        service.transferCaptaincy(teamId, requesterId, targetId),
+      ).rejects.toBeInstanceOf(CaptainTransferTargetNotOnTeamException);
+      expect(save).not.toHaveBeenCalled();
+      expect(target.isCaptain).toBe(false);
+    },
+  );
 
   it('rejects with captain_transfer_target_mid_erasure when the target has an active (requested/grace_period) erasure request — ADR-0013 Decision 4', async () => {
     const requester = {
@@ -208,7 +256,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.APPROVED,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service, save } = buildService({
       requester,
       target,
@@ -229,7 +282,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.PENDING,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ requester, target });
 
     await expect(
@@ -244,7 +302,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.APPROVED,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({
       requester,
       target,
@@ -271,7 +334,12 @@ describe('PlayersService.transferCaptaincy', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.APPROVED,
     };
-    const target = { id: targetId, teamId, isCaptain: false };
+    const target = {
+      id: targetId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const boom = new Error('boom');
     const { service } = buildService({
       requester,
@@ -312,7 +380,12 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       isCaptain: boolean;
       parentalConsentStatus?: ParentalConsentStatus;
     };
-    successor: { id: string; teamId: string; isCaptain: boolean } | null;
+    successor: {
+      id: string;
+      teamId: string;
+      isCaptain: boolean;
+      teamJoinStatus: TeamJoinStatus;
+    } | null;
     successorHasActiveErasureRequest?: boolean;
   }) {
     const save = jest.fn((entity: { isCaptain: boolean }) =>
@@ -366,7 +439,12 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.PENDING,
     };
-    const successor = { id: successorId, teamId, isCaptain: false };
+    const successor = {
+      id: successorId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ departing, successor });
 
     const result = await service.applyDeferredCaptainHandoff(
@@ -395,6 +473,7 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       id: successorId,
       teamId: 'other-team',
       isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
     };
     const { service } = buildService({ departing, successor });
 
@@ -407,6 +486,31 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
     ).rejects.toBeInstanceOf(CaptainTransferTargetNotOnTeamException);
   });
 
+  it('rejects a successor whose join is still pending (security audit, 2026-11-08)', async () => {
+    const departing = {
+      id: departingPlayerId,
+      teamId,
+      isCaptain: true,
+      parentalConsentStatus: ParentalConsentStatus.APPROVED,
+    };
+    const successor = {
+      id: successorId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.PENDING,
+    };
+    const { service, save } = buildService({ departing, successor });
+
+    await expect(
+      service.applyDeferredCaptainHandoff(
+        teamId,
+        departingPlayerId,
+        successorId,
+      ),
+    ).rejects.toBeInstanceOf(CaptainTransferTargetNotOnTeamException);
+    expect(save).not.toHaveBeenCalled();
+  });
+
   it('still rejects a successor who is themselves already mid-erasure', async () => {
     const departing = {
       id: departingPlayerId,
@@ -414,7 +518,12 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.PENDING,
     };
-    const successor = { id: successorId, teamId, isCaptain: false };
+    const successor = {
+      id: successorId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({
       departing,
       successor,
@@ -437,7 +546,12 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       isCaptain: false,
       parentalConsentStatus: ParentalConsentStatus.PENDING,
     };
-    const successor = { id: successorId, teamId, isCaptain: false };
+    const successor = {
+      id: successorId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service } = buildService({ departing, successor });
 
     await expect(
@@ -456,7 +570,12 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
       isCaptain: true,
       parentalConsentStatus: ParentalConsentStatus.PENDING,
     };
-    const successor = { id: successorId, teamId, isCaptain: false };
+    const successor = {
+      id: successorId,
+      teamId,
+      isCaptain: false,
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    };
     const { service, save } = buildService({ departing, successor });
 
     await expect(
@@ -471,6 +590,66 @@ describe('PlayersService.applyDeferredCaptainHandoff', () => {
 // their own tests/e2e coverage for the end-to-end path through this
 // method). Exercised directly here since it's the one place the
 // acting-captain consent gate is actually implemented.
+// Security audit, 2026-11-08 — decideTeamJoin(REJECTED) only flips
+// teamJoinStatus and leaves teamId set, so a teamId-only check let a
+// captain-rejected joiner keep reading chat text, teammates, the dashboard
+// (invite code included), weekly goals and the leaderboard.
+describe('PlayersService.assertTeamMembership', () => {
+  const teamId = 'team-1';
+  const playerId = 'player-1';
+
+  function buildService(player: {
+    id: string;
+    teamId: string;
+    teamJoinStatus: TeamJoinStatus;
+  }) {
+    const service = new PlayersService(
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
+    jest.spyOn(service, 'findByIdOrThrow').mockResolvedValue(player as never);
+    return service;
+  }
+
+  it('rejects a captain-REJECTED joiner with team_mismatch even though teamId still matches', async () => {
+    const service = buildService({
+      id: playerId,
+      teamId,
+      teamJoinStatus: TeamJoinStatus.REJECTED,
+    });
+
+    await expect(
+      service.assertTeamMembership(playerId, teamId),
+    ).rejects.toBeInstanceOf(TeamMismatchException);
+  });
+
+  it('rejects a player on a different team', async () => {
+    const service = buildService({
+      id: playerId,
+      teamId: 'other-team',
+      teamJoinStatus: TeamJoinStatus.APPROVED,
+    });
+
+    await expect(
+      service.assertTeamMembership(playerId, teamId),
+    ).rejects.toBeInstanceOf(TeamMismatchException);
+  });
+
+  // PENDING is an open owner decision — this fix must not change it.
+  it.each([TeamJoinStatus.APPROVED, TeamJoinStatus.PENDING])(
+    'still admits a %s player on this team (PENDING posture unchanged)',
+    async (teamJoinStatus) => {
+      const player = { id: playerId, teamId, teamJoinStatus };
+      const service = buildService(player);
+
+      await expect(
+        service.assertTeamMembership(playerId, teamId),
+      ).resolves.toEqual(player);
+    },
+  );
+});
+
 describe('PlayersService.assertIsCaptainOfTeam', () => {
   const teamId = 'team-1';
   const playerId = 'player-1';
@@ -810,6 +989,27 @@ describe('PlayersService.findAutoFallbackCaptainCandidate', () => {
         manager as never,
       ),
     ).resolves.toBeNull();
+  });
+
+  // Security audit, 2026-11-08 — flipCaptaincy now refuses a non-approved
+  // target, so an unfiltered candidate list would hand the erasure sweep a
+  // pick it can never apply (and crown an unapproved joiner if it could).
+  it('only considers APPROVED joiners as candidates', async () => {
+    const { service, manager, playerQueryBuilder } = buildService({
+      candidates: [{ id: 'player-2', teamId }],
+      activeErasurePlayerIds: [],
+    });
+
+    await service.findAutoFallbackCaptainCandidate(
+      teamId,
+      [],
+      manager as never,
+    );
+
+    expect(playerQueryBuilder.andWhere).toHaveBeenCalledWith(
+      'player.team_join_status = :approved',
+      { approved: TeamJoinStatus.APPROVED },
+    );
   });
 
   it('returns null when there are no other candidates on the team at all', async () => {

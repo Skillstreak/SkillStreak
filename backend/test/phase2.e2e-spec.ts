@@ -162,6 +162,7 @@ describe('Phase 2 API (e2e)', () => {
   async function createTeamMember(
     teamId: string,
     consentStatus: ParentalConsentStatus = ParentalConsentStatus.APPROVED,
+    teamJoinStatus: TeamJoinStatus = TeamJoinStatus.APPROVED,
   ) {
     const player = await dataSource.getRepository(Player).save(
       dataSource.getRepository(Player).create({
@@ -170,7 +171,7 @@ describe('Phase 2 API (e2e)', () => {
         avatarId: 'fox',
         birthYear: 2014,
         parentalConsentStatus: consentStatus,
-        teamJoinStatus: TeamJoinStatus.APPROVED,
+        teamJoinStatus,
       }),
     );
     await dataSource.getRepository(PlayerPrivateInfo).save(
@@ -279,6 +280,102 @@ describe('Phase 2 API (e2e)', () => {
       const dashboard = dashboardResponse.body as { viewerIsCaptain: boolean };
       expect(dashboard.viewerIsCaptain).toBe(false);
     });
+  });
+
+  // Security audit, 2026-11-08. Rejecting a join only flipped
+  // teamJoinStatus; teamId stayed set, and every team-scoped check was
+  // teamId-only — so the captain's "no" left the rejected account reading
+  // chat text, teammates, the dashboard (invite code included), weekly
+  // goals and the leaderboard. Goes through the real reject endpoint so
+  // the test covers the state the captain's action actually produces.
+  describe('Captain-rejected joiner (security audit, 2026-11-08)', () => {
+    it('loses every team-scoped read and write once the captain rejects the join', async () => {
+      const { teamId } = await createTeamFixture();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+      const { playerId: joinerId, sessionToken: joinerToken } =
+        await createTeamMember(
+          teamId,
+          ParentalConsentStatus.APPROVED,
+          TeamJoinStatus.PENDING,
+        );
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/pending-joins/${joinerId}/reject`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+
+      const reads = [
+        'dashboard',
+        'teammates',
+        'weekly-goal',
+        'weekly-goal/history',
+        'leaderboard',
+        'chat/messages',
+      ];
+      for (const path of reads) {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/teams/${teamId}/${path}`)
+          .set('Authorization', `Bearer ${joinerToken}`);
+        expect({ path, status: response.status }).toEqual({
+          path,
+          status: 403,
+        });
+        expect((response.body as ApiErrorBody).error.code).toBe(
+          'team_mismatch',
+        );
+        expect(JSON.stringify(response.body)).not.toMatch(/inviteCode/);
+      }
+
+      const post = await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/chat/messages`)
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .send({ content: 'hej' })
+        .expect(403);
+      expect((post.body as ApiErrorBody).error.code).toBe('team_mismatch');
+    });
+
+    it('leaves a still-PENDING joiner exactly as before (open owner decision)', async () => {
+      const { teamId } = await createTeamFixture();
+      await createCaptain(teamId);
+      const { sessionToken } = await createTeamMember(
+        teamId,
+        ParentalConsentStatus.APPROVED,
+        TeamJoinStatus.PENDING,
+      );
+
+      await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/dashboard`)
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .expect(200);
+    });
+
+    it.each([TeamJoinStatus.PENDING, TeamJoinStatus.REJECTED])(
+      'refuses to hand captaincy to a %s joiner',
+      async (joinStatus) => {
+        const { teamId } = await createTeamFixture();
+        const { playerId: captainId, sessionToken: captainToken } =
+          await createCaptain(teamId);
+        const { playerId: targetId } = await createTeamMember(
+          teamId,
+          ParentalConsentStatus.APPROVED,
+          joinStatus,
+        );
+
+        const response = await request(app.getHttpServer())
+          .post(`/api/v1/teams/${teamId}/captain-transfer`)
+          .set('Authorization', `Bearer ${captainToken}`)
+          .send({ newCaptainPlayerId: targetId })
+          .expect(403);
+        expect((response.body as ApiErrorBody).error.code).toBe(
+          'captain_transfer_target_not_on_team',
+        );
+
+        const captain = await dataSource
+          .getRepository(Player)
+          .findOneByOrFail({ id: captainId });
+        expect(captain.isCaptain).toBe(true);
+      },
+    );
   });
 
   describe('Weekly-goal CRUD + state machine', () => {
