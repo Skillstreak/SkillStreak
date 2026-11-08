@@ -1,5 +1,6 @@
 import { EntityManager, In } from 'typeorm';
 import { Player } from '../players/entities/player.entity';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import {
   AccountErasureRequest,
   AccountErasureStatus,
@@ -32,7 +33,16 @@ export async function isSuccessorStillValid(
   const target = await manager
     .getRepository(Player)
     .findOne({ where: { id: successorPlayerId } });
-  if (!target || target.teamId !== teamId) return false;
+  // APPROVED only (security audit, 2026-11-08) — same rule as
+  // PlayersService.flipCaptaincy: a pending or rejected joiner is not a
+  // teammate who can be handed the captaincy.
+  if (
+    !target ||
+    target.teamId !== teamId ||
+    target.teamJoinStatus !== TeamJoinStatus.APPROVED
+  ) {
+    return false;
+  }
 
   const activeErasureCount = await manager
     .getRepository(AccountErasureRequest)

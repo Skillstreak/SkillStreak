@@ -20,6 +20,7 @@ import { buildErasureCancelEmail } from '../mail/templates/erasure-cancel-email.
 import { buildErasureConfirmEmail } from '../mail/templates/erasure-confirm-email.template';
 import { ObjectStorageService } from '../video-clips/object-storage.service';
 import { VideoClip } from '../video-clips/entities/video-clip.entity';
+import { clipObjectKeys } from '../video-clips/video-clip.constants';
 import { Challenge } from '../challenges/entities/challenge.entity';
 import { TeamChatMessage } from '../team-chat/entities/team-chat-message.entity';
 import { Team } from '../teams/entities/team.entity';
@@ -467,7 +468,10 @@ export class AccountErasureService {
 
     const clips = await this.videoClipRepository.find({ where: { teamId } });
     for (const clip of clips) {
-      await this.objectStorageService.deleteObjectIfExists(clip.storageKey);
+      // Both keys a clip may own — see clipObjectKeys.
+      for (const key of clipObjectKeys(clip)) {
+        await this.objectStorageService.deleteObjectIfExists(key);
+      }
     }
 
     await this.dataSource.transaction(async (manager) => {
@@ -588,7 +592,10 @@ export class AccountErasureService {
       where: { uploaderPlayerId: row.playerId },
     });
     for (const clip of clips) {
-      await this.objectStorageService.deleteObjectIfExists(clip.storageKey);
+      // Both keys a clip may own — see clipObjectKeys.
+      for (const key of clipObjectKeys(clip)) {
+        await this.objectStorageService.deleteObjectIfExists(key);
+      }
     }
 
     const currentPlayer = await this.playersService.findByIdOrThrow(

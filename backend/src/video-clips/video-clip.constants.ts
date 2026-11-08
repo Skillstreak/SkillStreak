@@ -64,4 +64,70 @@ export function extensionForMimeType(mimeType: ClipMimeType): string {
   return CLIP_MIME_TYPE_EXTENSIONS[mimeType];
 }
 
+/**
+ * The key the presigned PUT is minted for — `clips/{teamId}/{clipId}.{ext}`.
+ * **Client-writable**: the presigned URL stays valid for
+ * CLIP_UPLOAD_URL_EXPIRES_SECONDS and can be reused, so anything at this
+ * key can be replaced by the uploader at any point in that window.
+ */
+export function clipUploadStorageKey(
+  teamId: string,
+  clipId: string,
+  mimeType: ClipMimeType,
+): string {
+  return `clips/${teamId}/${clipId}.${extensionForMimeType(mimeType)}`;
+}
+
+/**
+ * Where completeUpload writes the metadata-stripped remux — a key no
+ * presigned PUT has ever been minted for, so no client can write to it
+ * (security audit, 2026-11-08).
+ *
+ * The stripped output used to be written back to the upload key itself.
+ * The PUT URL for that key outlives the complete call, so the uploader
+ * could re-PUT the original, GPS-tagged file over the stripped one after
+ * publish, and every viewer, the clip tagger and the public-sharing
+ * reviewer would then be served bytes that never went through the remux.
+ *
+ * The random suffix rather than a fixed `.published` name means two
+ * completes that somehow both reach the write (the processing claim
+ * makes that a lease-expiry edge, not a normal path) can never overwrite,
+ * or clean up, each other's object.
+ */
+export function clipPublishedStorageKey(
+  teamId: string,
+  clipId: string,
+  mimeType: ClipMimeType,
+  suffix: string,
+): string {
+  return `clips/${teamId}/${clipId}.published-${suffix}.${extensionForMimeType(
+    mimeType,
+  )}`;
+}
+
+/**
+ * Every object a clip row may own: the key the row points at, plus the
+ * upload key. After publish the row points at the server-only key, but the
+ * upload URL can still be replayed for the rest of its window, re-creating
+ * an object at the upload key that no row references — an unstripped copy
+ * of a child's video that would otherwise outlive the clip forever, since
+ * every deletion path iterates rows. Deleting both, wherever a clip's
+ * bytes are deleted, closes that.
+ */
+export function clipObjectKeys(clip: {
+  id: string;
+  teamId: string;
+  mimeType: string;
+  storageKey: string;
+}): string[] {
+  const uploadKey = clipUploadStorageKey(
+    clip.teamId,
+    clip.id,
+    clip.mimeType as ClipMimeType,
+  );
+  return uploadKey === clip.storageKey
+    ? [clip.storageKey]
+    : [clip.storageKey, uploadKey];
+}
+
 export const DEFAULT_CLIP_BUCKET = 'clips';
