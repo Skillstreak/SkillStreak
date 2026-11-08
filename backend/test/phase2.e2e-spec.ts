@@ -205,12 +205,15 @@ describe('Phase 2 API (e2e)', () => {
       })
       .expect(201);
     const { playerId, sessionToken } = response.body as CreatePlayerBody;
-    await dataSource
-      .getRepository(Player)
-      .update(
-        { id: playerId },
-        { parentalConsentStatus: ParentalConsentStatus.APPROVED },
-      );
+    // Both gates, out of band: a join the captain hasn't approved is not
+    // membership (2026-11-08), so "approved player" has to mean both.
+    await dataSource.getRepository(Player).update(
+      { id: playerId },
+      {
+        parentalConsentStatus: ParentalConsentStatus.APPROVED,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
+      },
+    );
     return { playerId, sessionToken };
   }
 
@@ -334,18 +337,83 @@ describe('Phase 2 API (e2e)', () => {
       expect((post.body as ApiErrorBody).error.code).toBe('team_mismatch');
     });
 
-    it('leaves a still-PENDING joiner exactly as before (open owner decision)', async () => {
-      const { teamId } = await createTeamFixture();
-      await createCaptain(teamId);
-      const { sessionToken } = await createTeamMember(
-        teamId,
-        ParentalConsentStatus.APPROVED,
-        TeamJoinStatus.PENDING,
-      );
+    // Owner decision 2026-11-08 (ADR-0007 / ADR-0009 amendments) — written
+    // to fail against the pre-fix code, where every read below was a 200.
+    it('a still-PENDING joiner sees no team content until the captain approves, then sees it', async () => {
+      const { teamId, inviteCode } = await createTeamFixture();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/chat/messages`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .send({ content: 'Träning kl 17 imorgon' })
+        .expect(201);
+      const { playerId: joinerId, sessionToken: joinerToken } =
+        await createTeamMember(
+          teamId,
+          ParentalConsentStatus.APPROVED,
+          TeamJoinStatus.PENDING,
+        );
+
+      const reads = [
+        'dashboard',
+        'roster',
+        'teammates',
+        'teammates?approvedOnly=true',
+        'weekly-goal',
+        'weekly-goal/history',
+        'leaderboard',
+        'chat/messages',
+        'clips',
+        'clips/challenges/pending',
+      ];
+      for (const path of reads) {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/teams/${teamId}/${path}`)
+          .set('Authorization', `Bearer ${joinerToken}`);
+        expect({ path, status: response.status }).toEqual({
+          path,
+          status: 403,
+        });
+        expect({
+          path,
+          code: (response.body as ApiErrorBody).error.code,
+        }).toEqual({ path, code: 'team_join_approval_required' });
+        const raw = JSON.stringify(response.body);
+        expect(raw).not.toContain(inviteCode);
+        expect(raw).not.toContain('Träning kl 17');
+      }
+
+      // Their own things still work, and carry nothing of the team's
+      // beyond its name and aggregate pool.
+      const me = await request(app.getHttpServer())
+        .get('/api/v1/players/me')
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
+      expect(JSON.stringify(me.body)).not.toContain(inviteCode);
+      expect(
+        (me.body as { player: { teamJoinStatus: string } }).player,
+      ).toMatchObject({ teamJoinStatus: 'pending' });
+      // (`/players/me/profile` is not exercised here: this file's fixture
+      // stores parent_contact unencrypted, which that route cannot decrypt.
+      // It never calls assertTeamMembership.)
+      await request(app.getHttpServer())
+        .get('/api/v1/players/me/erasure/status')
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
 
       await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/pending-joins/${joinerId}/approve`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+
+      const after = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/chat/messages`)
+        .set('Authorization', `Bearer ${joinerToken}`)
+        .expect(200);
+      expect(JSON.stringify(after.body)).toContain('Träning kl 17');
+      await request(app.getHttpServer())
         .get(`/api/v1/teams/${teamId}/dashboard`)
-        .set('Authorization', `Bearer ${sessionToken}`)
+        .set('Authorization', `Bearer ${joinerToken}`)
         .expect(200);
     });
 

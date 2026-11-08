@@ -399,3 +399,36 @@ read-only surfaces; chat-read is not treated as more sensitive than those.
 - See `docs/api/phase2.6b-contract.md` for the full endpoint contract
   (request/response shapes, error codes, rate-limit numbers) that
   backend-developer and frontend-developer build against directly.
+
+## Amendment — 2026-11-08: reading chat requires an approved team join
+
+**Owner decision, 2026-11-08.** Added, not replacing anything above: the
+Decision 5 paragraph that leaves chat *reading* ungated still holds for
+**parental consent**. What changes is the other, independent gate — the
+captain's approval of the join (ADR-0009's 2026-07-27 addendum).
+
+A player whose join is still `pending` may no longer read chat text. They
+get `403 team_join_approval_required` from `GET .../chat/messages`, and from
+every other team-scoped route, until the captain approves.
+
+**Why.** Decision 5's reasoning was that a pending-*consent* player could
+already see the team's other read-only surfaces, so chat was no worse. That
+held for a player the team had accepted and whose parent had not yet
+clicked a link. It never held for a *join* nobody had accepted: a pending
+joiner is anyone who typed the code, and until 2026-11-08 codes were chosen
+by children and guessable (`IBK2014`). Such an account could read every
+child's messages on a team that had not let them in — CLAUDE.md's "their
+own **verified** team" with the verification skipped. A captain-rejected
+join was closed earlier the same day (security audit, `team_mismatch`);
+this closes the pending case that audit left as an open owner decision.
+
+**Where it is enforced.** `PlayersService.assertTeamMembership`, not in this
+module: every team-scoped read and write already funnels through it, so
+chat, teammates, dashboard, roster, weekly goal and history, the
+leaderboard, clips, reports and blocks are all gated by the one change —
+the "one exported definition fixes the class" reasoning recorded in
+`players/player-access.util.ts`.
+
+**Unchanged:** reading chat with an approved join but a still-pending
+*parental consent*. That is Decision 5's original case and the owner did
+not reopen it.
