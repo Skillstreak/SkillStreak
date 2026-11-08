@@ -39,6 +39,7 @@
     "reminderSentToast": "Připomínka odeslána.",
     "consentNoLongerPendingToast": "Tenhle hráč už nečeká na schválení.",
     "reminderErrorToast": "Něco se pokazilo. Zkus to znovu.",
+    "reminderBlockedPendingContactChangeToast": "Kontaktní adresa tohoto hráče se právě mění. Připomínku můžeš poslat, až bude změna hotová.",
     "reissueSentToast": "Přihlašovací kód odeslán rodiči/zákonnému zástupci.",
     "reissueRateLimitedToast": "Kód byl právě odeslán — počkej minutu, než pošleš další."
   },

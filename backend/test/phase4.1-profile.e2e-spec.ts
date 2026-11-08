@@ -11,6 +11,7 @@ import { Season } from '../src/team-pool/entities/season.entity';
 import { TeamSeasonPot } from '../src/team-pool/entities/team-season-pot.entity';
 import { TeamSeasonPotStatus } from '../src/team-pool/team-season-pot-status.enum';
 import { PlayerPrivateInfo } from '../src/player-private-info/entities/player-private-info.entity';
+import { Player } from '../src/players/entities/player.entity';
 
 interface ApiErrorBody {
   error: { code: string; message: string };
@@ -135,6 +136,21 @@ describe('Phase 4.1: profile page & contact-email change (e2e)', () => {
   // TTL (see phase2.e2e-spec.ts's expiry tests), applied here since the
   // actual apply only happens lazily, on the next read
   // (PlayerPrivateInfoService.getEffective).
+  // The cancel-link flow below is the one an APPROVED account gets. Since
+  // docs/adr/0012's 2026-11-08 amendment a not-yet-approved account takes
+  // the approve/stop path instead (see phase4.1-contact-change-consent-
+  // pending.e2e-spec.ts), so these tests approve consent first, through
+  // the real parent-facing endpoint.
+  async function approveConsent(playerId: string): Promise<void> {
+    const player = await dataSource
+      .getRepository(Player)
+      .findOneOrFail({ where: { id: playerId } });
+    expect(player.consentToken).not.toBeNull();
+    await request(app.getHttpServer())
+      .post(`/api/v1/consent/${player.consentToken}`)
+      .expect(200);
+  }
+
   async function backdateApplyAt(playerId: string): Promise<void> {
     await dataSource
       .getRepository(PlayerPrivateInfo)
@@ -331,6 +347,7 @@ describe('Phase 4.1: profile page & contact-email change (e2e)', () => {
         confirmed: true,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- jest's own matcher typing
         appliesAt: expect.any(String),
+        applied: false,
       });
       expect(JSON.stringify(confirmResponse.body)).not.toMatch(/[0-9A-Z]{8}/);
 
@@ -423,6 +440,7 @@ describe('Phase 4.1: profile page & contact-email change (e2e)', () => {
       sessionToken: string,
       newContact: string,
     ): Promise<string> {
+      await approveConsent(playerId);
       await request(app.getHttpServer())
         .post('/api/v1/players/me/contact-change-request')
         .set('Authorization', `Bearer ${sessionToken}`)

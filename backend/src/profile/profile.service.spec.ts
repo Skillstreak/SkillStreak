@@ -1,3 +1,4 @@
+import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { ProfileService } from './profile.service';
 
 function buildService(overrides: {
@@ -8,12 +9,16 @@ function buildService(overrides: {
   configService?: Record<string, jest.Mock>;
 }) {
   const playersService = {
+    // An APPROVED account by default: every pre-existing test here
+    // describes the original ADR-0012 flow, which approved accounts keep
+    // unchanged. The 2026-11-08 not-yet-approved path overrides this.
     findByIdOrThrow: jest.fn().mockResolvedValue({
       id: 'player-1',
       birthYear: 2013,
       screenName: 'FloorballStar15',
       tokenVersion: 1,
       avatarId: 'fox',
+      parentalConsentStatus: ParentalConsentStatus.APPROVED,
     }),
     findByIdForUpdate: jest.fn().mockResolvedValue({
       id: 'player-1',
@@ -37,6 +42,10 @@ function buildService(overrides: {
     findValidByCancelCode: jest.fn(),
     findByPlayerIdForUpdate: jest.fn(),
     cancelPendingContactChange: jest.fn().mockResolvedValue(undefined),
+    findValidByReviewCode: jest.fn(),
+    previewByReviewCode: jest.fn(),
+    markContactChangeApprovedByCurrent: jest.fn().mockResolvedValue(undefined),
+    applyPendingContactChangeNow: jest.fn().mockResolvedValue(undefined),
     ...overrides.playerPrivateInfoService,
   };
   const redisService = {
@@ -279,6 +288,8 @@ describe('ProfileService.confirmContactChange', () => {
         findValidByContactChangeCode: jest.fn().mockResolvedValue({
           playerId: 'player-1',
           pendingParentContact: 'encrypted-blob',
+          contactChangeReviewCode: null,
+          contactChangeApprovedByCurrentAt: null,
         }),
       },
     });
@@ -289,6 +300,7 @@ describe('ProfileService.confirmContactChange', () => {
       confirmed: true,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- jest's own matcher typing
       appliesAt: expect.any(String),
+      applied: false,
     });
     expect(
       playerPrivateInfoService.startContactChangeGracePeriod,
@@ -331,6 +343,8 @@ describe('ProfileService.confirmContactChange', () => {
         findValidByContactChangeCode: jest.fn().mockResolvedValue({
           playerId: 'someone-elses-player-id',
           pendingParentContact: 'encrypted-blob',
+          contactChangeReviewCode: null,
+          contactChangeApprovedByCurrentAt: null,
         }),
       },
     });
@@ -349,6 +363,8 @@ describe('ProfileService.confirmContactChange', () => {
         findValidByContactChangeCode: jest.fn().mockResolvedValue({
           playerId: 'player-1',
           pendingParentContact: 'encrypted-blob',
+          contactChangeReviewCode: null,
+          contactChangeApprovedByCurrentAt: null,
         }),
       },
       configService: {
@@ -374,6 +390,8 @@ describe('ProfileService.confirmContactChange', () => {
         findValidByContactChangeCode: jest.fn().mockResolvedValue({
           playerId: 'player-1',
           pendingParentContact: 'encrypted-blob',
+          contactChangeReviewCode: null,
+          contactChangeApprovedByCurrentAt: null,
         }),
       },
     });
@@ -577,6 +595,271 @@ describe('ProfileService.cancelOwnContactChange', () => {
     await expect(service.cancelOwnContactChange('player-1')).resolves.toEqual({
       cancelled: false,
     });
+    expect(
+      playerPrivateInfoService.cancelPendingContactChange,
+    ).not.toHaveBeenCalled();
+  });
+});
+
+// docs/adr/0012's 2026-11-08 amendment — the security-audit gap: while
+// parental consent is not yet approved, the CURRENT address must be able
+// to approve or stop a change, rather than merely being told about it.
+describe('ProfileService — contact change while consent is not yet approved', () => {
+  const pendingPlayer = {
+    id: 'player-1',
+    birthYear: 2015,
+    screenName: 'Floor<b>ball</b>Star',
+    tokenVersion: 4,
+    avatarId: 'fox',
+    locale: 'sv',
+    parentalConsentStatus: ParentalConsentStatus.PENDING,
+  };
+
+  function pendingService(
+    playerPrivateInfoService: Record<string, jest.Mock> = {},
+  ) {
+    return buildService({
+      playersService: {
+        findByIdOrThrow: jest.fn().mockResolvedValue(pendingPlayer),
+        findByIdForUpdate: jest.fn().mockResolvedValue(pendingPlayer),
+      },
+      playerPrivateInfoService,
+    });
+  }
+
+  it.each([
+    ParentalConsentStatus.PENDING,
+    ParentalConsentStatus.NOT_REQUESTED,
+    ParentalConsentStatus.REVOKED,
+  ])(
+    'request (%s): stores a 256-bit review token and mails the current address an approve/stop link',
+    async (status) => {
+      const { service, playerPrivateInfoService, mailService } = buildService({
+        playersService: {
+          findByIdOrThrow: jest.fn().mockResolvedValue({
+            ...pendingPlayer,
+            parentalConsentStatus: status,
+          }),
+        },
+      });
+
+      await service.requestContactChange('player-1', 'kid@example.com');
+
+      const [[, , fields]] = playerPrivateInfoService.setPendingContactChange
+        .mock.calls as [
+        [
+          unknown,
+          string,
+          {
+            expiresAt: Date;
+            review: { code: string; expiresAt: Date } | null;
+          },
+        ],
+      ];
+      expect(fields.review).not.toBeNull();
+      const review = fields.review as { code: string; expiresAt: Date };
+      expect(review.code).toMatch(/^[0-9a-f]{64}$/);
+      // Lives exactly as long as the confirmation code, until confirm
+      // extends it.
+      expect(review.expiresAt).toEqual(fields.expiresAt);
+
+      const sent = (
+        mailService.sendMail.mock.calls as [
+          { to: string; text: string; html: string },
+        ][]
+      ).map(([mail]) => mail);
+      expect(sent.map((m) => m.to)).toEqual([
+        'kid@example.com',
+        'old-parent@example.com',
+      ]);
+      const toOld = sent[1];
+      expect(toOld.text).toContain(
+        `/api/v1/players/contact-change-review/${review.code}`,
+      );
+      expect(toOld.text).toContain('kid@example.com');
+      // Screen names are free text: escaped in HTML, never raw.
+      expect(toOld.html).not.toContain('<b>ball</b>');
+      expect(toOld.html).toContain('Floor&lt;b&gt;ball&lt;/b&gt;Star');
+      // The new address only ever gets the code, never the review link.
+      expect(sent[0].text).not.toContain('contact-change-review');
+    },
+  );
+
+  it('request (approved account): no review token — the original notify mail', async () => {
+    const { service, playerPrivateInfoService, mailService } = buildService({});
+
+    await service.requestContactChange('player-1', 'new@example.com');
+
+    expect(
+      playerPrivateInfoService.setPendingContactChange,
+    ).toHaveBeenCalledWith(
+      undefined,
+      'player-1',
+      expect.objectContaining({ review: null }),
+    );
+    for (const [mail] of mailService.sendMail.mock.calls as [
+      { text: string },
+    ][]) {
+      expect(mail.text).not.toContain('contact-change-review');
+    }
+  });
+
+  it('confirm with no decision yet: 24h grace, NO cancel code or mail, review link extended to the deadline', async () => {
+    const { service, playerPrivateInfoService, mailService } = pendingService({
+      findValidByContactChangeCode: jest.fn().mockResolvedValue({
+        playerId: 'player-1',
+        pendingParentContact: 'encrypted-blob',
+        contactChangeReviewCode: 'a'.repeat(64),
+        contactChangeApprovedByCurrentAt: null,
+      }),
+    });
+
+    const result = await service.confirmContactChange('player-1', 'ABCD1234');
+
+    expect(result.applied).toBe(false);
+    const [[, , fields]] = playerPrivateInfoService
+      .startContactChangeGracePeriod.mock.calls as [
+      [
+        unknown,
+        string,
+        { applyAt: Date; cancelCode: string | null; reviewCodeExpiresAt: Date },
+      ],
+    ];
+    expect(fields.cancelCode).toBeNull();
+    expect(fields.reviewCodeExpiresAt).toEqual(fields.applyAt);
+    expect(fields.applyAt.getTime() - Date.now()).toBeGreaterThan(
+      23.9 * 3_600_000,
+    );
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+    expect(
+      playerPrivateInfoService.applyPendingContactChangeNow,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('confirm after the current address already approved: applies at once, reports applied', async () => {
+    const info = {
+      playerId: 'player-1',
+      pendingParentContact: 'encrypted-blob',
+      contactChangeReviewCode: null,
+      contactChangeApprovedByCurrentAt: new Date(),
+    };
+    const { service, playerPrivateInfoService } = pendingService({
+      findValidByContactChangeCode: jest.fn().mockResolvedValue(info),
+    });
+
+    const result = await service.confirmContactChange('player-1', 'ABCD1234');
+
+    expect(result.applied).toBe(true);
+    expect(new Date(result.appliesAt).getTime()).toBeLessThanOrEqual(
+      Date.now(),
+    );
+    expect(
+      playerPrivateInfoService.applyPendingContactChangeNow,
+    ).toHaveBeenCalledWith(undefined, info);
+    expect(
+      playerPrivateInfoService.startContactChangeGracePeriod,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('review approve, new address already confirmed: applies immediately, no token bump', async () => {
+    const info = {
+      playerId: 'player-1',
+      pendingParentContact: 'encrypted-blob',
+      contactChangeApplyAt: new Date(Date.now() + 3_600_000),
+    };
+    const { service, playerPrivateInfoService, playersService } =
+      pendingService({
+        findValidByReviewCode: jest.fn().mockResolvedValue(info),
+      });
+
+    await expect(
+      service.reviewContactChange('t'.repeat(64), 'approve'),
+    ).resolves.toEqual({ decision: 'approve', appliedNow: true, locale: 'sv' });
+    expect(
+      playerPrivateInfoService.applyPendingContactChangeNow,
+    ).toHaveBeenCalledWith(undefined, info);
+    expect(playersService.bumpTokenVersion).not.toHaveBeenCalled();
+  });
+
+  it('review approve, not yet confirmed: records the approval but applies nothing', async () => {
+    const { service, playerPrivateInfoService } = pendingService({
+      findValidByReviewCode: jest.fn().mockResolvedValue({
+        playerId: 'player-1',
+        pendingParentContact: 'encrypted-blob',
+        contactChangeApplyAt: null,
+      }),
+    });
+
+    await expect(
+      service.reviewContactChange('t'.repeat(64), 'approve'),
+    ).resolves.toMatchObject({ appliedNow: false });
+    expect(
+      playerPrivateInfoService.markContactChangeApprovedByCurrent,
+    ).toHaveBeenCalledWith(undefined, 'player-1');
+    expect(
+      playerPrivateInfoService.applyPendingContactChangeNow,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('review stop: discards the change and bumps token_version', async () => {
+    const { service, playerPrivateInfoService, playersService } =
+      pendingService({
+        findValidByReviewCode: jest.fn().mockResolvedValue({
+          playerId: 'player-1',
+          pendingParentContact: 'encrypted-blob',
+          contactChangeApplyAt: new Date(Date.now() + 3_600_000),
+        }),
+      });
+
+    await expect(
+      service.reviewContactChange('t'.repeat(64), 'stop'),
+    ).resolves.toMatchObject({ decision: 'stop' });
+    expect(
+      playerPrivateInfoService.cancelPendingContactChange,
+    ).toHaveBeenCalledWith(undefined, 'player-1');
+    expect(playersService.bumpTokenVersion).toHaveBeenCalledWith(
+      undefined,
+      'player-1',
+      5,
+    );
+  });
+
+  it('review with an unknown/expired/used token: null, and nothing written', async () => {
+    const { service, playerPrivateInfoService, playersService } =
+      pendingService({
+        findValidByReviewCode: jest.fn().mockResolvedValue(null),
+      });
+
+    await expect(
+      service.reviewContactChange('t'.repeat(64), 'stop'),
+    ).resolves.toBeNull();
+    expect(
+      playerPrivateInfoService.cancelPendingContactChange,
+    ).not.toHaveBeenCalled();
+    expect(
+      playerPrivateInfoService.markContactChangeApprovedByCurrent,
+    ).not.toHaveBeenCalled();
+    expect(playersService.bumpTokenVersion).not.toHaveBeenCalled();
+  });
+
+  it('preview returns screen name, requested address and locale, with no writes', async () => {
+    const { service, playerPrivateInfoService } = pendingService({
+      previewByReviewCode: jest.fn().mockResolvedValue({
+        playerId: 'player-1',
+        pendingContact: 'kid@example.com',
+      }),
+    });
+
+    await expect(
+      service.previewContactChangeReview('t'.repeat(64)),
+    ).resolves.toEqual({
+      screenName: pendingPlayer.screenName,
+      newContact: 'kid@example.com',
+      locale: 'sv',
+    });
+    expect(
+      playerPrivateInfoService.markContactChangeApprovedByCurrent,
+    ).not.toHaveBeenCalled();
     expect(
       playerPrivateInfoService.cancelPendingContactChange,
     ).not.toHaveBeenCalled();

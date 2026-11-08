@@ -39,6 +39,7 @@
     "reminderSentToast": "Erinnerung gesendet.",
     "consentNoLongerPendingToast": "Dieser Spieler wartet nicht mehr auf Freigabe.",
     "reminderErrorToast": "Etwas ist schiefgelaufen. Versuch's noch mal.",
+    "reminderBlockedPendingContactChangeToast": "Die Kontaktadresse dieses Spielers wird gerade geändert. Du kannst eine Erinnerung senden, sobald das erledigt ist.",
     "reissueSentToast": "Login-Code an Elternteil/Erziehungsberechtigte gesendet.",
     "reissueRateLimitedToast": "Ein Code wurde gerade erst gesendet — warte eine Minute, bevor du einen neuen anforderst."
   },
