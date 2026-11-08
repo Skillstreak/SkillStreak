@@ -122,7 +122,15 @@ export class PlayerPrivateInfoService {
   async setPendingContactChange(
     manager: EntityManager,
     playerId: string,
-    fields: { pendingContact: string; code: string; expiresAt: Date },
+    fields: {
+      pendingContact: string;
+      code: string;
+      expiresAt: Date;
+      // docs/adr/0012's 2026-11-08 amendment: the old address's approve/
+      // stop link, for a not-yet-approved account. Null for an approved
+      // account (original flow).
+      review: { code: string; expiresAt: Date } | null;
+    },
   ): Promise<void> {
     await manager.getRepository(PlayerPrivateInfo).update(
       { playerId },
@@ -133,6 +141,14 @@ export class PlayerPrivateInfoService {
         ),
         contactChangeCode: fields.code,
         contactChangeCodeExpiresAt: fields.expiresAt,
+        // Always overwritten, never merged: a re-request (allowed while
+        // the previous one is unconfirmed) replaces the old address's link
+        // and discards any approval it gave. Without the reset, a parent
+        // approving a change to B would carry over to a later request for
+        // C, which would then apply the instant C confirmed.
+        contactChangeReviewCode: fields.review?.code ?? null,
+        contactChangeReviewCodeExpiresAt: fields.review?.expiresAt ?? null,
+        contactChangeApprovedByCurrentAt: null,
       },
     );
   }
@@ -196,7 +212,16 @@ export class PlayerPrivateInfoService {
   async startContactChangeGracePeriod(
     manager: EntityManager,
     playerId: string,
-    fields: { applyAt: Date; cancelCode: string },
+    fields: {
+      applyAt: Date;
+      // Null on the 2026-11-08 review path: the old address already holds
+      // an approve/stop link from request time, which does the cancel
+      // link's job, so no second code is minted.
+      cancelCode: string | null;
+      // Review path only — the old address's link stays live for exactly
+      // as long as the grace period it can still cut short.
+      reviewCodeExpiresAt?: Date;
+    },
   ): Promise<void> {
     await manager.getRepository(PlayerPrivateInfo).update(
       { playerId },
@@ -205,7 +230,99 @@ export class PlayerPrivateInfoService {
         contactChangeCodeExpiresAt: null,
         contactChangeApplyAt: fields.applyAt,
         contactChangeCancelCode: fields.cancelCode,
+        ...(fields.reviewCodeExpiresAt
+          ? { contactChangeReviewCodeExpiresAt: fields.reviewCodeExpiresAt }
+          : {}),
       },
+    );
+  }
+
+  /**
+   * docs/adr/0012's 2026-11-08 amendment — row-locked lookup by the old
+   * address's approve/stop token. Live means: not expired, and a change is
+   * actually still pending. Returns null for "no such token", "expired"
+   * and "already used" alike (same generic-error posture as every other
+   * mailed-link lookup here).
+   */
+  async findValidByReviewCode(
+    manager: EntityManager,
+    code: string,
+  ): Promise<PlayerPrivateInfo | null> {
+    const info = await manager
+      .getRepository(PlayerPrivateInfo)
+      .createQueryBuilder('info')
+      .setLock('pessimistic_write')
+      .where('info.contact_change_review_code = :code', { code })
+      .getOne();
+    if (!info || !isReviewCodeLive(info)) {
+      return null;
+    }
+    return info;
+  }
+
+  /**
+   * Unlocked GET-side read for the review link's preview page — no side
+   * effects, same email-prefetch reasoning as previewByCancelCode. Returns
+   * the requested address decrypted, because that page asks the current
+   * address to approve a specific new one; decryption stays inside this
+   * module, per ADR-0002's addendum §1.
+   */
+  async previewByReviewCode(
+    code: string,
+  ): Promise<{ playerId: string; pendingContact: string } | null> {
+    const info = await this.privateInfoRepository.findOne({
+      where: { contactChangeReviewCode: code },
+    });
+    if (!info || !isReviewCodeLive(info)) {
+      return null;
+    }
+    return {
+      playerId: info.playerId,
+      pendingContact: decryptPii(
+        info.pendingParentContact as string,
+        this.encryptionKey,
+      ),
+    };
+  }
+
+  /**
+   * The old address approved before the new address confirmed. Consumes
+   * the review token (single-use) and records the approval; the change
+   * itself waits for the new address's code, then applies at once
+   * (ProfileService.confirmContactChange). Never applies an address that
+   * has not proven it exists — ADR-0012 decision 1's invariant holds.
+   */
+  async markContactChangeApprovedByCurrent(
+    manager: EntityManager,
+    playerId: string,
+  ): Promise<void> {
+    await manager.getRepository(PlayerPrivateInfo).update(
+      { playerId },
+      {
+        contactChangeReviewCode: null,
+        contactChangeReviewCodeExpiresAt: null,
+        contactChangeApprovedByCurrentAt: new Date(),
+      },
+    );
+  }
+
+  /**
+   * Applies a pending change right now, skipping whatever is left of the
+   * grace period. Only for the two cases where the CURRENT address has
+   * approved it (docs/adr/0012's 2026-11-08 amendment): the old address
+   * pressed approve after the new one confirmed, or the new one confirmed
+   * after an approval was already on file. Takes the row the caller
+   * already locked in the same transaction.
+   */
+  async applyPendingContactChangeNow(
+    manager: EntityManager,
+    info: PlayerPrivateInfo,
+  ): Promise<void> {
+    if (!info.pendingParentContact) return;
+    await this.applyPendingContactChange(
+      manager,
+      info.playerId,
+      info.pendingParentContact,
     );
   }
 
@@ -275,6 +392,9 @@ export class PlayerPrivateInfoService {
         contactChangeCodeExpiresAt: null,
         contactChangeApplyAt: null,
         contactChangeCancelCode: null,
+        contactChangeReviewCode: null,
+        contactChangeReviewCodeExpiresAt: null,
+        contactChangeApprovedByCurrentAt: null,
       },
     );
   }
@@ -283,9 +403,10 @@ export class PlayerPrivateInfoService {
    * Moves the already-encrypted pending value into the live column
    * directly (no decrypt/re-encrypt round trip needed — it's already
    * ciphertext in the right format) and clears every pending field.
-   * Called only from getEffective, once the grace period is actually due
-   * — never directly by a controller/service, unlike Part 3's original
-   * (pre-addendum) design.
+   * Called from getEffective once the grace period is actually due, and
+   * (since 2026-11-08) from applyPendingContactChangeNow when the current
+   * address itself has approved the change — never on the new address's
+   * say-so alone.
    */
   private async applyPendingContactChange(
     manager: EntityManager,
@@ -297,8 +418,16 @@ export class PlayerPrivateInfoService {
       {
         parentContact: pendingContactCiphertext,
         pendingParentContact: null,
+        // Already null on the lazy-apply path (confirm cleared them), but
+        // not on applyPendingContactChangeNow's: one method that leaves
+        // no pending state behind in every reachable state.
+        contactChangeCode: null,
+        contactChangeCodeExpiresAt: null,
         contactChangeApplyAt: null,
         contactChangeCancelCode: null,
+        contactChangeReviewCode: null,
+        contactChangeReviewCodeExpiresAt: null,
+        contactChangeApprovedByCurrentAt: null,
       },
     );
   }
@@ -327,6 +456,19 @@ export class PlayerPrivateInfoService {
    * a typo). "Unresolved" therefore means one of two live states, not
    * merely "the column is set":
    */
+  /**
+   * Applies a confirmed change whose grace period has already elapsed,
+   * and nothing else — the getEffective side effect on its own, without
+   * reading or decrypting anything. For a caller that is about to ask
+   * hasPendingContactChange and needs "due" to count as "taken effect"
+   * rather than "still pending" (ConsentService.sendReminder, 2026-11-08).
+   * Callers that must *observe* a due change instead (erasure, PT, public
+   * sharing) deliberately don't call this.
+   */
+  async resolveDueContactChange(playerId: string): Promise<void> {
+    await this.getEffective(playerId);
+  }
+
   async hasPendingContactChange(playerId: string): Promise<boolean> {
     const info = await this.privateInfoRepository.findOne({
       where: { playerId },
@@ -393,6 +535,9 @@ export class PlayerPrivateInfoService {
         pendingParentContact: null,
         contactChangeApplyAt: null,
         contactChangeCancelCode: null,
+        contactChangeReviewCode: null,
+        contactChangeReviewCodeExpiresAt: null,
+        contactChangeApprovedByCurrentAt: null,
       };
     });
   }
@@ -402,6 +547,14 @@ function isContactChangeCodeLive(info: PlayerPrivateInfo): boolean {
   return (
     info.contactChangeCodeExpiresAt !== null &&
     info.contactChangeCodeExpiresAt.getTime() > Date.now()
+  );
+}
+
+function isReviewCodeLive(info: PlayerPrivateInfo): boolean {
+  return (
+    info.pendingParentContact !== null &&
+    info.contactChangeReviewCodeExpiresAt !== null &&
+    info.contactChangeReviewCodeExpiresAt.getTime() > Date.now()
   );
 }
 

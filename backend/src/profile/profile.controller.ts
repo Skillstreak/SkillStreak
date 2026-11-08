@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -19,7 +20,13 @@ import {
   renderCancelConfirmPage,
   renderCancelInvalidPage,
 } from './contact-change-cancel-page.templates';
+import {
+  renderReviewApprovedPage,
+  renderReviewConfirmPage,
+  renderReviewStoppedPage,
+} from './contact-change-review-page.templates';
 import { ConfirmContactChangeDto } from './dto/confirm-contact-change.dto';
+import { ContactChangeReviewDecisionDto } from './dto/contact-change-review-decision.dto';
 import { RequestContactChangeDto } from './dto/request-contact-change.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
@@ -138,6 +145,52 @@ export class ProfileController {
     // double-tap, or the flow exercised twice) — same friendly-page
     // idiom as ConsentController.approveConsent, not an error.
     const html = result ? renderCancelAppliedPage() : renderCancelInvalidPage();
+    res.status(HttpStatus.OK).type('html').send(html);
+  }
+
+  // docs/adr/0012's 2026-11-08 amendment — the current address's
+  // approve/stop link, mailed at request time while parental consent is
+  // not yet approved. Same no-auth, GET-previews/POST-acts, throttled
+  // shape as the cancel link above.
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Get('contact-change-review/:token')
+  async previewContactChangeReview(
+    @Param('token') token: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const preview = await this.profileService.previewContactChangeReview(token);
+    const html = preview
+      ? renderReviewConfirmPage(
+          preview.screenName,
+          preview.newContact,
+          preview.locale,
+        )
+      : renderCancelInvalidPage();
+    res.status(HttpStatus.OK).type('html').send(html);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('contact-change-review/:token')
+  @HttpCode(HttpStatus.OK)
+  async reviewContactChange(
+    @Param('token') token: string,
+    @Query() query: ContactChangeReviewDecisionDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.profileService.reviewContactChange(
+      token,
+      query.decision,
+    );
+    // A second POST to a consumed token (double-tap, or approve after
+    // stop) is expected — the friendly dead-link page, not an error.
+    let html: string;
+    if (!result) {
+      html = renderCancelInvalidPage();
+    } else if (result.decision === 'stop') {
+      html = renderReviewStoppedPage(result.locale);
+    } else {
+      html = renderReviewApprovedPage(result.appliedNow, result.locale);
+    }
     res.status(HttpStatus.OK).type('html').send(html);
   }
 }

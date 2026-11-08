@@ -148,6 +148,24 @@ export class ConsentReminderRateLimitedException extends AppException {
   }
 }
 
+/**
+ * docs/adr/0012's 2026-11-08 amendment. A consent reminder mints a fresh
+ * consent token, which kills the link the parent already holds — and once
+ * a pending contact change applies, mails the new one to the NEW address.
+ * Refused outright while a change is unresolved, so the parent's existing
+ * link survives and no consent link can reach an address the parent has
+ * not had the chance to approve or stop.
+ */
+export class ConsentReminderBlockedPendingContactChangeException extends AppException {
+  constructor() {
+    super(
+      'consent_reminder_blocked_pending_contact_change',
+      'A contact-address change is pending for this player — the reminder can be sent once it has been approved, stopped or has taken effect.',
+      HttpStatus.CONFLICT,
+    );
+  }
+}
+
 export class InvalidOrExpiredCodeException extends AppException {
   constructor() {
     // Deliberately generic per ADR-0004 Part 3 — doesn't distinguish
