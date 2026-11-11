@@ -4,6 +4,15 @@
 
 Proposed — 2026-08-02.
 
+**Amended 2026-11-06 by [ADR-0039](0039-anonymous-ui-click-statistics.md)
+(Proposed).** I-003 adds client-side counting in the app, which Decision 1
+below rejected as option B. ADR-0039 permits one narrow shape only —
+per-key daily counters with no timestamps, identifiers or event order,
+opt-in per account — and keeps option B's event pipeline rejected.
+Decision 7's "no new consent gate or copy" does **not** extend to that
+feature; ADR-0039 Decision 2 carries its own consent analysis. Nothing
+below is deleted or changed.
+
 **Blocking security-reviewer sign-off required before backend-developer
 builds anything against this**, argued rather than reflexively asserted,
 from three independent sources all pointing the same way:
@@ -124,6 +133,10 @@ before assuming, not guessed at.
   pieces. Decision 4 states this ADR's relationship to it explicitly.
 
 ## Decision — 1: scope — a fixed, allow-listed set of aggregate queries over data that already exists, not an event-tracking pipeline
+
+*(Amended 2026-11-06: the rejection of option B is narrowed by
+[ADR-0039](0039-anonymous-ui-click-statistics.md) Decision 1 for opt-in
+per-key daily counters only. See the Status note.)*
 
 Three candidate shapes exist for "understand how real teams use the app,"
 weighed the same way ADR-0018 weighed its own three candidates for "AI
@@ -462,6 +475,11 @@ Both defaults are easy to change without touching this ADR's core
 decisions (1-5) at all.
 
 ## Decision — 7: consent/disclosure — no new consent gate or copy required, conditioned explicitly on Decisions 1 and 3 holding
+
+*(Amended 2026-11-06: this conclusion covers this ADR's server-side
+metrics only. It does not cover the client-side counters of
+[ADR-0039](0039-anonymous-ui-click-statistics.md), which need consent per
+that ADR's Decision 2.)*
 
 `docs/adr/0018-ai-video-content-tagging.md` Decision 3 needed a
 consent-copy update because it introduced a *new kind of processing of a
