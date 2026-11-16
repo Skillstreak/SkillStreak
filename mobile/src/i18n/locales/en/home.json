@@ -47,6 +47,10 @@
       "timer": "With the timer"
     },
     "submitTimer": "Start the timer",
+    "startTimerButton": "Start training clock ⏱️",
+    "startTimerHelp": "Counts up — 1 point per minute (max 60 min)",
+    "showManualLog": "Already trained? Log manually →",
+    "hideManualLog": "Hide manual log ↑",
     "clickOnlyRemaining": "{{remaining}} of {{limit}} quick logs left this week",
     "clickOnlyUsedUp": "You've used this week's quick logs. It still counts for your streak, but gives 0 points until Monday. The timer gives points!"
   },
@@ -131,11 +135,6 @@
     "erasureStaleState": "Something has changed on the team since you opened this screen. Check your profile and try again.",
     "erasureCancelledToast": "Done! Your account won't be deleted. 🎉",
     "erasureCancelError": "Something went wrong. Reload the page and try again.",
-    "editName": {
-      "heading": "Your name",
-      "sub": "Optional — never shown to anyone else on the team, only you see it here.",
-      "placeholder": "First and last name"
-    },
     "editAvatar": {
       "heading": "Choose an avatar",
       "sub": "No photo needed — just pick a character you like."
@@ -156,9 +155,6 @@
     "view": {
       "heading": "Your profile",
       "avatarLabel": "Avatar",
-      "nameLabel": "Name",
-      "nameNotSet": "Not set",
-      "addName": "Add",
       "birthYearLabel": "Birth year",
       "birthYearHelper": "Can't be changed yourself — contact your team's coach if it needs fixing.",
       "contactLabel": "Contact address",
@@ -307,27 +303,34 @@
     "notifBody": "10–15 minutes is enough. Your streak is waiting!"
   },
   "trainingTimer": {
-    "heading": "Go for it! 💪",
-    "explainer": "The timer shows that the time passed. You can lock your phone — the clock keeps going.",
+    "heading": "Training clock 💪",
+    "explainer": "The clock counts up and points tick in while you train (max 60 min). You can lock your phone — the clock keeps going.",
     "ofMinutes": "of {{minutes}} min",
     "remainingA11y": "{{time}} left",
-    "stop": "Finish",
-    "stopConfirm": "Finish now? You get points for {{minutes}} min.",
-    "stopConfirmYes": "Yes, finish and log it",
+    "stopwatchA11y": "Trained {{time}}",
+    "runningPoints": "+{{points}} points to the team 🔥",
+    "zeroPointsHelp": "0 points (starts ticking after 1 min)",
+    "firstPointIn": "{{seconds}}s to first point",
+    "nextPointIn": "{{seconds}}s to next point",
+    "maxCapLabel": "Max limit: {{minutes}} min",
+    "maxReached": "Max limit reached (60 min = 60 pts)! 🎉",
+    "stop": "End workout",
+    "stopConfirm": "Finish now? You trained for {{minutes}} min and earned {{points}} points.",
+    "stopConfirmYes": "Yes, finish and log",
     "keepGoing": "Keep training",
-    "tooShort": "Less than a minute has passed, so there's nothing to log yet. Keep going a bit longer, or cancel the timer.",
-    "discard": "Cancel the timer",
-    "doneHeading": "Time's up! 🎉",
-    "doneBody": "{{minutes}} min done. Nice work!",
-    "logIt": "Log the session",
-    "finishHeading": "How do you want to log it?",
-    "finishHelp": "The timer counts {{minutes}} min. If you want to give the team even more, add a video.",
+    "tooShort": "Less than a minute has passed (0 points). Train at least 1 minute to start collecting points!",
+    "discard": "Cancel timer",
+    "doneHeading": "Max limit reached! 🎉",
+    "doneBody": "60 minutes done — awesome job! You maxed out the session and earned 60 points for the team.",
+    "logIt": "Log session ({{points}} pts)",
+    "finishHeading": "How do you want to log?",
+    "finishHelp": "The timer awards {{minutes}} points (1 pt/min). Want to give the team even more? Attach a video.",
     "evidenceTimer": "Just the timer",
-    "submit": "Log it",
+    "submit": "Log workout",
     "back": "Back",
-    "notifTitle": "Time's up! ⏱️",
-    "notifBody": "Great effort! Open the app to log your session.",
-    "rejected": "The timer couldn't be used this time. Cancel the timer and log your session the normal way instead — it still counts."
+    "notifTitle": "Max limit reached (60 min)! ⏱️",
+    "notifBody": "Great job! Open the app and log your 60 points for the team.",
+    "rejected": "The timer could not be used this time. Cancel the timer and log normally instead — it still counts."
   },
   "adultFeedback": {
     "cardTitle": "Tell us what you think",

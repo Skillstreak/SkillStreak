@@ -6,6 +6,7 @@ import { ErrorLogModule } from '../error-log/error-log.module';
 import { MailModule } from '../mail/mail.module';
 import { Player } from '../players/entities/player.entity';
 import { RedisModule } from '../redis/redis.module';
+import { Team } from '../teams/entities/team.entity';
 import { TeamSeasonPot } from '../team-pool/entities/team-season-pot.entity';
 import { TeamChatMessage } from '../team-chat/entities/team-chat-message.entity';
 import { TrainingLogEntry } from '../training-logs/entities/training-log-entry.entity';
@@ -59,6 +60,7 @@ import { UsageMetricsService } from './usage-metrics.service';
       VideoClip,
       TeamChatMessage,
       BadgeAward,
+      Team,
     ]),
     MailModule,
     RedisModule,

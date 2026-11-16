@@ -131,11 +131,6 @@
     "erasureStaleState": "Joukkueessa on tapahtunut muutoksia sen jälkeen, kun avasit tämän näkymän. Tarkista profiilisi ja yritä uudelleen.",
     "erasureCancelledToast": "Valmista! Tiliäsi ei poisteta. 🎉",
     "erasureCancelError": "Jokin meni pieleen. Lataa sivu uudelleen ja yritä uudelleen.",
-    "editName": {
-      "heading": "Nimesi",
-      "sub": "Vapaaehtoinen — ei näy koskaan muille joukkueessa, vain sinä näet tämän.",
-      "placeholder": "Etu- ja sukunimi"
-    },
     "editAvatar": {
       "heading": "Valitse avatar",
       "sub": "Kuvaa ei tarvita — valitse hahmo, josta pidät."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Profiilisi",
       "avatarLabel": "Avatar",
-      "nameLabel": "Nimi",
-      "nameNotSet": "Ei asetettu",
-      "addName": "Lisää",
       "birthYearLabel": "Syntymävuosi",
       "birthYearHelper": "Et voi muuttaa tätä itse — ota yhteyttä joukkueen valmentajaan, jos tämä pitää korjata.",
       "contactLabel": "Yhteystieto",

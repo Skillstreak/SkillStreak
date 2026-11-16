@@ -17,6 +17,7 @@ import { TeamChatMessage } from '../team-chat/entities/team-chat-message.entity'
 import { ActivityType } from '../training-logs/activity-type.enum';
 import { TrainingLogEntry } from '../training-logs/entities/training-log-entry.entity';
 import { VideoClip } from '../video-clips/entities/video-clip.entity';
+import { Team } from '../teams/entities/team.entity';
 
 /**
  * docs/adr/0020-usage-analytics-product-metrics.md Decision 2 — the ONLY
@@ -77,6 +78,7 @@ export class UsageMetricsQueryService {
   async queryAdoptionFunnelRows(): Promise<TeamStatusCountRow[]> {
     const rows = await this.playerRepository
       .createQueryBuilder('player')
+      .innerJoin(Team, 'team', 'team.id = player.team_id')
       .select('player.team_id', 'teamId')
       .addSelect('player.parental_consent_status', 'parentalConsentStatus')
       .addSelect('player.team_join_status', 'teamJoinStatus')
@@ -85,6 +87,7 @@ export class UsageMetricsQueryService {
         'COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM training_log_entry log WHERE log.player_id = player.id))',
         'playersWithAtLeastOneTrainingLog',
       )
+      .where('team.is_test = false')
       .groupBy('player.team_id')
       .addGroupBy('player.parental_consent_status')
       .addGroupBy('player.team_join_status')
@@ -133,8 +136,10 @@ export class UsageMetricsQueryService {
     // there is no caller-supplied string anywhere in this expression.
     const rows = await this.playerRepository
       .createQueryBuilder('player')
+      .innerJoin(Team, 'team', 'team.id = player.team_id')
       .select(`player.${column}`, 'streakCount')
       .addSelect('COUNT(*)', 'playerCount')
+      .where('team.is_test = false')
       .groupBy(`player.${column}`)
       .getRawMany<{ streakCount: number | string; playerCount: string }>();
 
@@ -160,6 +165,7 @@ export class UsageMetricsQueryService {
   ): Promise<ActivityRecencyRow> {
     const row = await this.playerRepository
       .createQueryBuilder('player')
+      .innerJoin(Team, 'team', 'team.id = player.team_id')
       .select('COUNT(*)', 'totalPlayers')
       .addSelect(
         'COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM training_log_entry log WHERE log.player_id = player.id AND log.logged_at >= :sevenDayCutoff))',
@@ -169,6 +175,7 @@ export class UsageMetricsQueryService {
         'COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM training_log_entry log WHERE log.player_id = player.id AND log.logged_at >= :windowStart))',
         'playersActiveInWindow',
       )
+      .where('team.is_test = false')
       .setParameters({ sevenDayCutoff, windowStart })
       .getRawOne<{
         totalPlayers: string;
@@ -194,9 +201,12 @@ export class UsageMetricsQueryService {
   ): Promise<ActivityTypeCountRow[]> {
     const rows = await this.trainingLogRepository
       .createQueryBuilder('log')
+      .innerJoin('player', 'player', 'player.id = log.player_id')
+      .innerJoin(Team, 'team', 'team.id = player.team_id')
       .select('log.activity_type', 'activityType')
       .addSelect('COUNT(*)', 'logCount')
       .where('log.logged_at >= :windowStart', { windowStart })
+      .andWhere('team.is_test = false')
       .groupBy('log.activity_type')
       .getRawMany<{ activityType: ActivityType; logCount: string }>();
 
@@ -248,6 +258,7 @@ export class UsageMetricsQueryService {
   ): Promise<TeamGoalOutcomeRow[]> {
     const rows = await this.challengeRepository
       .createQueryBuilder('challenge')
+      .innerJoin(Team, 'team', 'team.id = challenge.team_id')
       .select('challenge.team_id', 'teamId')
       .addSelect(
         'COUNT(*) FILTER (WHERE challenge.status IN (:...ranStatuses))',
@@ -263,6 +274,7 @@ export class UsageMetricsQueryService {
       )
       .where('challenge.end_date >= :windowStartDate', { windowStartDate })
       .andWhere('challenge.end_date < :todayDate', { todayDate })
+      .andWhere('team.is_test = false')
       .setParameters({
         // 'active' belongs here, not just 'completed': a goal whose end
         // date has passed is normally still `active` in this schema —
@@ -304,6 +316,7 @@ export class UsageMetricsQueryService {
     const rows = await this.teamSeasonPotRepository
       .createQueryBuilder('pot')
       .innerJoin(Season, 'season', 'season.id = pot.season_id')
+      .innerJoin(Team, 'team', 'team.id = pot.team_id')
       .select('pot.points_total', 'pointsTotal')
       // Formatted in Postgres, not parsed in JS: node-postgres turns a
       // `date` column into a Date at LOCAL midnight, so reading the calendar
@@ -314,6 +327,7 @@ export class UsageMetricsQueryService {
       // quietly inflated the points/week rate.
       .addSelect(`to_char(season.start_date, 'YYYY-MM-DD')`, 'seasonStartDate')
       .where('pot.status = :status', { status: TeamSeasonPotStatus.ACTIVE })
+      .andWhere('team.is_test = false')
       .getRawMany<{ pointsTotal: string; seasonStartDate: string }>();
 
     return rows.map((row) => ({
@@ -374,12 +388,14 @@ export class UsageMetricsQueryService {
     // is" posture common/time/stockholm-date.util.ts already establishes for
     // streaks, and precise enough for a volume-per-week trend line.
     const rows = await queryBuilder
+      .innerJoin(Team, 'team', `team.id = ${alias}.team_id`)
       .select(
         `to_char(date_trunc('week', ${alias}.created_at), 'YYYY-MM-DD')`,
         'weekStart',
       )
       .addSelect('COUNT(*)', 'count')
       .where(`${alias}.created_at >= :windowStart`, { windowStart })
+      .andWhere('team.is_test = false')
       .groupBy(`date_trunc('week', ${alias}.created_at)`)
       .orderBy(`date_trunc('week', ${alias}.created_at)`, 'ASC')
       .getRawMany<{ weekStart: string; count: string }>();

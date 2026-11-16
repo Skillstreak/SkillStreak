@@ -92,8 +92,6 @@ export class DrillGroupsService {
         focus: drill.focus,
         durationMinutes: drill.durationMinutes,
         locale: drill.locale,
-        author: drill.author,
-        sourceNote: drill.sourceNote,
       }));
 
     return {

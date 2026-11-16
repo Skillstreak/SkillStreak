@@ -60,11 +60,13 @@ export function ActivitySheet({
   const [activityType, setActivityType] = useState<ActivityType | null>(null);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
   const [evidence, setEvidence] = useState<EvidenceChoice>('none');
+  const [showManualLog, setShowManualLog] = useState(false);
   const wasVisible = useRef(visible);
 
   const handleClose = () => {
     setActivityType(null);
     setDurationMinutes(null);
+    setShowManualLog(false);
     onClose();
   };
 
@@ -78,6 +80,7 @@ export function ActivitySheet({
     if (wasVisible.current && !visible) {
       setActivityType(null);
       setDurationMinutes(null);
+      setShowManualLog(false);
     }
     wasVisible.current = visible;
   }, [visible]);
@@ -149,31 +152,60 @@ export function ActivitySheet({
 
         {activityType ? (
           <>
-            <Text style={styles.subheading}>{t('activitySheet.durationHeading')}</Text>
-            <View style={styles.chipRow}>
-              {DURATIONS.map((option) => {
-                const selected = option.minutes === durationMinutes;
-                return (
-                  <Pressable
-                    key={option.labelKey}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    onPress={() => setDurationMinutes(option.minutes)}
-                    style={[styles.durationChip, selected && styles.chipSelected]}
-                  >
-                    <Text style={styles.chipLabel}>{t(`activitySheet.durations.${option.labelKey}`)}</Text>
-                  </Pressable>
-                );
-              })}
+            <View style={styles.timerStartContainer}>
+              <PrimaryButton
+                label={t('activitySheet.startTimerButton')}
+                loading={loading}
+                onPress={() => {
+                  onSubmit(activityType, 60, 'timer');
+                }}
+              />
+              <Text style={styles.timerStartHelp}>
+                {t('activitySheet.startTimerHelp')}
+              </Text>
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowManualLog((v) => !v)}
+              style={styles.manualLogToggle}
+            >
+              <Text style={styles.manualLogToggleText}>
+                {showManualLog
+                  ? t('activitySheet.hideManualLog')
+                  : t('activitySheet.showManualLog')}
+              </Text>
+            </Pressable>
+
+            {showManualLog ? (
+              <>
+                <Text style={styles.subheading}>{t('activitySheet.durationHeading')}</Text>
+                <View style={styles.chipRow}>
+                  {DURATIONS.map((option) => {
+                    const selected = option.minutes === durationMinutes;
+                    return (
+                      <Pressable
+                        key={option.labelKey}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        onPress={() => setDurationMinutes(option.minutes)}
+                        style={[styles.durationChip, selected && styles.chipSelected]}
+                      >
+                        <Text style={styles.chipLabel}>{t(`activitySheet.durations.${option.labelKey}`)}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
           </>
         ) : null}
 
-        {durationMinutes !== null ? (
+        {showManualLog && durationMinutes !== null ? (
           <>
             <Text style={styles.subheading}>{t('activitySheet.evidenceHeading')}</Text>
             <Text style={styles.evidenceHelp}>{t('activitySheet.evidenceHelp')}</Text>
-            {EVIDENCE_OPTIONS.map((option) => {
+            {EVIDENCE_OPTIONS.filter((o) => o.choice !== 'timer').map((option) => {
               const selected = option.choice === evidence;
               const points = evidencePointsPreview(
                 durationMinutes,
@@ -201,23 +233,21 @@ export function ActivitySheet({
                 </Pressable>
               );
             })}
+
+            {errorText ? <Text style={styles.error}>{errorText}</Text> : null}
+
+            <PrimaryButton
+              label={t('activitySheet.submit')}
+              disabled={!canSubmit}
+              loading={loading}
+              onPress={() => {
+                if (activityType && durationMinutes !== null) {
+                  onSubmit(activityType, durationMinutes, evidence);
+                }
+              }}
+            />
           </>
         ) : null}
-
-        {errorText ? <Text style={styles.error}>{errorText}</Text> : null}
-
-        <PrimaryButton
-          label={
-            evidence === 'timer' ? t('activitySheet.submitTimer') : t('activitySheet.submit')
-          }
-          disabled={!canSubmit}
-          loading={loading}
-          onPress={() => {
-            if (activityType && durationMinutes !== null) {
-              onSubmit(activityType, durationMinutes, evidence);
-            }
-          }}
-        />
       </View>
     </Modal>
   );
@@ -331,5 +361,24 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: colors.error,
     textAlign: 'center',
+  },
+  timerStartContainer: {
+    gap: 6,
+    marginTop: 6,
+  },
+  timerStartHelp: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  manualLogToggle: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  manualLogToggleText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.textMuted,
   },
 });

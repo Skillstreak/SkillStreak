@@ -131,11 +131,6 @@
     "erasureStaleState": "Quelque chose a changé dans l'équipe depuis que tu as ouvert cet écran. Vérifie ton profil et réessaie.",
     "erasureCancelledToast": "C'est fait ! Ton compte ne sera pas supprimé. 🎉",
     "erasureCancelError": "Une erreur s'est produite. Recharge la page et réessaie.",
-    "editName": {
-      "heading": "Ton nom",
-      "sub": "Facultatif — jamais montré aux autres membres de l'équipe, toi seul(e) le vois ici.",
-      "placeholder": "Prénom et nom"
-    },
     "editAvatar": {
       "heading": "Choisis un avatar",
       "sub": "Pas besoin de photo — choisis simplement un personnage que tu aimes."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Ton profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Nom",
-      "nameNotSet": "Non renseigné",
-      "addName": "Ajouter",
       "birthYearLabel": "Année de naissance",
       "birthYearHelper": "Tu ne peux pas le modifier toi-même — contacte l'entraîneur de ton équipe si ça doit être corrigé.",
       "contactLabel": "Adresse de contact",

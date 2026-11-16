@@ -131,11 +131,6 @@
     "erasureStaleState": "Im Team hat sich etwas geändert, seit du diese Ansicht geöffnet hast. Prüf dein Profil, und versuch's noch mal.",
     "erasureCancelledToast": "Erledigt! Dein Konto wird nicht gelöscht. 🎉",
     "erasureCancelError": "Etwas ist schiefgelaufen. Lade die Seite neu, und versuch's noch mal.",
-    "editName": {
-      "heading": "Dein Name",
-      "sub": "Freiwillig — wird nie anderen im Team angezeigt, nur du siehst ihn hier.",
-      "placeholder": "Vor- und Nachname"
-    },
     "editAvatar": {
       "heading": "Avatar wählen",
       "sub": "Kein Foto nötig — wähl einfach eine Figur, die dir gefällt."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Dein Profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Name",
-      "nameNotSet": "Nicht angegeben",
-      "addName": "Hinzufügen",
       "birthYearLabel": "Geburtsjahr",
       "birthYearHelper": "Kannst du nicht selbst ändern — wende dich an den Trainer deines Teams, wenn das korrigiert werden muss.",
       "contactLabel": "Kontaktadresse",

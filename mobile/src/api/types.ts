@@ -162,7 +162,7 @@ export function isClickOnlyUsedUp(allowance: ClickOnlyAllowance | null): boolean
 
 export interface CreateTrainingTimerRequest {
   activityType: ActivityType;
-  plannedMinutes: number;
+  plannedMinutes?: number;
 }
 
 /** All timestamps are the server's clock — the countdown is computed from
@@ -321,7 +321,7 @@ export interface RedeemSessionResponse {
 // returning player's saved choice wins over the device's own guess
 // (src/i18n/deviceLocale.ts), which only matters pre-auth.
 export interface PlayerProfileResponse {
-  realName: string | null;
+  realName?: string | null;
   birthYear: number;
   parentContact: string;
   avatarId: string;
@@ -329,7 +329,6 @@ export interface PlayerProfileResponse {
 }
 
 export interface UpdateProfileRequest {
-  realName?: string | null;
   avatarId?: string;
   // NEW (docs/adr/0014-multi-language-support.md Consequences, Fas 4.3) —
   // same optional-PATCH-field addition as `CreatePlayerRequest.locale`

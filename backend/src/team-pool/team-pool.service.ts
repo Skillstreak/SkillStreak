@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { stockholmDateString } from '../common/time/stockholm-date.util';
@@ -58,6 +62,9 @@ export class TeamPoolService {
     private readonly teamSeasonPotRepository: Repository<TeamSeasonPot>,
     @InjectRepository(Season)
     private readonly seasonRepository: Repository<Season>,
+    @Optional()
+    @InjectRepository(Team)
+    private readonly teamRepository?: Repository<Team>,
   ) {}
 
   async getActivePotForTeam(
@@ -179,6 +186,7 @@ export class TeamPoolService {
       .addSelect('team.name', 'teamName')
       .addSelect('pot.points_total', 'pointsTotal')
       .where('pot.status = :status', { status: TeamSeasonPotStatus.ACTIVE })
+      .andWhere('team.is_test = false')
       .orderBy('pot.points_total', 'DESC')
       // Stable secondary order for ties, so repeated calls (leaderboard +
       // a team's own rank on a different request) can't disagree about
@@ -220,6 +228,7 @@ export class TeamPoolService {
         'eligiblePlayerCount',
       )
       .where('pot.status = :status', { status: TeamSeasonPotStatus.ACTIVE })
+      .andWhere('team.is_test = false')
       .groupBy('team.id')
       .addGroupBy('team.name')
       .addGroupBy('pot.points_total')
@@ -271,6 +280,14 @@ export class TeamPoolService {
     const rows = await this.queryActivePotsWithEligibleCounts();
     const mine = rows.find((row) => row.teamId === teamId);
     if (!mine) {
+      if (this.teamRepository) {
+        const team = await this.teamRepository.findOne({
+          where: { id: teamId },
+        });
+        if (team?.isTest) {
+          return { effortRank: null, eligiblePlayerCount: 0 };
+        }
+      }
       throw new InternalServerErrorException(
         `Team ${teamId} has an active TeamSeasonPot but is missing from its own eligible-count computation.`,
       );
@@ -472,7 +489,15 @@ export class TeamPoolService {
     const leaderboard = await this.getLeaderboard();
     const entry = leaderboard.find((row) => row.teamId === teamId);
     if (!entry) {
-      throw new InternalServerErrorException(
+      if (this.teamRepository) {
+        const team = await this.teamRepository.findOne({
+          where: { id: teamId },
+        });
+        if (team?.isTest) {
+          return { rank: 0, teamCount: leaderboard.length };
+        }
+      }
+      throw new Error(
         `Team ${teamId} has an active TeamSeasonPot but is missing from its own leaderboard computation.`,
       );
     }

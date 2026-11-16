@@ -1,0 +1,52 @@
+{
+  "village": {
+    "title": "Skillstreak Village",
+    "intro": "Här syns lagnamn och sport. Inga spelare, inga siffror.",
+    "ownHeading": "Ditt lag",
+    "level": {
+      "calm": "Lugnt här",
+      "some": "Några lag",
+      "many": "Många lag",
+      "veryMany": "Väldigt många lag"
+    },
+    "empty": "Inga lag visas här just nu."
+  },
+  "arenas": {
+    "floorball": {
+      "name": "Innebandy"
+    },
+    "football": {
+      "name": "Fotboll"
+    },
+    "handball": {
+      "name": "Handboll"
+    },
+    "ice_hockey": {
+      "name": "Ishockey"
+    },
+    "rugby": {
+      "name": "Rugby"
+    },
+    "skiing": {
+      "name": "Skidåkning"
+    },
+    "volleyball": {
+      "name": "Volleyboll"
+    },
+    "basketball": {
+      "name": "Basket"
+    },
+    "rowing": {
+      "name": "Rodd"
+    },
+    "tennis": {
+      "name": "Tennis"
+    },
+    "skateboard": {
+      "name": "Skateboard"
+    },
+    "golf": {
+      "name": "Golf"
+    }
+  }
+}

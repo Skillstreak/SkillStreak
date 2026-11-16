@@ -1,0 +1,52 @@
+{
+  "village": {
+    "title": "Skillstreak Village",
+    "intro": "Hier siehst du Teamnamen und Sportarten. Keine Spieler, keine Zahlen.",
+    "ownHeading": "Dein Team",
+    "level": {
+      "calm": "Ruhig hier",
+      "some": "Ein paar Teams",
+      "many": "Viele Teams",
+      "veryMany": "Sehr viele Teams"
+    },
+    "empty": "Gerade werden hier keine Teams angezeigt."
+  },
+  "arenas": {
+    "floorball": {
+      "name": "Unihockey"
+    },
+    "football": {
+      "name": "Fußball"
+    },
+    "handball": {
+      "name": "Handball"
+    },
+    "ice_hockey": {
+      "name": "Eishockey"
+    },
+    "rugby": {
+      "name": "Rugby"
+    },
+    "skiing": {
+      "name": "Skifahren"
+    },
+    "volleyball": {
+      "name": "Volleyball"
+    },
+    "basketball": {
+      "name": "Basketball"
+    },
+    "rowing": {
+      "name": "Rudern"
+    },
+    "tennis": {
+      "name": "Tennis"
+    },
+    "skateboard": {
+      "name": "Skateboarden"
+    },
+    "golf": {
+      "name": "Golf"
+    }
+  }
+}

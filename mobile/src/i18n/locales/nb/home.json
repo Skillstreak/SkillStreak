@@ -131,11 +131,6 @@
     "erasureStaleState": "Noe har endret seg i laget siden du åpnet denne visningen. Sjekk profilen din, og prøv igjen.",
     "erasureCancelledToast": "Ferdig! Kontoen din blir ikke slettet. 🎉",
     "erasureCancelError": "Noe gikk galt. Last siden på nytt, og prøv igjen.",
-    "editName": {
-      "heading": "Navnet ditt",
-      "sub": "Valgfritt — vises aldri for andre på laget, bare du ser det her.",
-      "placeholder": "For- og etternavn"
-    },
     "editAvatar": {
       "heading": "Velg avatar",
       "sub": "Ingen bilde trengs — velg en figur du liker."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Din profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Navn",
-      "nameNotSet": "Ikke angitt",
-      "addName": "Legg til",
       "birthYearLabel": "Fødselsår",
       "birthYearHelper": "Kan ikke endres selv — ta kontakt med lagets trener hvis det må rettes.",
       "contactLabel": "Kontaktadresse",

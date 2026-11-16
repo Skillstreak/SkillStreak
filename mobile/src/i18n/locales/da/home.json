@@ -131,11 +131,6 @@
     "erasureStaleState": "Der er sket ændringer på holdet, siden du åbnede denne skærm. Tjek din profil, og prøv igen.",
     "erasureCancelledToast": "Klaret! Din konto bliver ikke slettet. 🎉",
     "erasureCancelError": "Noget gik galt. Genindlæs siden, og prøv igen.",
-    "editName": {
-      "heading": "Dit navn",
-      "sub": "Valgfrit — vises aldrig for andre på holdet, kun du ser det her.",
-      "placeholder": "For- og efternavn"
-    },
     "editAvatar": {
       "heading": "Vælg avatar",
       "sub": "Intet billede nødvendigt — vælg en figur, du kan lide."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Din profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Navn",
-      "nameNotSet": "Ikke angivet",
-      "addName": "Tilføj",
       "birthYearLabel": "Fødselsår",
       "birthYearHelper": "Kan ikke ændres selv — kontakt holdets træner, hvis det skal rettes.",
       "contactLabel": "Kontaktadresse",

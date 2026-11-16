@@ -5,7 +5,10 @@ import {
   assertTeamJoinApproved,
 } from '../players/player-access.util';
 import { PlayersService } from '../players/players.service';
-import { StartTrainingTimerDto } from './dto/start-training-timer.dto';
+import {
+  MAX_TIMER_MINUTES,
+  StartTrainingTimerDto,
+} from './dto/start-training-timer.dto';
 import { TrainingTimer } from './entities/training-timer.entity';
 
 const MS_PER_MINUTE = 60 * 1000;
@@ -60,11 +63,16 @@ export class TrainingTimersService {
       // it, so there is nothing to keep it for.
       await repository.delete({ playerId, consumedAt: IsNull() });
 
+      const plannedMinutes = Math.min(
+        dto.plannedMinutes ?? MAX_TIMER_MINUTES,
+        MAX_TIMER_MINUTES,
+      );
+
       const timer = await repository.save(
         repository.create({
           playerId,
           activityType: dto.activityType,
-          plannedMinutes: dto.plannedMinutes,
+          plannedMinutes,
           startedAt: new Date(),
           consumedAt: null,
         }),

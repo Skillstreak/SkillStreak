@@ -489,6 +489,37 @@ describe('TrainingTimersService.start (ADR-0038 Decision 2)', () => {
     });
   });
 
+  it('defaults plannedMinutes to 60 when omitted (I-010 up-counting stopwatch)', async () => {
+    const { service } = buildTimersService();
+
+    await expect(
+      service.start('player-1', {
+        activityType: ActivityType.FITNESS,
+      }),
+    ).resolves.toEqual({
+      timerId: 'timer-2',
+      startedAt: '2026-10-07T10:00:00.000Z',
+      plannedMinutes: 60,
+      endsAt: '2026-10-07T11:00:00.000Z',
+    });
+  });
+
+  it('caps plannedMinutes at 60 when an excessive value is supplied', async () => {
+    const { service } = buildTimersService();
+
+    await expect(
+      service.start('player-1', {
+        activityType: ActivityType.DRILL,
+        plannedMinutes: 90,
+      }),
+    ).resolves.toEqual({
+      timerId: 'timer-2',
+      startedAt: '2026-10-07T10:00:00.000Z',
+      plannedMinutes: 60,
+      endsAt: '2026-10-07T11:00:00.000Z',
+    });
+  });
+
   it("abandons the player's open timer before starting a new one", async () => {
     const { service, timerRepository } = buildTimersService();
 

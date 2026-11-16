@@ -1,0 +1,52 @@
+{
+  "village": {
+    "title": "Skillstreak Village",
+    "intro": "Tady vidíš názvy týmů a sporty. Žádní hráči, žádná čísla.",
+    "ownHeading": "Tvůj tým",
+    "level": {
+      "calm": "Tady je klid",
+      "some": "Pár týmů",
+      "many": "Hodně týmů",
+      "veryMany": "Opravdu hodně týmů"
+    },
+    "empty": "Momentálně se tu nezobrazují žádné týmy."
+  },
+  "arenas": {
+    "floorball": {
+      "name": "Florbal"
+    },
+    "football": {
+      "name": "Fotbal"
+    },
+    "handball": {
+      "name": "Házená"
+    },
+    "ice_hockey": {
+      "name": "Lední hokej"
+    },
+    "rugby": {
+      "name": "Ragby"
+    },
+    "skiing": {
+      "name": "Lyžování"
+    },
+    "volleyball": {
+      "name": "Volejbal"
+    },
+    "basketball": {
+      "name": "Basketbal"
+    },
+    "rowing": {
+      "name": "Veslování"
+    },
+    "tennis": {
+      "name": "Tenis"
+    },
+    "skateboard": {
+      "name": "Skateboarding"
+    },
+    "golf": {
+      "name": "Golf"
+    }
+  }
+}

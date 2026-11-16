@@ -47,6 +47,10 @@
       "timer": "Med timer"
     },
     "submitTimer": "Starta timern",
+    "startTimerButton": "Starta träningsklockan ⏱️",
+    "startTimerHelp": "Klockan räknar uppåt — 1 poäng per minut (max 60 min)",
+    "showManualLog": "Redan tränat? Logga i efterhand →",
+    "hideManualLog": "Dölj efterhandsloggning ↑",
     "clickOnlyRemaining": "{{remaining}} av {{limit}} snabbloggningar kvar denna vecka",
     "clickOnlyUsedUp": "Veckans snabbloggningar är slut. Passet räknas ändå för din streak, men ger 0 poäng fram till måndag. Timern ger poäng!"
   },
@@ -131,11 +135,6 @@
     "erasureStaleState": "Något har ändrats i laget sedan du öppnade den här vyn. Kolla din profil och försök igen.",
     "erasureCancelledToast": "Klart! Ditt konto raderas inte. 🎉",
     "erasureCancelError": "Något gick fel. Ladda om sidan och testa igen.",
-    "editName": {
-      "heading": "Ditt namn",
-      "sub": "Frivilligt — visas aldrig för andra i laget, bara du ser det här.",
-      "placeholder": "För- och efternamn"
-    },
     "editAvatar": {
       "heading": "Välj avatar",
       "sub": "Ingen bild behövs — välj en figur du gillar."
@@ -156,9 +155,6 @@
     "view": {
       "heading": "Din profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Namn",
-      "nameNotSet": "Inte angivet",
-      "addName": "Lägg till",
       "birthYearLabel": "Födelseår",
       "birthYearHelper": "Går inte att ändra själv — hör av dig till lagets tränare om det behöver rättas.",
       "contactLabel": "Kontaktadress",
@@ -307,26 +303,33 @@
     "notifBody": "10–15 minuter räcker. Din streak väntar!"
   },
   "trainingTimer": {
-    "heading": "Kör hårt! 💪",
-    "explainer": "Timern visar att tiden gick. Du kan låsa telefonen — klockan fortsätter ändå.",
+    "heading": "Träningsklocka 💪",
+    "explainer": "Klockan räknar uppåt och poäng tickar in under tiden du tränar (max 60 min). Du kan låsa telefonen — klockan fortsätter ändå.",
     "ofMinutes": "av {{minutes}} min",
     "remainingA11y": "{{time}} kvar",
-    "stop": "Avsluta",
-    "stopConfirm": "Avsluta nu? Du får poäng för {{minutes}} min.",
+    "stopwatchA11y": "Tränat {{time}}",
+    "runningPoints": "+{{points}} poäng till laget 🔥",
+    "zeroPointsHelp": "0 poäng (börjar ticka efter 1 min)",
+    "firstPointIn": "{{seconds}}s till första poängen",
+    "nextPointIn": "{{seconds}}s till nästa poäng",
+    "maxCapLabel": "Maxtak: {{minutes}} min",
+    "maxReached": "Maxtak nått (60 min = 60 p)! 🎉",
+    "stop": "Avsluta pass",
+    "stopConfirm": "Avsluta nu? Du har tränat i {{minutes}} min och samlat {{points}} poäng.",
     "stopConfirmYes": "Ja, avsluta och logga",
     "keepGoing": "Fortsätt träna",
-    "tooShort": "Det har gått mindre än en minut, så det finns inget att logga än. Kör en stund till, eller avbryt timern.",
+    "tooShort": "Det har gått mindre än en minut (0 poäng). Träna minst 1 minut så börjar poängen ticka in!",
     "discard": "Avbryt timern",
-    "doneHeading": "Tiden är ute! 🎉",
-    "doneBody": "{{minutes}} min klara. Snyggt jobbat!",
-    "logIt": "Logga passet",
+    "doneHeading": "Maxtak nått! 🎉",
+    "doneBody": "60 minuter klara — grymt jobbat! Du har maxat passet och samlat 60 poäng till laget.",
+    "logIt": "Logga passet ({{points}} p)",
     "finishHeading": "Hur vill du logga passet?",
-    "finishHelp": "Timern räknar {{minutes}} min. Vill du ge laget ännu mer kan du lägga till en video.",
+    "finishHelp": "Timern ger {{minutes}} poäng (1 p/min). Vill du ge laget ännu mer kan du lägga till en video.",
     "evidenceTimer": "Bara timern",
-    "submit": "Logga",
+    "submit": "Logga passet",
     "back": "Tillbaka",
-    "notifTitle": "Tiden är ute! ⏱️",
-    "notifBody": "Bra kämpat! Öppna appen och logga ditt pass.",
+    "notifTitle": "Maxtaket nått (60 min)! ⏱️",
+    "notifBody": "Bra kämpat! Öppna appen och logga dina 60 poäng till laget.",
     "rejected": "Timern gick inte att använda den här gången. Avbryt timern och logga passet som vanligt i stället — det räknas ändå."
   },
   "adultFeedback": {

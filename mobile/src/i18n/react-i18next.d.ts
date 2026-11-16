@@ -9,6 +9,7 @@ import svOnboarding from './locales/sv/onboarding.json';
 import svPt from './locales/sv/pt.json';
 import svTips from './locales/sv/tips.json';
 import svTeam from './locales/sv/team.json';
+import svVillage from './locales/sv/village.json';
 
 // Typed-resource augmentation (docs/adr/0014-multi-language-support.md
 // Decision 2's stated reason for choosing i18next over lighter
@@ -31,6 +32,7 @@ declare module 'i18next' {
       clips: typeof svClips;
       pt: typeof svPt;
       tips: typeof svTips;
+      village: typeof svVillage;
     };
   }
 }

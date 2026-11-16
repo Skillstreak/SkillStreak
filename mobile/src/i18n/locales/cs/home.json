@@ -131,11 +131,6 @@
     "erasureStaleState": "Od doby, kdy jsi otevřel/a tuhle obrazovku, se v týmu něco změnilo. Zkontroluj profil a zkus to znovu.",
     "erasureCancelledToast": "Hotovo! Tvůj účet se nesmaže. 🎉",
     "erasureCancelError": "Něco se pokazilo. Načti stránku znovu a zkus to ještě jednou.",
-    "editName": {
-      "heading": "Tvoje jméno",
-      "sub": "Nepovinné — ostatním v týmu se nikdy nezobrazí, vidíš ho jen ty.",
-      "placeholder": "Jméno a příjmení"
-    },
     "editAvatar": {
       "heading": "Vyber si avatara",
       "sub": "Fotku nepotřebuješ — jen si vyber postavičku, která se ti líbí."
@@ -156,9 +151,6 @@
     "view": {
       "heading": "Tvůj profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Jméno",
-      "nameNotSet": "Nevyplněno",
-      "addName": "Přidat",
       "birthYearLabel": "Rok narození",
       "birthYearHelper": "Sám/sama to změnit nemůžeš — pokud je potřeba to opravit, ozvi se trenérovi svého týmu.",
       "contactLabel": "Kontaktní adresa",

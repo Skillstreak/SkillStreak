@@ -11,7 +11,8 @@ dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.32",
   "python-multipart>=0.0.17",  # multipart/form-data, per the contract
-  "pillow>=11.0",
+  "pillow>=13.0.0",
+  "certifi>=2026.10.19",
   "pyyaml>=6.0",
   # The worker calls the app cluster (pull topology). A main dependency,
   # not a dev one, since it is now on the production path.
