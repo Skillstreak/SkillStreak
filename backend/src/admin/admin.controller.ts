@@ -104,7 +104,7 @@ import { UpdateImprovementSuggestionStatusDto } from './dto/update-improvement-s
  * See AdminPlanningDocsService's docstring for why that separation is
  * structural, and keep it that way if the console ever moves.
  */
-@Controller(['api/v1/admin', 'admin'])
+@Controller('api/v1/admin')
 @UseGuards(AdminAuthGuard)
 export class AdminController {
   constructor(

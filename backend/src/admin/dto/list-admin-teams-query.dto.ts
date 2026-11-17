@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
@@ -25,8 +25,12 @@ export class ListAdminTeamsQueryDto {
   @Min(0)
   offset?: number = 0;
 
+  // Not @Type(() => Boolean): that is Boolean('false') === true, which
+  // turned ?isTest=false into the opposite filter.
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }: { value: unknown }) =>
+    value === 'true' ? true : value === 'false' ? false : value,
+  )
   @IsBoolean()
   isTest?: boolean;
 
