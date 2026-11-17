@@ -44,11 +44,5 @@
     "web:tunnel": "expo start --tunnel --web",
     "lint": "eslint src"
   },
-  "private": true,
-  "pnpm": {
-    "overrides": {
-      "shell-quote": ">=1.11.0",
-      "@xmldom/xmldom": ">=0.9.12"
-    }
-  }
+  "private": true
 }
