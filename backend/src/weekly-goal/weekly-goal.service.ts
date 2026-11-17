@@ -24,10 +24,7 @@ import {
 } from '../challenges/entities/challenge.entity';
 import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
-import {
-  ACTIVITY_TYPE_BY_TARGET_METRIC,
-  TARGET_UNIT_BY_TARGET_METRIC,
-} from './weekly-goal-target-metric.enum';
+import { TARGET_UNIT_BY_TARGET_METRIC } from './weekly-goal-target-metric.enum';
 import { isLegalWeeklyGoalTransition } from './weekly-goal-transition.util';
 
 const ONE_ACTIVE_GOAL_PER_TEAM_CONSTRAINT =
@@ -345,7 +342,8 @@ export class WeeklyGoalService {
    * ADR-0005 Decision 2's progress formula:
    * SUM(duration_minutes) WHERE team_id = :teamId
    *   AND logged_at's Europe/Stockholm calendar date BETWEEN start/end
-   *   AND (targetMetric = total-minuter OR activityType matches).
+   *   (every metric counts every log since the ADR-0015 amendment of
+   *   2026-11-17 — the app no longer records what kind of training it was).
    * Computed live from TrainingLogEntry, no challenge_id tagging involved.
    * Shared by every caller that needs this number (dashboard, the two GET
    * weekly-goal endpoints, and the bonus check inside
@@ -374,14 +372,6 @@ export class WeeklyGoalService {
         "(log.logged_at AT TIME ZONE 'Europe/Stockholm')::date BETWEEN :startDate AND :endDate",
         { startDate, endDate },
       );
-
-    const activityType =
-      ACTIVITY_TYPE_BY_TARGET_METRIC[
-        targetMetric as keyof typeof ACTIVITY_TYPE_BY_TARGET_METRIC
-      ];
-    if (activityType) {
-      qb.andWhere('log.activity_type = :activityType', { activityType });
-    }
 
     const raw = await qb.getRawOne<{ sum: string }>();
     return Number(raw?.sum ?? 0);
@@ -424,14 +414,6 @@ export class WeeklyGoalService {
         { startDate, endDate },
       )
       .groupBy('log.player_id');
-
-    const activityType =
-      ACTIVITY_TYPE_BY_TARGET_METRIC[
-        targetMetric as keyof typeof ACTIVITY_TYPE_BY_TARGET_METRIC
-      ];
-    if (activityType) {
-      qb.andWhere('log.activity_type = :activityType', { activityType });
-    }
 
     const rows = await qb.getRawMany<{ playerId: string; value: string }>();
     const map = new Map<string, number>();

@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Co má každý hráč zvládnout tento týden?",
-    "sub": "Každý hráč v týmu musí splnit cíl sám za sebe — vyber, jestli se počítá v minutách nebo trénincích, a jaký typ tréninku se počítá.",
+    "sub": "Každý hráč v týmu musí cíl splnit sám — vyber, jestli se počítá v minutách, nebo v trénincích. Počítá se každý trénink.",
     "unitMinutes": "⏱️ Minuty",
     "unitSessions": "🔁 Počet tréninků",
     "unitHelper": "Jeden trénink = jeden zaznamenaný trénink, bez ohledu na to, jak dlouho trval.",

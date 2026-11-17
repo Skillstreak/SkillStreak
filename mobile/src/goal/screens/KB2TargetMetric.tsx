@@ -8,7 +8,6 @@ import { SecondaryLink } from '../../components/SecondaryLink';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
 import {
-  TARGET_METRIC_OPTIONS,
   targetMetricLabelInline,
   targetUnitForMetric,
   targetUnitLabel,
@@ -27,7 +26,7 @@ const UNIT_PLACEHOLDER_KEYS = {
   sessions: 'kb2.placeholderSessions',
 } as const satisfies Record<WeeklyGoalTargetUnit, string>;
 
-/** Screen KB2 — activity type + per-player target, redesigned 2026-07-31
+/** Screen KB2 — per-player target, redesigned 2026-07-31
  * per docs/adr/0015-weekly-goal-per-player-completion.md +
  * docs/design/phase2.10-per-player-goal-flows.md: a new unit toggle
  * (minuter/pass) drives which of the 10 `WeeklyGoalTargetMetric` values
@@ -40,32 +39,21 @@ export function KB2TargetMetric({
   onBack,
 }: KB2Props) {
   const { t } = useTranslation('goal');
-  const initialOption = initialTargetMetric
-    ? TARGET_METRIC_OPTIONS.find(
-        (option) =>
-          option.minutesValue === initialTargetMetric || option.sessionsValue === initialTargetMetric,
-      ) ?? null
-    : null;
 
   const [selectedUnit, setSelectedUnit] = useState<WeeklyGoalTargetUnit>(
     initialTargetMetric ? targetUnitForMetric(initialTargetMetric) : 'minutes',
-  );
-  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(
-    initialOption ? TARGET_METRIC_OPTIONS.indexOf(initialOption) : null,
   );
   const [targetValueText, setTargetValueText] = useState(
     initialTargetValue !== null ? String(initialTargetValue) : '',
   );
 
-  const selectedOption = selectedOptionIndex !== null ? TARGET_METRIC_OPTIONS[selectedOptionIndex] : null;
-  const targetMetric =
-    selectedOption !== null
-      ? selectedUnit === 'minutes'
-        ? selectedOption.minutesValue
-        : selectedOption.sessionsValue
-      : null;
+  // ADR-0015 amendment 2026-11-17: the app no longer records what kind of
+  // training a session was, so a goal can only count totals. Editing an
+  // older draft set on one activity keeps its unit and becomes a total.
+  const targetMetric: WeeklyGoalTargetMetric =
+    selectedUnit === 'minutes' ? 'total-minuter' : 'total-pass';
   const targetValue = Number.parseInt(targetValueText, 10);
-  const canSubmit = targetMetric !== null && Number.isFinite(targetValue) && targetValue > 0;
+  const canSubmit = Number.isFinite(targetValue) && targetValue > 0;
   const unitLabel = targetUnitLabel(t, selectedUnit);
 
   // Switching units resets the numeric field — a "20" typed while
@@ -102,23 +90,6 @@ export function KB2TargetMetric({
       </View>
       <Text style={styles.unitHelper}>{t('kb2.unitHelper')}</Text>
 
-      <View style={styles.chipRow}>
-        {TARGET_METRIC_OPTIONS.map((option, index) => {
-          const selected = index === selectedOptionIndex;
-          return (
-            <Pressable
-              key={option.labelKey}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => setSelectedOptionIndex(index)}
-              style={[styles.chip, selected && styles.chipSelected]}
-            >
-              <Text style={styles.chipEmoji}>{option.icon}</Text>
-              <Text style={styles.chipLabel}>{t(option.labelKey)}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
 
       <Text style={styles.label}>{t('kb2.targetLabel', { unit: unitLabel })}</Text>
       <TextInput
@@ -131,7 +102,7 @@ export function KB2TargetMetric({
       />
       <Text style={styles.helper}>{t('kb2.helper')}</Text>
 
-      {targetMetric && canSubmit ? (
+      {canSubmit ? (
         <View style={styles.previewCallout}>
           <Text style={styles.previewText}>
             {t('kb2.previewText', {
@@ -147,7 +118,7 @@ export function KB2TargetMetric({
         label={t('kb2.next')}
         disabled={!canSubmit}
         onPress={() => {
-          if (targetMetric && canSubmit) onNext(targetMetric, targetValue);
+          if (canSubmit) onNext(targetMetric, targetValue);
         }}
       />
       <SecondaryLink label={t('kb2.back')} onPress={onBack} />
@@ -194,34 +165,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 11.5,
     color: colors.textMuted,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  chip: {
-    width: '47%',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-    paddingVertical: 14,
-    alignItems: 'center',
-    gap: 4,
-  },
-  chipSelected: {
-    borderColor: colors.gold,
-    backgroundColor: '#FFF7E0',
-  },
-  chipEmoji: {
-    fontSize: 22,
-  },
-  chipLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.ink,
-    textAlign: 'center',
   },
   label: {
     fontFamily: fonts.bodyBold,

@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "¿Qué tiene que conseguir cada jugador esta semana?",
-    "sub": "Cada jugador del equipo tiene que lograr el objetivo por su cuenta: elige si se cuenta en minutos o en sesiones, y qué tipo de entrenamiento cuenta.",
+    "sub": "Cada jugador del equipo tiene que alcanzar el objetivo por su cuenta — elige si se cuenta en minutos o en sesiones. Todo entrenamiento cuenta.",
     "unitMinutes": "⏱️ Minutos",
     "unitSessions": "🔁 Número de sesiones",
     "unitHelper": "Una sesión = un entrenamiento registrado, da igual cuánto haya durado.",

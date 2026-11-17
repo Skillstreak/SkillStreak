@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Vad ska varje spelare klara den här veckan?",
-    "sub": "Varje spelare i laget behöver nå målet på egen hand — välj om det räknas i minuter eller pass, och vilken typ av träning som gäller.",
+    "sub": "Varje spelare i laget behöver nå målet på egen hand — välj om det räknas i minuter eller pass. All träning räknas.",
     "unitMinutes": "⏱️ Minuter",
     "unitSessions": "🔁 Antal pass",
     "unitHelper": "Ett pass = en loggad träning, oavsett hur lång den var.",

@@ -348,3 +348,24 @@ existing index would be designing for scale this project doesn't have.
   Decision 2 doesn't reintroduce any of ADR-0013's already-closed
   findings (e.g. via the same live-roster query being reused
   incorrectly elsewhere).
+
+## Amendment 2026-11-17 — goals count totals only (owner)
+
+ADR-0038's amendment of the same date stops the app asking what kind of
+training a session was; new logs are stored with activity type `other`. A
+goal on one activity ("60 min löpning") could then never be met.
+
+Owner's decision, 2026-11-17: **goals are set on totals only** —
+`total-minuter` or `total-pass`.
+
+- Create and update (`POST`/`PATCH` weekly goal) accept only those two
+  values (`SETTABLE_TARGET_METRICS`); the captain's builder (Screen KB2)
+  shows the minutes/sessions toggle and no activity chips.
+- The eight per-activity values stay in `WeeklyGoalTargetMetric`, because
+  existing `Challenge` rows may carry them, and Decision 5's progress
+  query **no longer filters by activity** for any metric. An older goal
+  set on one activity therefore counts all training, the same as its
+  total counterpart, instead of becoming unreachable.
+
+Production held only the team's own test data when this was decided, so
+no real team's running goal changed meaning mid-week.
