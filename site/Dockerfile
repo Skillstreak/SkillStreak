@@ -17,7 +17,7 @@ FROM node:22-alpine AS mobile-build
 WORKDIR /app
 RUN corepack enable
 
-COPY mobile/package.json mobile/pnpm-lock.yaml ./
+COPY mobile/package.json mobile/pnpm-lock.yaml mobile/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY mobile/. .
