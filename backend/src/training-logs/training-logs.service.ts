@@ -15,6 +15,7 @@ import { TeamPoolService } from '../team-pool/team-pool.service';
 import { WeeklyGoalService } from '../weekly-goal/weekly-goal.service';
 import { CreateTrainingLogDto } from './dto/create-training-log.dto';
 import { TrainingLogEntry } from './entities/training-log-entry.entity';
+import { ActivityType } from './activity-type.enum';
 import { TrainingTimer } from './entities/training-timer.entity';
 import {
   CLICK_ONLY_WEEKLY_LIMIT,
@@ -345,7 +346,7 @@ export class TrainingLogsService {
           playerId,
           teamId: lockedPlayer.teamId,
           loggedAt: now,
-          activityType: dto.activityType,
+          activityType: dto.activityType ?? ActivityType.OTHER,
           durationMinutes,
           evidenceClipId: dto.evidenceClipId ?? null,
           evidenceTier,

@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage';
-import type { ActivityType, TrainingTimerResponse } from './types';
+import type { TrainingTimerResponse } from './types';
 
 /**
  * docs/adr/0038 Decision 2 — the one running countdown timer, kept on this
@@ -30,7 +30,6 @@ const MAX_TIMER_AGE_MS = 24 * 60 * 60 * 1000;
 
 export interface ActiveTimer {
   timerId: string;
-  activityType: ActivityType;
   plannedMinutes: number;
   startedAt: string;
   endsAt: string;
@@ -48,11 +47,9 @@ export interface ActiveTimer {
 
 export function activeTimerFromResponse(
   response: TrainingTimerResponse,
-  activityType: ActivityType,
 ): ActiveTimer {
   return {
     timerId: response.timerId,
-    activityType,
     plannedMinutes: response.plannedMinutes,
     startedAt: response.startedAt,
     endsAt: response.endsAt,
@@ -60,9 +57,31 @@ export function activeTimerFromResponse(
   };
 }
 
+export const MAX_TIMER_MINUTES = 60;
+
 /** "Now" on the server's clock, as best this device can tell. */
 export function serverNow(timer: ActiveTimer): number {
   return Date.now() + timer.clockOffsetMs;
+}
+
+/** Elapsed milliseconds from startedAt, capped at max duration (60 minutes). */
+export function elapsedMs(timer: ActiveTimer): number {
+  const maxMs = (timer.plannedMinutes || MAX_TIMER_MINUTES) * 60_000;
+  const elapsed = serverNow(timer) - Date.parse(timer.startedAt);
+  return Math.max(0, Math.min(maxMs, elapsed));
+}
+
+/** Elapsed whole seconds for display. */
+export function elapsedSeconds(timer: ActiveTimer): number {
+  return Math.floor(elapsedMs(timer) / 1000);
+}
+
+/** Format clock counting up (MM:SS). e.g. 00:00 -> 05:23 -> 60:00. */
+export function formatStopwatch(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 export function remainingMs(timer: ActiveTimer): number {
@@ -70,10 +89,16 @@ export function remainingMs(timer: ActiveTimer): number {
 }
 
 /** Whole minutes done so far, never more than planned — the same figure
- * the server will credit (ADR-0038 Decision 2 and 3). */
+ * the server will credit (ADR-0038 Decision 2 and 3, I-010). */
 export function elapsedWholeMinutes(timer: ActiveTimer): number {
   const elapsed = Math.floor((serverNow(timer) - Date.parse(timer.startedAt)) / 60_000);
-  return Math.max(0, Math.min(timer.plannedMinutes, elapsed));
+  const cap = timer.plannedMinutes || MAX_TIMER_MINUTES;
+  return Math.max(0, Math.min(cap, elapsed));
+}
+
+/** Current points earned so far (1 point per whole minute, up to 60). */
+export function currentPoints(timer: ActiveTimer): number {
+  return elapsedWholeMinutes(timer);
 }
 
 function isActiveTimer(value: unknown): value is ActiveTimer {
@@ -81,7 +106,6 @@ function isActiveTimer(value: unknown): value is ActiveTimer {
   const v = value as Record<string, unknown>;
   return (
     typeof v.timerId === 'string' &&
-    typeof v.activityType === 'string' &&
     typeof v.plannedMinutes === 'number' &&
     typeof v.startedAt === 'string' &&
     typeof v.endsAt === 'string' &&

@@ -1,5 +1,4 @@
 import { EntityManager } from 'typeorm';
-import { ActivityType } from '../training-logs/activity-type.enum';
 import { ChallengeStatus } from '../challenges/entities/challenge.entity';
 import {
   ChallengeAlreadyTerminalException,
@@ -325,7 +324,7 @@ describe('WeeklyGoalService.processGoalBonusForLog', () => {
     );
   });
 
-  it('filters the per-player progress query by activityType when targetMetric is a specific activity (drill-minuter), not total-minuter', async () => {
+  it('counts every log for a legacy per-activity goal (drill-minuter) — ADR-0015 amendment 2026-11-17, the app no longer records activity type', async () => {
     const drillGoal = {
       ...baseGoal,
       targetMetric: WeeklyGoalTargetMetric.DRILL_MINUTER,
@@ -342,10 +341,10 @@ describe('WeeklyGoalService.processGoalBonusForLog', () => {
       '2026-07-08',
     );
 
-    expect(trainingLogQb.andWhere).toHaveBeenCalledWith(
-      'log.activity_type = :activityType',
-      { activityType: ActivityType.DRILL },
+    const activityTypeCalls = trainingLogQb.andWhere.mock.calls.filter(
+      ([sql]: [string]) => sql.includes('activity_type'),
     );
+    expect(activityTypeCalls).toHaveLength(0);
   });
 
   it('does NOT filter by activityType when targetMetric is total-minuter', async () => {

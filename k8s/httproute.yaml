@@ -75,6 +75,11 @@ metadata:
 spec:
   parentRefs:
     - name: skillstreak-gateway
+      sectionName: https-site
+    - name: skillstreak-gateway
+      sectionName: https-www
+    - name: skillstreak-gateway
+      sectionName: https-try
   hostnames:
     - "skillstreak.xyz"
     - "www.skillstreak.xyz"
@@ -92,6 +97,7 @@ metadata:
 spec:
   parentRefs:
     - name: skillstreak-gateway
+      sectionName: https-api
   hostnames:
     - "api.skillstreak.xyz"
   rules:

@@ -40,7 +40,14 @@ import {
   AdminQuickFeedbackResponse,
   AdminQuickFeedbackService,
 } from './admin-quick-feedback.service';
+import {
+  AdminTeamRow,
+  AdminTeamsListResponse,
+  AdminTeamsService,
+} from './admin-teams.service';
 import { QuickFeedbackQueryDto } from './dto/quick-feedback-query.dto';
+import { ListAdminTeamsQueryDto } from './dto/list-admin-teams-query.dto';
+import { SetTeamTestFlagDto } from './dto/set-team-test-flag.dto';
 import {
   AdminPlanningResponse,
   toPlanningResponse,
@@ -108,6 +115,7 @@ export class AdminController {
     private readonly adminImprovementSuggestionsService: AdminImprovementSuggestionsService,
     private readonly adminPlanningDocsService: AdminPlanningDocsService,
     private readonly adminQuickFeedbackService: AdminQuickFeedbackService,
+    private readonly adminTeamsService: AdminTeamsService,
   ) {}
 
   // §13/§2 — lets the console know it's signed in on first paint without
@@ -153,6 +161,23 @@ export class AdminController {
     @Query() query: QuickFeedbackQueryDto,
   ): Promise<AdminQuickFeedbackResponse> {
     return this.adminQuickFeedbackService.totals(query.week);
+  }
+
+  // I-007 Steg 1 — list teams for admin control center (sanitized, count-only, no PII)
+  @Get('teams')
+  listTeams(
+    @Query() query: ListAdminTeamsQueryDto,
+  ): Promise<AdminTeamsListResponse> {
+    return this.adminTeamsService.listTeams(query);
+  }
+
+  // I-007 Steg 1 — manually flag/unflag test team (guarded by Juridik A2)
+  @Patch('teams/:id/test-flag')
+  setTestFlag(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetTeamTestFlagDto,
+  ): Promise<AdminTeamRow> {
+    return this.adminTeamsService.setTestFlag(id, dto.isTest);
   }
 
   // Decision 6 — paginated, filterable by source / status_code range /

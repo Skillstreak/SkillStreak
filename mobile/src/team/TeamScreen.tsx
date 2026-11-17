@@ -29,6 +29,7 @@ import {
   rejectTeamJoin,
   rotateInviteCode,
 } from '../api/endpoints';
+import { PT_ENABLED } from '../api/config';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 import type {
@@ -423,7 +424,7 @@ export function TeamScreen({
         {/* Screen CAP1 (docs/design/phase8-pt-flows.md §8) — captain-only.
             The server enforces that too (`assertIsCaptainOfTeam` inside the
             service), so this gate is presentation, not protection. */}
-        {dashboard.viewerIsCaptain ? <TeamPtLinksScreen teamId={teamId} /> : null}
+        {PT_ENABLED && dashboard.viewerIsCaptain ? <TeamPtLinksScreen teamId={teamId} /> : null}
 
         <TeamPoolCard
           pointsTotal={dashboard.teamPool.pointsTotal}

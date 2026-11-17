@@ -7,6 +7,13 @@ import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage'
 // platform split this relies on.
 const SESSION_TOKEN_KEY = 'skillstreak.sessionToken';
 
+// Local micro-challenge keys (see frontend architecture, L1).
+const MICRO_KEYS = [
+  'skillstreak.micro.doneToday',
+  'skillstreak.micro.safetySeen',
+  'skillstreak.micro.timerMarker',
+] as const;
+
 export async function getSessionToken(): Promise<string | null> {
   return secureGetItem(SESSION_TOKEN_KEY);
 }
@@ -17,4 +24,14 @@ export async function setSessionToken(token: string): Promise<void> {
 
 export async function clearSessionToken(): Promise<void> {
   await secureDeleteItem(SESSION_TOKEN_KEY);
+  // L1: clear local micro-challenge state too, so it does not leak to the
+  // next account on a shared device. Try every key independently; log only
+  // the error code, never values.
+  for (const key of MICRO_KEYS) {
+    try {
+      await secureDeleteItem(key);
+    } catch {
+      console.warn('MICRO_CLEAR_FAILED');
+    }
+  }
 }

@@ -48,7 +48,6 @@ import type { ActiveTimer } from '../api/trainingTimer';
 import { colors } from '../theme/colors';
 import { UploadFlow } from '../clips/upload/UploadFlow';
 import type {
-  ActivityType,
   ClickOnlyAllowance,
   CreateTrainingLogRequest,
   EvidenceChoice,
@@ -123,7 +122,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
    * silently discarding the work.
    */
   const [abandonedEvidenceLog, setAbandonedEvidenceLog] = useState<{
-    activityType: ActivityType;
     durationMinutes: number;
     /**
      * Carried through the retry. Dropping it silently downgraded
@@ -138,7 +136,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   } | null>(null);
 
   const [pendingEvidenceLog, setPendingEvidenceLog] = useState<{
-    activityType: ActivityType;
     durationMinutes: number;
     evidence: EvidenceChoice;
     timerId?: string;
@@ -318,12 +315,14 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
 
   /** docs/adr/0038 Decision 2 — the server starts the clock; the phone
    * only displays it. */
-  const startTimer = async (activityType: ActivityType, plannedMinutes: number) => {
+  const startTimer = async () => {
     setSheetLoading(true);
     setSheetError(null);
     try {
-      const response = await postTrainingTimer({ activityType, plannedMinutes });
-      const timer = activeTimerFromResponse(response, activityType);
+      // ADR-0038 amendment 2026-11-17: no kind of training, no planned
+      // length — the server opens a 60-minute window and the clock counts up.
+      const response = await postTrainingTimer({});
+      const timer = activeTimerFromResponse(response);
       await saveActiveTimer(timer);
       void scheduleTimerEndNotification(timer, {
         title: t('trainingTimer.notifTitle'),
@@ -358,7 +357,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   const handleTimerLog = (minutesDone: number, choice: TimerLogChoice) => {
     if (!activeTimer) return;
     const base = {
-      activityType: activeTimer.activityType,
       durationMinutes: minutesDone,
       timerId: activeTimer.timerId,
     };
@@ -384,21 +382,16 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
    * they simply land back on the home screen and can log a plain session
    * instead.
    */
-  const handleSubmitLog = async (
-    activityType: ActivityType,
+  const handleLogAfterwards = async (
     durationMinutes: number,
     evidence: EvidenceChoice,
   ) => {
-    if (evidence === 'timer') {
-      await startTimer(activityType, durationMinutes);
-      return;
-    }
     if (evidence !== 'none') {
       setSheetOpen(false);
-      setPendingEvidenceLog({ activityType, durationMinutes, evidence });
+      setPendingEvidenceLog({ durationMinutes, evidence });
       return;
     }
-    await writeTrainingLog({ activityType, durationMinutes });
+    await writeTrainingLog({ durationMinutes });
   };
 
   const writeTrainingLog = async (body: CreateTrainingLogRequest) => {
@@ -660,7 +653,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           setPendingEvidenceLog(null);
           if (!pending || !clipId) return;
           void writeTrainingLog({
-            activityType: pending.activityType,
             durationMinutes: pending.durationMinutes,
             evidenceClipId: clipId,
             sharedWithTeam: pending.evidence === 'video_shared',
@@ -792,7 +784,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
             // Timed session: logs at ×1 with the timer, and any error shows
             // on the countdown screen, which comes back for it.
             void writeTrainingLog({
-              activityType: fallback.activityType,
               durationMinutes: fallback.durationMinutes,
               timerId: fallback.timerId,
             });
@@ -808,7 +799,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           // No evidenceClipId, so the server resolves this to CLICK_ONLY.
           // The client never claims a tier; it only ever supplies proof.
           void writeTrainingLog({
-            activityType: fallback.activityType,
             durationMinutes: fallback.durationMinutes,
           });
         }}
@@ -826,7 +816,8 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
         onClose={() => {
           if (!sheetLoading) setSheetOpen(false);
         }}
-        onSubmit={handleSubmitLog}
+        onStartTimer={() => void startTimer()}
+        onLogAfterwards={(minutes, evidence) => void handleLogAfterwards(minutes, evidence)}
       />
 
       {activeTimer ? (

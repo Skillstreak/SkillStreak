@@ -22,15 +22,8 @@
     "zeroPointsToast": "Tu sesión está guardada y cuenta para tu racha 🔥 Ya has usado los {{limit}} registros rápidos de esta semana, así que esta dio 0 puntos. Prueba el temporizador la próxima vez: ¡así el equipo gana puntos!"
   },
   "activitySheet": {
-    "heading": "¿Qué has entrenado?",
     "durationHeading": "¿Cuánto tiempo?",
     "submit": "¡Listo!",
-    "activities": {
-      "fitness": "Físico",
-      "drill": "Técnica/ejercicios",
-      "running": "Correr",
-      "other": "Otro"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,12 +36,15 @@
     "evidence": {
       "none": "Solo registrarlo",
       "video": "Con un vídeo",
-      "videoShared": "Con un vídeo: compartir con el equipo",
-      "timer": "Con el temporizador"
+      "videoShared": "Con un vídeo: compartir con el equipo"
     },
-    "submitTimer": "Iniciar el temporizador",
     "clickOnlyRemaining": "Te quedan {{remaining}} de {{limit}} registros rápidos esta semana",
-    "clickOnlyUsedUp": "Ya has usado los registros rápidos de esta semana. Sigue contando para tu racha, pero da 0 puntos hasta el lunes. ¡El temporizador da puntos!"
+    "clickOnlyUsedUp": "Ya has usado los registros rápidos de esta semana. Sigue contando para tu racha, pero da 0 puntos hasta el lunes. ¡El temporizador da puntos!",
+    "startHeading": "¡Hora de entrenar! 💪",
+    "startTimerButton": "Iniciar el reloj de entrenamiento ⏱️",
+    "startTimerHelp": "El reloj cuenta hacia arriba — 1 punto por minuto (máx. 60 min)",
+    "showManualLog": "¿Olvidaste iniciar el reloj? Regístralo después →",
+    "hideManualLog": "Ocultar ↑"
   },
   "goalBonusTakeover": {
     "headline": "¡El equipo ha logrado el objetivo de esta semana!",
@@ -131,11 +127,6 @@
     "erasureStaleState": "Algo ha cambiado en el equipo desde que abriste esta pantalla. Revisa tu perfil e inténtalo de nuevo.",
     "erasureCancelledToast": "¡Listo! Tu cuenta no se borrará. 🎉",
     "erasureCancelError": "Algo salió mal. Recarga la página e inténtalo de nuevo.",
-    "editName": {
-      "heading": "Tu nombre",
-      "sub": "Opcional: nunca se muestra a nadie más del equipo, solo lo ves tú aquí.",
-      "placeholder": "Nombre y apellidos"
-    },
     "editAvatar": {
       "heading": "Elige un avatar",
       "sub": "No hace falta ninguna foto: elige un personaje que te guste."
@@ -156,9 +147,6 @@
     "view": {
       "heading": "Tu perfil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Nombre",
-      "nameNotSet": "Sin definir",
-      "addName": "Añadir",
       "birthYearLabel": "Año de nacimiento",
       "birthYearHelper": "No lo puedes cambiar tú: habla con el entrenador de tu equipo si hay que corregirlo.",
       "contactLabel": "Dirección de contacto",
@@ -307,33 +295,42 @@
     "notifBody": "Con 10–15 minutos basta. ¡Tu racha te espera!"
   },
   "trainingTimer": {
-    "heading": "¡A tope! 💪",
-    "explainer": "El temporizador muestra que el tiempo pasó. Puedes bloquear el móvil: el reloj sigue.",
-    "ofMinutes": "de {{minutes}} min",
-    "remainingA11y": "Quedan {{time}}",
-    "stop": "Terminar",
-    "stopConfirm": "¿Terminar ahora? Consigues puntos por {{minutes}} min.",
+    "heading": "Reloj de entrenamiento 💪",
+    "explainer": "El reloj cuenta hacia arriba y ganas 1 punto por minuto (máx. 60 min). Puedes bloquear el móvil — el reloj sigue.",
+    "stop": "Terminar la sesión",
+    "stopConfirm": "¿Terminar ahora? Has entrenado {{minutes}} min y has ganado {{points}} puntos.",
     "stopConfirmYes": "Sí, terminar y registrar",
     "keepGoing": "Seguir entrenando",
-    "tooShort": "Ha pasado menos de un minuto, así que aún no hay nada que registrar. Sigue un poco más o cancela el temporizador.",
-    "discard": "Cancelar el temporizador",
-    "doneHeading": "¡Se acabó el tiempo! 🎉",
-    "doneBody": "{{minutes}} min hechos. ¡Buen trabajo!",
-    "logIt": "Registrar la sesión",
+    "tooShort": "Ha pasado menos de un minuto. ¡Entrena al menos 1 minuto para ganar tu primer punto!",
+    "discard": "Cancelar el reloj",
+    "doneHeading": "¡Máximo alcanzado! 🎉",
+    "doneBody": "60 minutos — ¡buen trabajo! Has ganado 60 puntos para el equipo.",
+    "logIt": "Registrar sesión ({{points}} pts)",
     "finishHeading": "¿Cómo quieres registrar la sesión?",
-    "finishHelp": "El temporizador cuenta {{minutes}} min. Si quieres darle aún más al equipo, añade un vídeo.",
-    "evidenceTimer": "Solo el temporizador",
-    "submit": "Registrar",
-    "back": "Volver",
-    "notifTitle": "¡Se acabó el tiempo! ⏱️",
-    "notifBody": "¡Buen esfuerzo! Abre la app para registrar tu sesión.",
-    "rejected": "Esta vez no se pudo usar el temporizador. Cancélalo y registra tu sesión de la forma normal: cuenta igual."
+    "finishHelp": "El reloj da {{minutes}} puntos (1 pt/min). ¿Quieres darle aún más al equipo? Añade un vídeo.",
+    "evidenceTimer": "Solo el reloj",
+    "submit": "Registrar sesión",
+    "back": "Atrás",
+    "notifTitle": "¡60 minutos completados! ⏱️",
+    "notifBody": "¡Buen trabajo! Abre la app y registra tus 60 puntos para el equipo.",
+    "rejected": "No se pudo usar el reloj esta vez. Cancélalo y registra la sesión después — cuenta igual.",
+    "stopwatchA11y": "Entrenado {{time}}",
+    "runningPoints": "+{{points}} puntos para el equipo 🔥",
+    "zeroPointsHelp": "0 puntos (primer punto tras 1 min)",
+    "firstPointIn": "{{seconds}} s para el primer punto",
+    "nextPointIn": "{{seconds}} s para el siguiente punto",
+    "maxCapLabel": "Máx. {{minutes}} min",
+    "maxReached": "¡Máximo alcanzado (60 min = 60 pts)! 🎉"
   },
   "adultFeedback": {
     "cardTitle": "Dinos lo que piensas",
     "cardButton": "Enviar comentarios",
     "heading": "Dinos lo que piensas",
-    "kinds": { "idea": "Idea", "problem": "Problema", "other": "Otro" },
+    "kinds": {
+      "idea": "Idea",
+      "problem": "Problema",
+      "other": "Otro"
+    },
     "placeholder": "Escribe aquí",
     "counter": "{{count}}/{{max}}",
     "warning": "No escribas nombres ni datos de niños.",
@@ -355,8 +352,17 @@
     "progress": "Pregunta {{step}} de 2",
     "funQuestion": "¿Fue divertido hoy?",
     "wantQuestion": "¿De qué quieres más?",
-    "fun": { "happy": "Divertido", "meh": "Regular", "sad": "No divertido" },
-    "want": { "drills": "Ejercicios", "challenges": "Retos", "badges": "Insignias", "unsure": "No sé" },
+    "fun": {
+      "happy": "Divertido",
+      "meh": "Regular",
+      "sad": "No divertido"
+    },
+    "want": {
+      "drills": "Ejercicios",
+      "challenges": "Retos",
+      "badges": "Insignias",
+      "unsure": "No sé"
+    },
     "skip": "Omitir",
     "error": "No se pudo enviar. Inténtalo de nuevo.",
     "thanksHeading": "¡Gracias!",

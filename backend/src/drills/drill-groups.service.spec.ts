@@ -237,6 +237,21 @@ describe('DrillGroupsService', () => {
       expect(view.drills[0]).not.toHaveProperty('body');
     });
 
+    it('never includes author or sourceNote in a group listing (Juridik R1)', async () => {
+      groupFind.mockResolvedValue([group(GROUP_A, 'Uppvärmning')]);
+      membershipFind.mockResolvedValue([
+        { groupId: GROUP_A, drillSlug: 'kortpassningar-under-press' },
+      ]);
+
+      const [view] = await service.list(OWNER);
+      expect(view.drills.length).toBeGreaterThan(0);
+      for (const drill of view.drills) {
+        expect(drill).not.toHaveProperty('author');
+        expect(drill).not.toHaveProperty('authorConsentedNamed');
+        expect(drill).not.toHaveProperty('sourceNote');
+      }
+    });
+
     it('reads memberships in one query, not one per group', async () => {
       groupFind.mockResolvedValue([group(GROUP_A, 'A'), group(GROUP_B, 'B')]);
       await service.list(OWNER);

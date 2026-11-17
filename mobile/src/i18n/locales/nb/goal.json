@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Hva skal hver spiller klare denne uken?",
-    "sub": "Hver spiller på laget må nå målet på egen hånd — velg om det telles i minutter eller økter, og hvilken type trening som gjelder.",
+    "sub": "Hver spiller på laget må nå målet på egen hånd — velg om det telles i minutter eller økter. All trening teller.",
     "unitMinutes": "⏱️ Minutter",
     "unitSessions": "🔁 Antall økter",
     "unitHelper": "En økt = én loggført trening, uansett hvor lang den var.",

@@ -1,6 +1,5 @@
 import {
   IsDateString,
-  IsEnum,
   IsIn,
   IsInt,
   IsString,
@@ -8,7 +7,10 @@ import {
   Min,
 } from 'class-validator';
 import { ChallengeStatus } from '../../challenges/entities/challenge.entity';
-import { WeeklyGoalTargetMetric } from '../weekly-goal-target-metric.enum';
+import {
+  SETTABLE_TARGET_METRICS,
+  WeeklyGoalTargetMetric,
+} from '../weekly-goal-target-metric.enum';
 
 // Generous but bounded, same reasoning as CreatePlayerDto's caps — these
 // are captain-authored copy fields, not free text with no legitimate upper
@@ -33,7 +35,7 @@ export class CreateWeeklyGoalDto {
   @MaxLength(MAX_DESCRIPTION_LENGTH)
   description!: string;
 
-  @IsEnum(WeeklyGoalTargetMetric)
+  @IsIn(SETTABLE_TARGET_METRICS)
   targetMetric!: WeeklyGoalTargetMetric;
 
   @IsInt()

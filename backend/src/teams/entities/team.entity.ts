@@ -52,6 +52,23 @@ export class Team {
   })
   jurisdiction!: Jurisdiction | null;
 
+  /**
+   * I-007 Steg 1 — manual test-team flag.
+   *
+   * True marks an internal test/seed team, excluding it from public
+   * leaderboards (VM-Guld) and usage analytics. Defaults to false.
+   */
+  @Column({ name: 'is_test', type: 'boolean', default: false })
+  isTest!: boolean;
+
+  get is_test(): boolean {
+    return this.isTest;
+  }
+
+  set is_test(value: boolean) {
+    this.isTest = value;
+  }
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

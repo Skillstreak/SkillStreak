@@ -10,6 +10,7 @@ import csOnboarding from './locales/cs/onboarding.json';
 import csPt from './locales/cs/pt.json';
 import csTips from './locales/cs/tips.json';
 import csTeam from './locales/cs/team.json';
+import csVillage from './locales/cs/village.json';
 import daChat from './locales/da/chat.json';
 import daClips from './locales/da/clips.json';
 import daCommon from './locales/da/common.json';
@@ -19,6 +20,7 @@ import daOnboarding from './locales/da/onboarding.json';
 import daPt from './locales/da/pt.json';
 import daTips from './locales/da/tips.json';
 import daTeam from './locales/da/team.json';
+import daVillage from './locales/da/village.json';
 import deChat from './locales/de/chat.json';
 import deClips from './locales/de/clips.json';
 import deCommon from './locales/de/common.json';
@@ -28,6 +30,7 @@ import deOnboarding from './locales/de/onboarding.json';
 import dePt from './locales/de/pt.json';
 import deTips from './locales/de/tips.json';
 import deTeam from './locales/de/team.json';
+import deVillage from './locales/de/village.json';
 import enChat from './locales/en/chat.json';
 import enClips from './locales/en/clips.json';
 import enCommon from './locales/en/common.json';
@@ -37,6 +40,7 @@ import enOnboarding from './locales/en/onboarding.json';
 import enPt from './locales/en/pt.json';
 import enTips from './locales/en/tips.json';
 import enTeam from './locales/en/team.json';
+import enVillage from './locales/en/village.json';
 import fiChat from './locales/fi/chat.json';
 import fiClips from './locales/fi/clips.json';
 import fiCommon from './locales/fi/common.json';
@@ -46,6 +50,7 @@ import fiOnboarding from './locales/fi/onboarding.json';
 import fiPt from './locales/fi/pt.json';
 import fiTips from './locales/fi/tips.json';
 import fiTeam from './locales/fi/team.json';
+import fiVillage from './locales/fi/village.json';
 import frChat from './locales/fr/chat.json';
 import frClips from './locales/fr/clips.json';
 import frCommon from './locales/fr/common.json';
@@ -55,6 +60,7 @@ import frOnboarding from './locales/fr/onboarding.json';
 import frPt from './locales/fr/pt.json';
 import frTips from './locales/fr/tips.json';
 import frTeam from './locales/fr/team.json';
+import frVillage from './locales/fr/village.json';
 import esChat from './locales/es/chat.json';
 import esClips from './locales/es/clips.json';
 import esCommon from './locales/es/common.json';
@@ -64,6 +70,7 @@ import esOnboarding from './locales/es/onboarding.json';
 import esPt from './locales/es/pt.json';
 import esTips from './locales/es/tips.json';
 import esTeam from './locales/es/team.json';
+import esVillage from './locales/es/village.json';
 import nbChat from './locales/nb/chat.json';
 import nbClips from './locales/nb/clips.json';
 import nbCommon from './locales/nb/common.json';
@@ -73,6 +80,7 @@ import nbOnboarding from './locales/nb/onboarding.json';
 import nbPt from './locales/nb/pt.json';
 import nbTips from './locales/nb/tips.json';
 import nbTeam from './locales/nb/team.json';
+import nbVillage from './locales/nb/village.json';
 import svChat from './locales/sv/chat.json';
 import svClips from './locales/sv/clips.json';
 import svCommon from './locales/sv/common.json';
@@ -82,6 +90,7 @@ import svOnboarding from './locales/sv/onboarding.json';
 import svPt from './locales/sv/pt.json';
 import svTips from './locales/sv/tips.json';
 import svTeam from './locales/sv/team.json';
+import svVillage from './locales/sv/village.json';
 import { getDeviceDefaultLocale } from './deviceLocale';
 // No runtime import of `./react-i18next.d` needed — it's an ambient
 // `declare module 'i18next'` augmentation, picked up automatically by
@@ -117,6 +126,7 @@ const NAMESPACES = [
   'clips',
   'pt',
   'tips',
+  'village',
 ] as const;
 
 void i18n.use(initReactI18next).init({
@@ -133,6 +143,7 @@ void i18n.use(initReactI18next).init({
       clips: svClips,
       pt: svPt,
       tips: svTips,
+      village: svVillage,
     },
     en: {
       common: enCommon,
@@ -144,6 +155,7 @@ void i18n.use(initReactI18next).init({
       clips: enClips,
       pt: enPt,
       tips: enTips,
+      village: enVillage,
     },
     fi: {
       common: fiCommon,
@@ -155,6 +167,7 @@ void i18n.use(initReactI18next).init({
       clips: fiClips,
       pt: fiPt,
       tips: fiTips,
+      village: fiVillage,
     },
     da: {
       common: daCommon,
@@ -166,6 +179,7 @@ void i18n.use(initReactI18next).init({
       clips: daClips,
       pt: daPt,
       tips: daTips,
+      village: daVillage,
     },
     nb: {
       common: nbCommon,
@@ -177,6 +191,7 @@ void i18n.use(initReactI18next).init({
       clips: nbClips,
       pt: nbPt,
       tips: nbTips,
+      village: nbVillage,
     },
     de: {
       common: deCommon,
@@ -188,6 +203,7 @@ void i18n.use(initReactI18next).init({
       clips: deClips,
       pt: dePt,
       tips: deTips,
+      village: deVillage,
     },
     cs: {
       common: csCommon,
@@ -199,6 +215,7 @@ void i18n.use(initReactI18next).init({
       clips: csClips,
       pt: csPt,
       tips: csTips,
+      village: csVillage,
     },
     fr: {
       common: frCommon,
@@ -210,6 +227,7 @@ void i18n.use(initReactI18next).init({
       clips: frClips,
       pt: frPt,
       tips: frTips,
+      village: frVillage,
     },
     es: {
       common: esCommon,
@@ -221,6 +239,7 @@ void i18n.use(initReactI18next).init({
       clips: esClips,
       pt: esPt,
       tips: esTips,
+      village: esVillage,
     },
   },
   // Pre-selects the nearest supported language from the device's own

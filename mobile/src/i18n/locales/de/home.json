@@ -22,15 +22,8 @@
     "zeroPointsToast": "Dein Training ist gespeichert und zählt für deine Serie 🔥 Du hast die {{limit}} Schnelleinträge dieser Woche benutzt, deshalb gab es diesmal 0 Punkte. Probier nächstes Mal den Timer — dann bekommt dein Team Punkte!"
   },
   "activitySheet": {
-    "heading": "Was hast du trainiert?",
     "durationHeading": "Wie lange?",
     "submit": "Fertig!",
-    "activities": {
-      "fitness": "Kondition",
-      "drill": "Technik/Übung",
-      "running": "Laufen",
-      "other": "Anderes"
-    },
     "durations": {
       "d10": "10 Min.",
       "d15": "15 Min.",
@@ -43,12 +36,15 @@
     "evidence": {
       "none": "Nur eintragen",
       "video": "Mit Video",
-      "videoShared": "Mit Video — mit dem Team teilen",
-      "timer": "Mit Timer"
+      "videoShared": "Mit Video — mit dem Team teilen"
     },
-    "submitTimer": "Timer starten",
     "clickOnlyRemaining": "Noch {{remaining}} von {{limit}} Schnelleinträgen diese Woche",
-    "clickOnlyUsedUp": "Die Schnelleinträge dieser Woche sind aufgebraucht. Das Training zählt trotzdem für deine Serie, bringt aber bis Montag 0 Punkte. Der Timer bringt Punkte!"
+    "clickOnlyUsedUp": "Die Schnelleinträge dieser Woche sind aufgebraucht. Das Training zählt trotzdem für deine Serie, bringt aber bis Montag 0 Punkte. Der Timer bringt Punkte!",
+    "startHeading": "Zeit zum Trainieren! 💪",
+    "startTimerButton": "Trainingsuhr starten ⏱️",
+    "startTimerHelp": "Die Uhr zählt hoch — 1 Punkt pro Minute (max. 60 Min.)",
+    "showManualLog": "Uhr vergessen? Nachträglich eintragen →",
+    "hideManualLog": "Ausblenden ↑"
   },
   "goalBonusTakeover": {
     "headline": "Das Team hat das Wochenziel erreicht!",
@@ -131,11 +127,6 @@
     "erasureStaleState": "Im Team hat sich etwas geändert, seit du diese Ansicht geöffnet hast. Prüf dein Profil, und versuch's noch mal.",
     "erasureCancelledToast": "Erledigt! Dein Konto wird nicht gelöscht. 🎉",
     "erasureCancelError": "Etwas ist schiefgelaufen. Lade die Seite neu, und versuch's noch mal.",
-    "editName": {
-      "heading": "Dein Name",
-      "sub": "Freiwillig — wird nie anderen im Team angezeigt, nur du siehst ihn hier.",
-      "placeholder": "Vor- und Nachname"
-    },
     "editAvatar": {
       "heading": "Avatar wählen",
       "sub": "Kein Foto nötig — wähl einfach eine Figur, die dir gefällt."
@@ -156,9 +147,6 @@
     "view": {
       "heading": "Dein Profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Name",
-      "nameNotSet": "Nicht angegeben",
-      "addName": "Hinzufügen",
       "birthYearLabel": "Geburtsjahr",
       "birthYearHelper": "Kannst du nicht selbst ändern — wende dich an den Trainer deines Teams, wenn das korrigiert werden muss.",
       "contactLabel": "Kontaktadresse",
@@ -307,33 +295,42 @@
     "notifBody": "10–15 Minuten reichen. Deine Serie wartet!"
   },
   "trainingTimer": {
-    "heading": "Gib alles! 💪",
-    "explainer": "Der Timer zeigt, dass die Zeit vergangen ist. Du kannst das Handy sperren — die Uhr läuft weiter.",
-    "ofMinutes": "von {{minutes}} Min.",
-    "remainingA11y": "Noch {{time}}",
-    "stop": "Beenden",
-    "stopConfirm": "Jetzt beenden? Du bekommst Punkte für {{minutes}} Min.",
+    "heading": "Trainingsuhr 💪",
+    "explainer": "Die Uhr zählt hoch und du bekommst 1 Punkt pro Minute (max. 60 Min.). Du kannst dein Handy sperren — die Uhr läuft weiter.",
+    "stop": "Training beenden",
+    "stopConfirm": "Jetzt beenden? Du hast {{minutes}} Min. trainiert und {{points}} Punkte gesammelt.",
     "stopConfirmYes": "Ja, beenden und eintragen",
-    "keepGoing": "Weiter trainieren",
-    "tooShort": "Es ist weniger als eine Minute vergangen, also gibt es noch nichts einzutragen. Mach noch etwas weiter oder brich den Timer ab.",
-    "discard": "Timer abbrechen",
-    "doneHeading": "Die Zeit ist um! 🎉",
-    "doneBody": "{{minutes}} Min. geschafft. Super gemacht!",
-    "logIt": "Training eintragen",
-    "finishHeading": "Wie willst du das Training eintragen?",
-    "finishHelp": "Der Timer zählt {{minutes}} Min. Wenn du deinem Team noch mehr geben willst, füge ein Video hinzu.",
-    "evidenceTimer": "Nur der Timer",
-    "submit": "Eintragen",
+    "keepGoing": "Weitertrainieren",
+    "tooShort": "Es ist weniger als eine Minute vergangen. Trainiere mindestens 1 Minute, dann bekommst du deinen ersten Punkt!",
+    "discard": "Uhr abbrechen",
+    "doneHeading": "Maximum erreicht! 🎉",
+    "doneBody": "60 Minuten — stark gemacht! Du hast 60 Punkte fürs Team gesammelt.",
+    "logIt": "Training eintragen ({{points}} P.)",
+    "finishHeading": "Wie möchtest du das Training eintragen?",
+    "finishHelp": "Die Uhr bringt {{minutes}} Punkte (1 P./Min.). Willst du dem Team noch mehr geben? Füge ein Video hinzu.",
+    "evidenceTimer": "Nur die Uhr",
+    "submit": "Training eintragen",
     "back": "Zurück",
-    "notifTitle": "Die Zeit ist um! ⏱️",
-    "notifBody": "Stark gekämpft! Öffne die App und trag dein Training ein.",
-    "rejected": "Der Timer konnte diesmal nicht verwendet werden. Brich den Timer ab und trag dein Training stattdessen ganz normal ein — es zählt trotzdem."
+    "notifTitle": "60 Minuten geschafft! ⏱️",
+    "notifBody": "Gut gekämpft! Öffne die App und trage deine 60 Punkte fürs Team ein.",
+    "rejected": "Die Uhr konnte diesmal nicht verwendet werden. Brich sie ab und trage das Training stattdessen nachträglich ein — es zählt trotzdem.",
+    "stopwatchA11y": "{{time}} trainiert",
+    "runningPoints": "+{{points}} Punkte fürs Team 🔥",
+    "zeroPointsHelp": "0 Punkte (erster Punkt nach 1 Min.)",
+    "firstPointIn": "{{seconds}} s bis zum ersten Punkt",
+    "nextPointIn": "{{seconds}} s bis zum nächsten Punkt",
+    "maxCapLabel": "Max. {{minutes}} Min.",
+    "maxReached": "Maximum erreicht (60 Min. = 60 P.)! 🎉"
   },
   "adultFeedback": {
     "cardTitle": "Sag uns, was du denkst",
     "cardButton": "Feedback senden",
     "heading": "Sag uns, was du denkst",
-    "kinds": { "idea": "Idee", "problem": "Problem", "other": "Sonstiges" },
+    "kinds": {
+      "idea": "Idee",
+      "problem": "Problem",
+      "other": "Sonstiges"
+    },
     "placeholder": "Hier schreiben",
     "counter": "{{count}}/{{max}}",
     "warning": "Schreib keine Namen oder Angaben zu Kindern.",
@@ -355,8 +352,17 @@
     "progress": "Frage {{step}} von 2",
     "funQuestion": "War es heute lustig?",
     "wantQuestion": "Wovon willst du mehr?",
-    "fun": { "happy": "Lustig", "meh": "Na ja", "sad": "Nicht lustig" },
-    "want": { "drills": "Übungen", "challenges": "Challenges", "badges": "Abzeichen", "unsure": "Weiß nicht" },
+    "fun": {
+      "happy": "Lustig",
+      "meh": "Na ja",
+      "sad": "Nicht lustig"
+    },
+    "want": {
+      "drills": "Übungen",
+      "challenges": "Challenges",
+      "badges": "Abzeichen",
+      "unsure": "Weiß nicht"
+    },
     "skip": "Überspringen",
     "error": "Senden hat nicht geklappt. Versuch es noch einmal.",
     "thanksHeading": "Danke!",

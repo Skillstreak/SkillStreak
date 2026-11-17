@@ -1,6 +1,5 @@
 import {
   IsDateString,
-  IsEnum,
   IsIn,
   IsInt,
   IsOptional,
@@ -9,7 +8,10 @@ import {
   Min,
 } from 'class-validator';
 import { ChallengeStatus } from '../../challenges/entities/challenge.entity';
-import { WeeklyGoalTargetMetric } from '../weekly-goal-target-metric.enum';
+import {
+  SETTABLE_TARGET_METRICS,
+  WeeklyGoalTargetMetric,
+} from '../weekly-goal-target-metric.enum';
 
 const MAX_TITLE_LENGTH = 140;
 const MAX_DESCRIPTION_LENGTH = 2000;
@@ -42,7 +44,7 @@ export class UpdateWeeklyGoalDto {
   description?: string;
 
   @IsOptional()
-  @IsEnum(WeeklyGoalTargetMetric)
+  @IsIn(SETTABLE_TARGET_METRICS)
   targetMetric?: WeeklyGoalTargetMetric;
 
   @IsOptional()

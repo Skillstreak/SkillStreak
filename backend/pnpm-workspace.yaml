@@ -7,7 +7,9 @@ allowBuilds:
 # reachable today), but Fas 3's video upload will use this exact
 # dependency chain — overriding now rather than waiting.
 overrides:
-  multer: ">=2.2.0"
+  multer: ">=2.5.0"
+  proxy-addr: ">=2.0.8"
+  body-parser: ">=2.4.0"
 
 # NOT overridden, and the attempt is recorded so it is not retried blindly:
 # brace-expansion, js-yaml and fast-uri each carry high-severity advisories

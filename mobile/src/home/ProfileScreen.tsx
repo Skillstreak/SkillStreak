@@ -32,7 +32,7 @@ import {
   unlinkAccount,
 } from '../api/endpoints';
 import { ApiError } from '../api/ApiError';
-import { CONSOLE_URL } from '../api/config';
+import { CONSOLE_URL, PT_ENABLED } from '../api/config';
 import type { ErasureStatusResponse, PlayerProfileResponse, TeammateEntry } from '../api/types';
 import { AVATAR_CATALOG } from '../onboarding/avatarCatalog';
 import { Avatar } from '../components/Avatar';
@@ -86,7 +86,6 @@ interface ProfileScreenProps {
 
 type ProfileView =
   | 'view'
-  | 'editName'
   | 'editAvatar'
   | 'requestChange'
   | 'confirmChange'
@@ -131,8 +130,6 @@ export function ProfileScreen({
 
   const [view, setView] = useState<ProfileView>('view');
 
-  const [nameInput, setNameInput] = useState('');
-  const [nameSaving, setNameSaving] = useState(false);
 
   const [avatarSelection, setAvatarSelection] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
@@ -209,23 +206,6 @@ export function ProfileScreen({
   useEffect(() => {
     void fetchProfile();
   }, [fetchProfile]);
-
-  const handleSaveName = async () => {
-    setNameSaving(true);
-    try {
-      const trimmed = nameInput.trim();
-      await updateProfile({ realName: trimmed.length > 0 ? trimmed : null });
-      setProfile((prev) => (prev ? { ...prev, realName: trimmed.length > 0 ? trimmed : null } : prev));
-      setView('view');
-      setToastDurationMs(2000);
-      setToastMessage(t('profileScreen.savedToast'));
-    } catch {
-      setToastDurationMs(2000);
-      setToastMessage(t('shared.genericErrorTryAgain'));
-    } finally {
-      setNameSaving(false);
-    }
-  };
 
   const handleSaveAvatar = async () => {
     if (!avatarSelection) return;
@@ -543,28 +523,6 @@ export function ProfileScreen({
     );
   }
 
-  if (view === 'editName') {
-    return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>{t('profileScreen.editName.heading')}</Text>
-        <Text style={styles.sub}>{t('profileScreen.editName.sub')}</Text>
-        <TextField
-          value={nameInput}
-          onChangeText={setNameInput}
-          placeholder={t('profileScreen.editName.placeholder')}
-          autoCapitalize="words"
-        />
-        <View style={styles.spacer} />
-        <PrimaryButton
-          label={t('shared.save')}
-          onPress={() => void handleSaveName()}
-          loading={nameSaving}
-        />
-        <SecondaryLink label={t('shared.cancel')} onPress={() => setView('view')} />
-      </ScrollView>
-    );
-  }
-
   if (view === 'editAvatar') {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -804,17 +762,6 @@ export function ProfileScreen({
           />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.fieldLabel}>{t('profileScreen.view.nameLabel')}</Text>
-          <Text style={styles.fieldValue}>{profile.realName ?? t('profileScreen.view.nameNotSet')}</Text>
-          <SecondaryLink
-            label={profile.realName ? t('shared.edit') : t('profileScreen.view.addName')}
-            onPress={() => {
-              setNameInput(profile.realName ?? '');
-              setView('editName');
-            }}
-          />
-        </View>
 
         <View style={styles.card}>
           <Text style={styles.fieldLabel}>{t('profileScreen.view.birthYearLabel')}</Text>
@@ -835,7 +782,7 @@ export function ProfileScreen({
             as nothing when the player has no PT relationships — this is not
             a concept every child needs to meet, so it appears only once one
             actually exists. */}
-        <PtRelationshipsScreen />
+        {PT_ENABLED ? <PtRelationshipsScreen /> : null}
 
         <SecondaryLink label={t('profileScreen.view.back')} onPress={onBack} />
         <SecondaryLink label={t('profileScreen.view.logout')} onPress={() => void handleLogout()} />
@@ -907,7 +854,7 @@ export function ProfileScreen({
             SameSite=Strict and same-origin with the API, which is exactly
             what makes it safe, and a native re-implementation would need
             its own staff auth path before it could show anything. */}
-        {isSelfVerification && trainerLinked !== null ? (
+        {PT_ENABLED && isSelfVerification && trainerLinked !== null ? (
           <View style={styles.trainerBlock}>
             {trainerLinked ? (
               <>

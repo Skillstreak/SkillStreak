@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Hvad skal hver spiller klare denne uge?",
-    "sub": "Hver spiller på holdet skal nå målet på egen hånd — vælg om det tælles i minutter eller gange, og hvilken type træning der tæller.",
+    "sub": "Hver spiller på holdet skal nå målet på egen hånd — vælg, om det tælles i minutter eller træninger. Al træning tæller.",
     "unitMinutes": "⏱️ Minutter",
     "unitSessions": "🔁 Antal gange",
     "unitHelper": "En gang = én logget træning, uanset hvor lang den var.",

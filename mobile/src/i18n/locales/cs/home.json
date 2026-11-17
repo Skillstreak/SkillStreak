@@ -22,15 +22,8 @@
     "zeroPointsToast": "Trénink je uložený a počítá se do tvé série 🔥 Využil(a) jsi {{limit}} rychlé zápisy na tento týden, takže tentokrát to bylo 0 bodů. Příště zkus časovač — tým pak dostane body!"
   },
   "activitySheet": {
-    "heading": "Co jsi trénoval/a?",
     "durationHeading": "Jak dlouho?",
     "submit": "Hotovo!",
-    "activities": {
-      "fitness": "Kondice",
-      "drill": "Technika/cvičení",
-      "running": "Běh",
-      "other": "Jiné"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,12 +36,15 @@
     "evidence": {
       "none": "Jen zapsat",
       "video": "S videem",
-      "videoShared": "S videem — sdílet s týmem",
-      "timer": "S časovačem"
+      "videoShared": "S videem — sdílet s týmem"
     },
-    "submitTimer": "Spustit časovač",
     "clickOnlyRemaining": "Zbývá {{remaining}} z {{limit}} rychlých zápisů tento týden",
-    "clickOnlyUsedUp": "Rychlé zápisy na tento týden jsou vyčerpané. Trénink se ti pořád počítá do série, ale do pondělí dává 0 bodů. Časovač body dává!"
+    "clickOnlyUsedUp": "Rychlé zápisy na tento týden jsou vyčerpané. Trénink se ti pořád počítá do série, ale do pondělí dává 0 bodů. Časovač body dává!",
+    "startHeading": "Čas trénovat! 💪",
+    "startTimerButton": "Spustit tréninkové hodiny ⏱️",
+    "startTimerHelp": "Hodiny počítají nahoru — 1 bod za minutu (max. 60 min)",
+    "showManualLog": "Zapomněl/a jsi spustit hodiny? Zapiš to dodatečně →",
+    "hideManualLog": "Skrýt ↑"
   },
   "goalBonusTakeover": {
     "headline": "Tým splnil týdenní cíl!",
@@ -131,11 +127,6 @@
     "erasureStaleState": "Od doby, kdy jsi otevřel/a tuhle obrazovku, se v týmu něco změnilo. Zkontroluj profil a zkus to znovu.",
     "erasureCancelledToast": "Hotovo! Tvůj účet se nesmaže. 🎉",
     "erasureCancelError": "Něco se pokazilo. Načti stránku znovu a zkus to ještě jednou.",
-    "editName": {
-      "heading": "Tvoje jméno",
-      "sub": "Nepovinné — ostatním v týmu se nikdy nezobrazí, vidíš ho jen ty.",
-      "placeholder": "Jméno a příjmení"
-    },
     "editAvatar": {
       "heading": "Vyber si avatara",
       "sub": "Fotku nepotřebuješ — jen si vyber postavičku, která se ti líbí."
@@ -156,9 +147,6 @@
     "view": {
       "heading": "Tvůj profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Jméno",
-      "nameNotSet": "Nevyplněno",
-      "addName": "Přidat",
       "birthYearLabel": "Rok narození",
       "birthYearHelper": "Sám/sama to změnit nemůžeš — pokud je potřeba to opravit, ozvi se trenérovi svého týmu.",
       "contactLabel": "Kontaktní adresa",
@@ -307,33 +295,42 @@
     "notifBody": "Stačí 10–15 minut. Tvoje série čeká!"
   },
   "trainingTimer": {
-    "heading": "Do toho! 💪",
-    "explainer": "Časovač ukazuje, že čas uběhl. Můžeš zamknout telefon — hodiny běží dál.",
-    "ofMinutes": "z {{minutes}} min",
-    "remainingA11y": "Zbývá {{time}}",
-    "stop": "Ukončit",
-    "stopConfirm": "Ukončit teď? Dostaneš body za {{minutes}} min.",
+    "heading": "Tréninkové hodiny 💪",
+    "explainer": "Hodiny počítají nahoru a dostáváš 1 bod za minutu (max. 60 min). Telefon můžeš zamknout — hodiny běží dál.",
+    "stop": "Ukončit trénink",
+    "stopConfirm": "Ukončit teď? Trénoval/a jsi {{minutes}} min a získal/a {{points}} bodů.",
     "stopConfirmYes": "Ano, ukončit a zapsat",
     "keepGoing": "Trénovat dál",
-    "tooShort": "Uběhla méně než minuta, takže zatím není co zapsat. Pokračuj ještě chvíli, nebo časovač zruš.",
-    "discard": "Zrušit časovač",
-    "doneHeading": "Čas vypršel! 🎉",
-    "doneBody": "{{minutes}} min hotovo. Skvělá práce!",
-    "logIt": "Zapsat trénink",
+    "tooShort": "Uběhla méně než minuta. Trénuj aspoň 1 minutu a získáš svůj první bod!",
+    "discard": "Zrušit hodiny",
+    "doneHeading": "Maximum dosaženo! 🎉",
+    "doneBody": "60 minut — skvělá práce! Získal/a jsi pro tým 60 bodů.",
+    "logIt": "Zapsat trénink ({{points}} b.)",
     "finishHeading": "Jak chceš trénink zapsat?",
-    "finishHelp": "Časovač počítá {{minutes}} min. Jestli chceš dát týmu ještě víc, přidej video.",
-    "evidenceTimer": "Jen časovač",
-    "submit": "Zapsat",
+    "finishHelp": "Hodiny dávají {{minutes}} bodů (1 b./min). Chceš dát týmu ještě víc? Přidej video.",
+    "evidenceTimer": "Jen hodiny",
+    "submit": "Zapsat trénink",
     "back": "Zpět",
-    "notifTitle": "Čas vypršel! ⏱️",
-    "notifBody": "Pěkná dřina! Otevři aplikaci a zapiš svůj trénink.",
-    "rejected": "Časovač se tentokrát nedal použít. Zruš ho a zapiš trénink normálně — pořád se počítá."
+    "notifTitle": "60 minut hotovo! ⏱️",
+    "notifBody": "Skvělá práce! Otevři aplikaci a zapiš svých 60 bodů pro tým.",
+    "rejected": "Hodiny tentokrát nešlo použít. Zruš je a zapiš trénink dodatečně — i tak se počítá.",
+    "stopwatchA11y": "Natrénováno {{time}}",
+    "runningPoints": "+{{points}} bodů pro tým 🔥",
+    "zeroPointsHelp": "0 bodů (první bod po 1 min)",
+    "firstPointIn": "{{seconds}} s do prvního bodu",
+    "nextPointIn": "{{seconds}} s do dalšího bodu",
+    "maxCapLabel": "Max. {{minutes}} min",
+    "maxReached": "Maximum dosaženo (60 min = 60 b.)! 🎉"
   },
   "adultFeedback": {
     "cardTitle": "Řekni nám, co si myslíš",
     "cardButton": "Poslat zpětnou vazbu",
     "heading": "Řekni nám, co si myslíš",
-    "kinds": { "idea": "Nápad", "problem": "Problém", "other": "Jiné" },
+    "kinds": {
+      "idea": "Nápad",
+      "problem": "Problém",
+      "other": "Jiné"
+    },
     "placeholder": "Piš sem",
     "counter": "{{count}}/{{max}}",
     "warning": "Nepiš jména ani údaje o dětech.",
@@ -355,8 +352,17 @@
     "progress": "Otázka {{step}} ze 2",
     "funQuestion": "Bavilo tě to dnes?",
     "wantQuestion": "Čeho chceš víc?",
-    "fun": { "happy": "Bavilo", "meh": "Ujde to", "sad": "Nebavilo" },
-    "want": { "drills": "Cvičení", "challenges": "Výzvy", "badges": "Odznaky", "unsure": "Nevím" },
+    "fun": {
+      "happy": "Bavilo",
+      "meh": "Ujde to",
+      "sad": "Nebavilo"
+    },
+    "want": {
+      "drills": "Cvičení",
+      "challenges": "Výzvy",
+      "badges": "Odznaky",
+      "unsure": "Nevím"
+    },
     "skip": "Přeskočit",
     "error": "Odeslání se nepovedlo. Zkus to znovu.",
     "thanksHeading": "Díky!",

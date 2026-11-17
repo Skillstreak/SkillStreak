@@ -229,7 +229,7 @@ describe('Phase 2 API (e2e)', () => {
         .send({
           title: 'Zorro-finter-veckan',
           description: 'Gör så många du kan!',
-          targetMetric: 'drill-minuter',
+          targetMetric: 'total-minuter',
           targetValue: 100,
           startDate: '2026-07-06',
           endDate: '2026-07-12',
@@ -567,7 +567,7 @@ describe('Phase 2 API (e2e)', () => {
         .send({
           title: 'Zorro-finter-veckan',
           description: 'Gör så många du kan!',
-          targetMetric: 'drill-minuter',
+          targetMetric: 'total-minuter',
           targetValue: 100,
           startDate: '2026-07-06',
           endDate: '2026-07-12',
@@ -1097,7 +1097,7 @@ describe('Phase 2 API (e2e)', () => {
         .send({
           title: 'Bonus-testet',
           description: '...',
-          targetMetric: 'fitness-minuter',
+          targetMetric: 'total-minuter',
           targetValue: 30,
           startDate: today,
           endDate: tomorrowDateString(today),
@@ -1165,8 +1165,10 @@ describe('Phase 2 API (e2e)', () => {
       expect(goal.goalMet).toBe(true);
     });
 
-    it('does not award a bonus for logs outside the goal window or of a non-matching activity type', async () => {
-      const { teamId, potId } = await createTeamFixture();
+    it('rejects a goal set on one kind of training (ADR-0015 amendment 2026-11-17)', async () => {
+      // The app no longer records what kind of training a session was, so
+      // a per-activity goal could never be met: only totals are settable.
+      const { teamId } = await createTeamFixture();
       const today = stockholmDateString();
       const { sessionToken: captainToken } = await createCaptain(teamId);
 
@@ -1182,24 +1184,42 @@ describe('Phase 2 API (e2e)', () => {
           endDate: tomorrowDateString(today),
           status: 'active',
         })
+        .expect(400);
+    });
+
+    it('counts a log sent without an activity type toward a total goal', async () => {
+      const { teamId } = await createTeamFixture();
+      const today = stockholmDateString();
+      const { sessionToken: captainToken } = await createCaptain(teamId);
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/teams/${teamId}/weekly-goal`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .send({
+          title: 'Tio minuter',
+          description: '...',
+          targetMetric: 'total-minuter',
+          targetValue: 10,
+          startDate: today,
+          endDate: tomorrowDateString(today),
+          status: 'active',
+        })
         .expect(201);
 
       const { sessionToken } = await createTeamMember(teamId);
-
-      // Wrong activity type: fitness minutes don't count toward a
-      // running-minuter goal, even though this would otherwise cross 10.
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/api/v1/training-logs')
         .set('Authorization', `Bearer ${sessionToken}`)
-        .send({ activityType: 'fitness', durationMinutes: 50 })
+        .send({ durationMinutes: 15 })
         .expect(201);
-      expect((response.body as TrainingLogBody).goalBonus).toBeNull();
 
-      const pot = await dataSource
-        .getRepository(TeamSeasonPot)
-        .findOneOrFail({ where: { id: potId } });
-      // Base points still land (50), just no bonus.
-      expect(pot.pointsTotal).toBe(pointsForTrainingLog(50));
+      const goalResponse = await request(app.getHttpServer())
+        .get(`/api/v1/teams/${teamId}/weekly-goal`)
+        .set('Authorization', `Bearer ${captainToken}`)
+        .expect(200);
+      expect(JSON.stringify(goalResponse.body)).toContain(
+        '"teamBonusBasisMinutes":15',
+      );
     });
 
     it('concurrency: N simultaneous crossing-adjacent logs award the bonus exactly once', async () => {

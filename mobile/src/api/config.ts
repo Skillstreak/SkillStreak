@@ -21,6 +21,11 @@ function resolveDefaultBaseUrl(): string {
 export const API_BASE_URL: string =
   process.env.EXPO_PUBLIC_API_URL ?? resolveDefaultBaseUrl();
 
+// Personal-trainer (PT) screens and the trainer-link block. Off in store
+// release v1 (founder decision 2026-10-29). Fail-closed: only the exact
+// string 'true' turns it on.
+export const PT_ENABLED: boolean = process.env.EXPO_PUBLIC_PT_ENABLED === 'true';
+
 // Fixed per docs/api/phase1-contract.md's "Conventions" section.
 export const API_PREFIX = '/api/v1';
 
