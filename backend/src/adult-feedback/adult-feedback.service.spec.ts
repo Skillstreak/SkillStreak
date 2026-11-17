@@ -9,7 +9,9 @@ import { AdultFeedbackKind } from './adult-feedback.enum';
 const PLAYER_ID = '11111111-1111-4111-8111-111111111111';
 const THIS_YEAR = new Date().getUTCFullYear();
 
-function build(opts: { age?: number; cap?: boolean; handedOff?: boolean } = {}) {
+function build(
+  opts: { age?: number; cap?: boolean; handedOff?: boolean } = {},
+) {
   const playerRepository = {
     findOne: jest.fn().mockResolvedValue({
       id: PLAYER_ID,
@@ -17,7 +19,9 @@ function build(opts: { age?: number; cap?: boolean; handedOff?: boolean } = {}) 
     }),
   };
   const redisService = {
-    tryClaimAdultFeedbackDailyCap: jest.fn().mockResolvedValue(opts.cap ?? true),
+    tryClaimAdultFeedbackDailyCap: jest
+      .fn()
+      .mockResolvedValue(opts.cap ?? true),
   };
   const mailService = {
     sendMail: jest

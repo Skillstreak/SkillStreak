@@ -126,7 +126,9 @@ export async function run(): Promise<void> {
   // 1. Ensure content team exists
   let team =
     (await teamRepo.findOne({ where: { id: PUBLIC_FEED_TEAM_ID } })) ??
-    (await teamRepo.findOne({ where: { inviteCode: PUBLIC_FEED_INVITE_CODE } }));
+    (await teamRepo.findOne({
+      where: { inviteCode: PUBLIC_FEED_INVITE_CODE },
+    }));
 
   if (!team) {
     team = await teamRepo.save(
@@ -189,9 +191,13 @@ export async function run(): Promise<void> {
       }
       if (updated) {
         await playerRepo.save(player);
-        console.log(`[${orderNum}/10] Updated player ${player.screenName} (${player.id})`);
+        console.log(
+          `[${orderNum}/10] Updated player ${player.screenName} (${player.id})`,
+        );
       } else {
-        console.log(`[${orderNum}/10] Player ${player.screenName} (${player.id}) already valid`);
+        console.log(
+          `[${orderNum}/10] Player ${player.screenName} (${player.id}) already valid`,
+        );
       }
     }
 
@@ -207,11 +213,15 @@ export async function run(): Promise<void> {
           status: PublicSharingConsentStatus.ACTIVE,
         }),
       );
-      console.log(`  -> Created active PublicSharingConsent for ${player.screenName}`);
+      console.log(
+        `  -> Created active PublicSharingConsent for ${player.screenName}`,
+      );
     } else if (consent.status !== PublicSharingConsentStatus.ACTIVE) {
       consent.status = PublicSharingConsentStatus.ACTIVE;
       await consentRepo.save(consent);
-      console.log(`  -> Activated PublicSharingConsent for ${player.screenName}`);
+      console.log(
+        `  -> Activated PublicSharingConsent for ${player.screenName}`,
+      );
     }
 
     // 4. Ensure video clip exists and is published + approved
