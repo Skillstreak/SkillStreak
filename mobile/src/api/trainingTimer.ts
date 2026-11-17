@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage';
-import type { ActivityType, TrainingTimerResponse } from './types';
+import type { TrainingTimerResponse } from './types';
 
 /**
  * docs/adr/0038 Decision 2 — the one running countdown timer, kept on this
@@ -30,7 +30,6 @@ const MAX_TIMER_AGE_MS = 24 * 60 * 60 * 1000;
 
 export interface ActiveTimer {
   timerId: string;
-  activityType: ActivityType;
   plannedMinutes: number;
   startedAt: string;
   endsAt: string;
@@ -48,11 +47,9 @@ export interface ActiveTimer {
 
 export function activeTimerFromResponse(
   response: TrainingTimerResponse,
-  activityType: ActivityType,
 ): ActiveTimer {
   return {
     timerId: response.timerId,
-    activityType,
     plannedMinutes: response.plannedMinutes,
     startedAt: response.startedAt,
     endsAt: response.endsAt,
@@ -109,7 +106,6 @@ function isActiveTimer(value: unknown): value is ActiveTimer {
   const v = value as Record<string, unknown>;
   return (
     typeof v.timerId === 'string' &&
-    typeof v.activityType === 'string' &&
     typeof v.plannedMinutes === 'number' &&
     typeof v.startedAt === 'string' &&
     typeof v.endsAt === 'string' &&

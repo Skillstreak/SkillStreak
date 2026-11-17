@@ -93,7 +93,8 @@ export interface CreatePlayerResponse {
 // --- 3. POST /training-logs ---------------------------------------------------
 
 export interface CreateTrainingLogRequest {
-  activityType: ActivityType;
+  /** ADR-0038 amendment 2026-11-17: no longer sent; the server stores `other`. */
+  activityType?: ActivityType;
   durationMinutes: number;
   challengeId?: string;
   /** docs/adr/0025 — a published clip offered as proof of this session.
@@ -161,7 +162,8 @@ export function isClickOnlyUsedUp(allowance: ClickOnlyAllowance | null): boolean
 // --- POST /training-timers (docs/adr/0038 Decision 2) ------------------------
 
 export interface CreateTrainingTimerRequest {
-  activityType: ActivityType;
+  /** ADR-0038 amendment 2026-11-17: no longer sent; the server stores `other`. */
+  activityType?: ActivityType;
   plannedMinutes?: number;
 }
 

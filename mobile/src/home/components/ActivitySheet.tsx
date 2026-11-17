@@ -6,20 +6,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
 import { evidencePointsPreview, isClickOnlyUsedUp } from '../../api/types';
-import type { ActivityType, ClickOnlyAllowance, EvidenceChoice } from '../../api/types';
-
-interface ActivityOption {
-  activityType: ActivityType;
-  emoji: string;
-  labelKey: 'fitness' | 'drill' | 'running' | 'other';
-}
-
-const ACTIVITIES: ActivityOption[] = [
-  { activityType: 'fitness', emoji: '🏋️', labelKey: 'fitness' },
-  { activityType: 'drill', emoji: '🏑', labelKey: 'drill' },
-  { activityType: 'running', emoji: '🏃', labelKey: 'running' },
-  { activityType: 'other', emoji: '⭐', labelKey: 'other' },
-];
+import type { ClickOnlyAllowance, EvidenceChoice } from '../../api/types';
 
 const DURATIONS: { labelKey: 'd10' | 'd15' | 'd20' | 'd30plus'; minutes: number }[] = [
   { labelKey: 'd10', minutes: 10 },
@@ -27,6 +14,16 @@ const DURATIONS: { labelKey: 'd10' | 'd15' | 'd20' | 'd30plus'; minutes: number 
   { labelKey: 'd20', minutes: 20 },
   { labelKey: 'd30plus', minutes: 30 },
 ];
+
+/** What a session logged afterwards can carry — the timer is not one of
+ * them: it is started from the big button, never chosen after the fact. */
+type AfterwardsEvidence = Exclude<EvidenceChoice, 'timer'>;
+
+const AFTERWARDS_OPTIONS = [
+  { choice: 'none', labelKey: 'none' },
+  { choice: 'video', labelKey: 'video' },
+  { choice: 'video_shared', labelKey: 'videoShared' },
+] as const satisfies readonly { choice: AfterwardsEvidence; labelKey: string }[];
 
 interface ActivitySheetProps {
   visible: boolean;
@@ -37,80 +34,56 @@ interface ActivitySheetProps {
    * allowance line rather than a guess. */
   clickOnlyAllowance: ClickOnlyAllowance | null;
   onClose: () => void;
-  onSubmit: (
-    activityType: ActivityType,
-    durationMinutes: number,
-    evidence: EvidenceChoice,
-  ) => void;
+  /** The main path: start the up-counting clock, 1 point per minute. */
+  onStartTimer: () => void;
+  /** The fallback path: a session done without the clock running. */
+  onLogAfterwards: (durationMinutes: number, evidence: AfterwardsEvidence) => void;
 }
 
-/** State H2 — a bottom sheet, not a form: the contract requires
- * `activityType` + `durationMinutes` on every log, resolved here as one
- * extra tap of big chips rather than a text form, per the flow doc's
- * "one tap deep" judgment call. */
+/**
+ * State H2 — ADR-0038 amendment 2026-11-17 (owner): the player no longer
+ * picks a kind of training or a length up front. One big button starts a
+ * clock that counts up and pays 1 point per minute.
+ *
+ * Logging afterwards stays, behind a small link, for a child who trained
+ * without starting the clock: ADR-0038 Decision 4's reason still holds — a
+ * forgotten clock must not cost them their streak. It still pays x0.1 for
+ * the first 3 a week and 0 after, and the row says so before the choice.
+ */
 export function ActivitySheet({
   visible,
   loading,
   errorText,
   clickOnlyAllowance,
   onClose,
-  onSubmit,
+  onStartTimer,
+  onLogAfterwards,
 }: ActivitySheetProps) {
   const { t } = useTranslation('home');
-  const [activityType, setActivityType] = useState<ActivityType | null>(null);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
-  const [evidence, setEvidence] = useState<EvidenceChoice>('none');
-  const [showManualLog, setShowManualLog] = useState(false);
+  const [evidence, setEvidence] = useState<AfterwardsEvidence>('none');
+  const [showAfterwards, setShowAfterwards] = useState(false);
   const wasVisible = useRef(visible);
 
-  const handleClose = () => {
-    setActivityType(null);
+  const reset = () => {
     setDurationMinutes(null);
-    setShowManualLog(false);
+    setEvidence('none');
+    setShowAfterwards(false);
+  };
+
+  const handleClose = () => {
+    reset();
     onClose();
   };
 
   // The sheet is permanently mounted (`<Modal visible={sheetOpen}>`), so
-  // its chip selection survives across opens unless explicitly cleared.
-  // `handleClose` only covers the backdrop-tap path — a successful submit
-  // closes the sheet from the parent (visible: true -> false) without
-  // going through `handleClose`, so without this the previous
-  // activity/duration would still look selected on next open.
+  // its selection survives across opens unless explicitly cleared. A
+  // successful submit closes it from the parent without `handleClose`.
   useEffect(() => {
-    if (wasVisible.current && !visible) {
-      setActivityType(null);
-      setDurationMinutes(null);
-      setShowManualLog(false);
-    }
+    if (wasVisible.current && !visible) reset();
     wasVisible.current = visible;
   }, [visible]);
 
-  const canSubmit = activityType !== null && durationMinutes !== null && !loading;
-
-  /**
-   * docs/adr/0025 Decision 1 — each option shows what it is actually worth
-   * BEFORE the child picks one. The mechanism only changes behaviour if it
-   * is legible, and a multiplier applied after the fact reads as the app
-   * taking something away rather than offering more.
-   *
-   * Real points, not the multiplier: "180 poäng" means something to a
-   * 10-year-old in a way "×12" does not.
-   */
-  const EVIDENCE_OPTIONS = [
-    { choice: 'none', labelKey: 'none' },
-    // docs/adr/0038 Decision 1 — the countdown timer, ×1, no media at all.
-    { choice: 'timer', labelKey: 'timer' },
-    { choice: 'video', labelKey: 'video' },
-    { choice: 'video_shared', labelKey: 'videoShared' },
-  ] as const satisfies readonly { choice: EvidenceChoice; labelKey: string }[];
-
-  /*
-   * docs/adr/0038 Decision 4 — click-only stays selectable even when the
-   * week's paid allowance is used up. Hiding or disabling it would cost a
-   * child who trained without the app open their streak; instead the row
-   * says plainly that it still counts for the streak, pays 0, and that the
-   * timer pays.
-   */
   const clickOnlyUsedUp = isClickOnlyUsedUp(clickOnlyAllowance);
   const clickOnlyNote = clickOnlyAllowance
     ? clickOnlyUsedUp
@@ -130,83 +103,62 @@ export function ActivitySheet({
     >
       <Pressable style={styles.backdrop} onPress={handleClose} />
       <View style={styles.sheet}>
-        <Text style={styles.heading}>{t('activitySheet.heading')}</Text>
+        <Text style={styles.heading}>{t('activitySheet.startHeading')}</Text>
 
-        <View style={styles.chipRow}>
-          {ACTIVITIES.map((option) => {
-            const selected = option.activityType === activityType;
-            return (
-              <Pressable
-                key={option.activityType}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setActivityType(option.activityType)}
-                style={[styles.activityChip, selected && styles.chipSelected]}
-              >
-                <Text style={styles.chipEmoji}>{option.emoji}</Text>
-                <Text style={styles.chipLabel}>{t(`activitySheet.activities.${option.labelKey}`)}</Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.timerStartContainer}>
+          <PrimaryButton
+            label={t('activitySheet.startTimerButton')}
+            loading={loading && !showAfterwards}
+            disabled={loading}
+            onPress={onStartTimer}
+          />
+          <Text style={styles.timerStartHelp}>{t('activitySheet.startTimerHelp')}</Text>
         </View>
 
-        {activityType ? (
+        {errorText && !showAfterwards ? <Text style={styles.error}>{errorText}</Text> : null}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showAfterwards }}
+          onPress={() => setShowAfterwards((v) => !v)}
+          style={styles.manualLogToggle}
+        >
+          <Text style={styles.manualLogToggleText}>
+            {showAfterwards
+              ? t('activitySheet.hideManualLog')
+              : t('activitySheet.showManualLog')}
+          </Text>
+        </Pressable>
+
+        {showAfterwards ? (
           <>
-            <View style={styles.timerStartContainer}>
-              <PrimaryButton
-                label={t('activitySheet.startTimerButton')}
-                loading={loading}
-                onPress={() => {
-                  onSubmit(activityType, 60, 'timer');
-                }}
-              />
-              <Text style={styles.timerStartHelp}>
-                {t('activitySheet.startTimerHelp')}
-              </Text>
+            <Text style={styles.subheading}>{t('activitySheet.durationHeading')}</Text>
+            <View style={styles.chipRow}>
+              {DURATIONS.map((option) => {
+                const selected = option.minutes === durationMinutes;
+                return (
+                  <Pressable
+                    key={option.labelKey}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => setDurationMinutes(option.minutes)}
+                    style={[styles.durationChip, selected && styles.chipSelected]}
+                  >
+                    <Text style={styles.chipLabel}>{t(`activitySheet.durations.${option.labelKey}`)}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setShowManualLog((v) => !v)}
-              style={styles.manualLogToggle}
-            >
-              <Text style={styles.manualLogToggleText}>
-                {showManualLog
-                  ? t('activitySheet.hideManualLog')
-                  : t('activitySheet.showManualLog')}
-              </Text>
-            </Pressable>
-
-            {showManualLog ? (
-              <>
-                <Text style={styles.subheading}>{t('activitySheet.durationHeading')}</Text>
-                <View style={styles.chipRow}>
-                  {DURATIONS.map((option) => {
-                    const selected = option.minutes === durationMinutes;
-                    return (
-                      <Pressable
-                        key={option.labelKey}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        onPress={() => setDurationMinutes(option.minutes)}
-                        style={[styles.durationChip, selected && styles.chipSelected]}
-                      >
-                        <Text style={styles.chipLabel}>{t(`activitySheet.durations.${option.labelKey}`)}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </>
-            ) : null}
           </>
         ) : null}
 
-        {showManualLog && durationMinutes !== null ? (
+        {showAfterwards && durationMinutes !== null ? (
           <>
             <Text style={styles.subheading}>{t('activitySheet.evidenceHeading')}</Text>
             <Text style={styles.evidenceHelp}>{t('activitySheet.evidenceHelp')}</Text>
-            {EVIDENCE_OPTIONS.filter((o) => o.choice !== 'timer').map((option) => {
+            {AFTERWARDS_OPTIONS.map((option) => {
               const selected = option.choice === evidence;
+              // ADR-0025 Decision 1 — real points, shown before the choice.
               const points = evidencePointsPreview(
                 durationMinutes,
                 option.choice,
@@ -238,13 +190,9 @@ export function ActivitySheet({
 
             <PrimaryButton
               label={t('activitySheet.submit')}
-              disabled={!canSubmit}
+              disabled={loading}
               loading={loading}
-              onPress={() => {
-                if (activityType && durationMinutes !== null) {
-                  onSubmit(activityType, durationMinutes, evidence);
-                }
-              }}
+              onPress={() => onLogAfterwards(durationMinutes, evidence)}
             />
           </>
         ) : null}
@@ -323,16 +271,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
-  activityChip: {
-    width: '47%',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-    paddingVertical: 14,
-    alignItems: 'center',
-    gap: 4,
-  },
   durationChip: {
     minWidth: '22%',
     flexGrow: 1,
@@ -346,9 +284,6 @@ const styles = StyleSheet.create({
   chipSelected: {
     borderColor: colors.flame,
     backgroundColor: colors.flameTint,
-  },
-  chipEmoji: {
-    fontSize: 22,
   },
   chipLabel: {
     fontFamily: fonts.bodyBold,

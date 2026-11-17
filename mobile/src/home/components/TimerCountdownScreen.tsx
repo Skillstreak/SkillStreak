@@ -95,7 +95,6 @@ export function TimerCountdownScreen({
   const maxCap = timer.plannedMinutes || MAX_TIMER_MINUTES;
   const isDone = minutesSoFar >= maxCap;
   const secondsUntilNextPoint = points >= maxCap ? 0 : 60 - (seconds % 60);
-  const activityLabel = t(`activitySheet.activities.${timer.activityType}`);
 
   const goToFinish = (minutes: number) => {
     setFinishMinutes(minutes);
@@ -220,7 +219,6 @@ export function TimerCountdownScreen({
     <Modal visible={visible} animationType="slide" onRequestClose={handleBack}>
       <View style={styles.screen}>
         <View style={styles.clockBlock}>
-          <Text style={styles.activity}>{activityLabel}</Text>
           <Text
             style={styles.clock}
             accessibilityRole="timer"
@@ -270,11 +268,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 24,
     gap: 4,
-  },
-  activity: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 16,
-    color: colors.textMuted,
   },
   clock: {
     fontFamily: fonts.headingBold,

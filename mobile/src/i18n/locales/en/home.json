@@ -22,15 +22,8 @@
     "zeroPointsToast": "Your session is saved and counts for your streak 🔥 You've used this week's {{limit}} quick logs, so this one gave 0 points. Try the timer next time — it gives the team points!"
   },
   "activitySheet": {
-    "heading": "What did you train?",
     "durationHeading": "How long?",
     "submit": "Done!",
-    "activities": {
-      "fitness": "Fitness",
-      "drill": "Skills/drills",
-      "running": "Running",
-      "other": "Other"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,16 +36,15 @@
     "evidence": {
       "none": "Just log it",
       "video": "With a video",
-      "videoShared": "With a video — share with the team",
-      "timer": "With the timer"
+      "videoShared": "With a video — share with the team"
     },
-    "submitTimer": "Start the timer",
-    "startTimerButton": "Start training clock ⏱️",
+    "startTimerButton": "Start the training clock ⏱️",
     "startTimerHelp": "Counts up — 1 point per minute (max 60 min)",
-    "showManualLog": "Already trained? Log manually →",
-    "hideManualLog": "Hide manual log ↑",
+    "showManualLog": "Forgot to start the clock? Log it afterwards →",
+    "hideManualLog": "Hide ↑",
     "clickOnlyRemaining": "{{remaining}} of {{limit}} quick logs left this week",
-    "clickOnlyUsedUp": "You've used this week's quick logs. It still counts for your streak, but gives 0 points until Monday. The timer gives points!"
+    "clickOnlyUsedUp": "You've used this week's quick logs. It still counts for your streak, but gives 0 points until Monday. The timer gives points!",
+    "startHeading": "Time to train! 💪"
   },
   "goalBonusTakeover": {
     "headline": "The team hit this week's goal!",
@@ -304,39 +296,41 @@
   },
   "trainingTimer": {
     "heading": "Training clock 💪",
-    "explainer": "The clock counts up and points tick in while you train (max 60 min). You can lock your phone — the clock keeps going.",
-    "ofMinutes": "of {{minutes}} min",
-    "remainingA11y": "{{time}} left",
+    "explainer": "The clock counts up and you get 1 point per minute (max 60 min). You can lock your phone — the clock keeps going.",
     "stopwatchA11y": "Trained {{time}}",
-    "runningPoints": "+{{points}} points to the team 🔥",
-    "zeroPointsHelp": "0 points (starts ticking after 1 min)",
-    "firstPointIn": "{{seconds}}s to first point",
-    "nextPointIn": "{{seconds}}s to next point",
-    "maxCapLabel": "Max limit: {{minutes}} min",
-    "maxReached": "Max limit reached (60 min = 60 pts)! 🎉",
-    "stop": "End workout",
-    "stopConfirm": "Finish now? You trained for {{minutes}} min and earned {{points}} points.",
+    "runningPoints": "+{{points}} points for the team 🔥",
+    "zeroPointsHelp": "0 points (first point after 1 min)",
+    "firstPointIn": "{{seconds}}s to your first point",
+    "nextPointIn": "{{seconds}}s to the next point",
+    "maxCapLabel": "Max {{minutes}} min",
+    "maxReached": "Max reached (60 min = 60 pts)! 🎉",
+    "stop": "Finish session",
+    "stopConfirm": "Finish now? You've trained for {{minutes}} min and earned {{points}} points.",
     "stopConfirmYes": "Yes, finish and log",
     "keepGoing": "Keep training",
-    "tooShort": "Less than a minute has passed (0 points). Train at least 1 minute to start collecting points!",
-    "discard": "Cancel timer",
-    "doneHeading": "Max limit reached! 🎉",
-    "doneBody": "60 minutes done — awesome job! You maxed out the session and earned 60 points for the team.",
+    "tooShort": "Less than a minute has passed. Train for at least 1 minute to get your first point!",
+    "discard": "Cancel the clock",
+    "doneHeading": "Max reached! 🎉",
+    "doneBody": "60 minutes — awesome job! You've earned 60 points for the team.",
     "logIt": "Log session ({{points}} pts)",
-    "finishHeading": "How do you want to log?",
-    "finishHelp": "The timer awards {{minutes}} points (1 pt/min). Want to give the team even more? Attach a video.",
-    "evidenceTimer": "Just the timer",
-    "submit": "Log workout",
+    "finishHeading": "How do you want to log it?",
+    "finishHelp": "The clock gives {{minutes}} points (1 pt/min). Want to give the team even more? Add a video.",
+    "evidenceTimer": "Just the clock",
+    "submit": "Log session",
     "back": "Back",
-    "notifTitle": "Max limit reached (60 min)! ⏱️",
-    "notifBody": "Great job! Open the app and log your 60 points for the team.",
-    "rejected": "The timer could not be used this time. Cancel the timer and log normally instead — it still counts."
+    "notifTitle": "60 minutes done! ⏱️",
+    "notifBody": "Great work! Open the app and log your 60 points for the team.",
+    "rejected": "The clock couldn't be used this time. Cancel it and log the session afterwards instead — it still counts."
   },
   "adultFeedback": {
     "cardTitle": "Tell us what you think",
     "cardButton": "Send feedback",
     "heading": "Tell us what you think",
-    "kinds": { "idea": "Idea", "problem": "Problem", "other": "Other" },
+    "kinds": {
+      "idea": "Idea",
+      "problem": "Problem",
+      "other": "Other"
+    },
     "placeholder": "Write here",
     "counter": "{{count}}/{{max}}",
     "warning": "Don't write names or details about children.",
@@ -358,8 +352,17 @@
     "progress": "Question {{step}} of 2",
     "funQuestion": "Was it fun today?",
     "wantQuestion": "What do you want more of?",
-    "fun": { "happy": "Fun", "meh": "So-so", "sad": "Not fun" },
-    "want": { "drills": "Drills", "challenges": "Challenges", "badges": "Badges", "unsure": "Not sure" },
+    "fun": {
+      "happy": "Fun",
+      "meh": "So-so",
+      "sad": "Not fun"
+    },
+    "want": {
+      "drills": "Drills",
+      "challenges": "Challenges",
+      "badges": "Badges",
+      "unsure": "Not sure"
+    },
     "skip": "Skip",
     "error": "Couldn't send. Please try again.",
     "thanksHeading": "Thanks!",

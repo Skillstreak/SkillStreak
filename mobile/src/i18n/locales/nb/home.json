@@ -22,15 +22,8 @@
     "zeroPointsToast": "Økta er lagret og teller for streaken din 🔥 Du har brukt ukas {{limit}} hurtiglogginger, så det ble 0 poeng denne gangen. Prøv timeren neste gang — da får laget poeng!"
   },
   "activitySheet": {
-    "heading": "Hva trente du?",
     "durationHeading": "Hvor lenge?",
     "submit": "Ferdig!",
-    "activities": {
-      "fitness": "Kondisjon",
-      "drill": "Teknikk/øvelse",
-      "running": "Løping",
-      "other": "Annet"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,12 +36,15 @@
     "evidence": {
       "none": "Bare logg",
       "video": "Med video",
-      "videoShared": "Med video — del med laget",
-      "timer": "Med timer"
+      "videoShared": "Med video — del med laget"
     },
-    "submitTimer": "Start timeren",
     "clickOnlyRemaining": "{{remaining}} av {{limit}} hurtiglogginger igjen denne uka",
-    "clickOnlyUsedUp": "Ukas hurtiglogginger er brukt opp. Økta teller fortsatt for streaken din, men gir 0 poeng fram til mandag. Timeren gir poeng!"
+    "clickOnlyUsedUp": "Ukas hurtiglogginger er brukt opp. Økta teller fortsatt for streaken din, men gir 0 poeng fram til mandag. Timeren gir poeng!",
+    "startHeading": "På tide å trene! 💪",
+    "startTimerButton": "Start treningsklokka ⏱️",
+    "startTimerHelp": "Klokka teller oppover — 1 poeng per minutt (maks 60 min)",
+    "showManualLog": "Glemte du å starte klokka? Logg i etterkant →",
+    "hideManualLog": "Skjul ↑"
   },
   "goalBonusTakeover": {
     "headline": "Laget nådde ukens mål!",
@@ -299,33 +295,42 @@
     "notifBody": "10–15 minutter holder. Streaken din venter!"
   },
   "trainingTimer": {
-    "heading": "Stå på! 💪",
-    "explainer": "Timeren viser at tiden gikk. Du kan låse telefonen — klokka går likevel.",
-    "ofMinutes": "av {{minutes}} min",
-    "remainingA11y": "{{time}} igjen",
-    "stop": "Avslutt",
-    "stopConfirm": "Avslutte nå? Du får poeng for {{minutes}} min.",
+    "heading": "Treningsklokke 💪",
+    "explainer": "Klokka teller oppover, og du får 1 poeng per minutt (maks 60 min). Du kan låse telefonen — klokka går likevel.",
+    "stop": "Avslutt økta",
+    "stopConfirm": "Avslutte nå? Du har trent i {{minutes}} min og samlet {{points}} poeng.",
     "stopConfirmYes": "Ja, avslutt og logg",
     "keepGoing": "Fortsett å trene",
-    "tooShort": "Det har gått mindre enn ett minutt, så det er ingenting å logge ennå. Hold på litt til, eller avbryt timeren.",
-    "discard": "Avbryt timeren",
-    "doneHeading": "Tiden er ute! 🎉",
-    "doneBody": "{{minutes}} min ferdig. Bra jobba!",
-    "logIt": "Logg økta",
+    "tooShort": "Det har gått mindre enn ett minutt. Tren minst 1 minutt, så får du ditt første poeng!",
+    "discard": "Avbryt klokka",
+    "doneHeading": "Maks nådd! 🎉",
+    "doneBody": "60 minutter — knallbra jobba! Du har samlet 60 poeng til laget.",
+    "logIt": "Logg økta ({{points}} p)",
     "finishHeading": "Hvordan vil du logge økta?",
-    "finishHelp": "Timeren teller {{minutes}} min. Vil du gi laget enda mer, kan du legge til en video.",
-    "evidenceTimer": "Bare timeren",
-    "submit": "Logg",
+    "finishHelp": "Klokka gir {{minutes}} poeng (1 p/min). Vil du gi laget enda mer, kan du legge til en video.",
+    "evidenceTimer": "Bare klokka",
+    "submit": "Logg økta",
     "back": "Tilbake",
-    "notifTitle": "Tiden er ute! ⏱️",
-    "notifBody": "Bra kjempa! Åpne appen og logg økta di.",
-    "rejected": "Timeren kunne ikke brukes denne gangen. Avbryt timeren og logg økta som vanlig i stedet — den teller likevel."
+    "notifTitle": "60 minutter ferdig! ⏱️",
+    "notifBody": "Bra kjempet! Åpne appen og logg de 60 poengene dine til laget.",
+    "rejected": "Klokka kunne ikke brukes denne gangen. Avbryt klokka og logg økta i etterkant i stedet — den teller likevel.",
+    "stopwatchA11y": "Trent {{time}}",
+    "runningPoints": "+{{points}} poeng til laget 🔥",
+    "zeroPointsHelp": "0 poeng (første poeng etter 1 min)",
+    "firstPointIn": "{{seconds}} s til første poeng",
+    "nextPointIn": "{{seconds}} s til neste poeng",
+    "maxCapLabel": "Maks {{minutes}} min",
+    "maxReached": "Maks nådd (60 min = 60 p)! 🎉"
   },
   "adultFeedback": {
     "cardTitle": "Si hva du mener",
     "cardButton": "Send tilbakemelding",
     "heading": "Si hva du mener",
-    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Annet" },
+    "kinds": {
+      "idea": "Idé",
+      "problem": "Problem",
+      "other": "Annet"
+    },
     "placeholder": "Skriv her",
     "counter": "{{count}}/{{max}}",
     "warning": "Ikke skriv navn eller opplysninger om barn.",
@@ -347,8 +352,17 @@
     "progress": "Spørsmål {{step}} av 2",
     "funQuestion": "Var det gøy i dag?",
     "wantQuestion": "Hva vil du ha mer av?",
-    "fun": { "happy": "Gøy", "meh": "Sånn passe", "sad": "Ikke gøy" },
-    "want": { "drills": "Øvelser", "challenges": "Utfordringer", "badges": "Merker", "unsure": "Vet ikke" },
+    "fun": {
+      "happy": "Gøy",
+      "meh": "Sånn passe",
+      "sad": "Ikke gøy"
+    },
+    "want": {
+      "drills": "Øvelser",
+      "challenges": "Utfordringer",
+      "badges": "Merker",
+      "unsure": "Vet ikke"
+    },
     "skip": "Hopp over",
     "error": "Kunne ikke sende. Prøv igjen.",
     "thanksHeading": "Takk!",

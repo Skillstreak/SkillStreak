@@ -9,6 +9,7 @@ import {
   MAX_TIMER_MINUTES,
   StartTrainingTimerDto,
 } from './dto/start-training-timer.dto';
+import { ActivityType } from './activity-type.enum';
 import { TrainingTimer } from './entities/training-timer.entity';
 
 const MS_PER_MINUTE = 60 * 1000;
@@ -71,7 +72,7 @@ export class TrainingTimersService {
       const timer = await repository.save(
         repository.create({
           playerId,
-          activityType: dto.activityType,
+          activityType: dto.activityType ?? ActivityType.OTHER,
           plannedMinutes,
           startedAt: new Date(),
           consumedAt: null,

@@ -22,15 +22,8 @@
     "zeroPointsToast": "Passet är sparat och räknas för din streak 🔥 Du har använt veckans {{limit}} snabbloggningar, så det blev 0 poäng den här gången. Testa timern nästa gång — då får laget poäng!"
   },
   "activitySheet": {
-    "heading": "Vad tränade du?",
     "durationHeading": "Hur länge?",
     "submit": "Klart!",
-    "activities": {
-      "fitness": "Kondition",
-      "drill": "Teknik/övning",
-      "running": "Löpning",
-      "other": "Annat"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,16 +36,15 @@
     "evidence": {
       "none": "Bara logga",
       "video": "Med video",
-      "videoShared": "Med video — dela med laget",
-      "timer": "Med timer"
+      "videoShared": "Med video — dela med laget"
     },
-    "submitTimer": "Starta timern",
     "startTimerButton": "Starta träningsklockan ⏱️",
     "startTimerHelp": "Klockan räknar uppåt — 1 poäng per minut (max 60 min)",
-    "showManualLog": "Redan tränat? Logga i efterhand →",
-    "hideManualLog": "Dölj efterhandsloggning ↑",
+    "showManualLog": "Glömde du starta klockan? Logga i efterhand →",
+    "hideManualLog": "Dölj ↑",
     "clickOnlyRemaining": "{{remaining}} av {{limit}} snabbloggningar kvar denna vecka",
-    "clickOnlyUsedUp": "Veckans snabbloggningar är slut. Passet räknas ändå för din streak, men ger 0 poäng fram till måndag. Timern ger poäng!"
+    "clickOnlyUsedUp": "Veckans snabbloggningar är slut. Passet räknas ändå för din streak, men ger 0 poäng fram till måndag. Timern ger poäng!",
+    "startHeading": "Dags att träna! 💪"
   },
   "goalBonusTakeover": {
     "headline": "Laget nådde veckans mål!",
@@ -304,39 +296,41 @@
   },
   "trainingTimer": {
     "heading": "Träningsklocka 💪",
-    "explainer": "Klockan räknar uppåt och poäng tickar in under tiden du tränar (max 60 min). Du kan låsa telefonen — klockan fortsätter ändå.",
-    "ofMinutes": "av {{minutes}} min",
-    "remainingA11y": "{{time}} kvar",
+    "explainer": "Klockan räknar uppåt och du får 1 poäng per minut (max 60 min). Du kan låsa telefonen — klockan fortsätter ändå.",
     "stopwatchA11y": "Tränat {{time}}",
     "runningPoints": "+{{points}} poäng till laget 🔥",
-    "zeroPointsHelp": "0 poäng (börjar ticka efter 1 min)",
-    "firstPointIn": "{{seconds}}s till första poängen",
-    "nextPointIn": "{{seconds}}s till nästa poäng",
-    "maxCapLabel": "Maxtak: {{minutes}} min",
-    "maxReached": "Maxtak nått (60 min = 60 p)! 🎉",
-    "stop": "Avsluta pass",
+    "zeroPointsHelp": "0 poäng (första poängen efter 1 min)",
+    "firstPointIn": "{{seconds}} s till första poängen",
+    "nextPointIn": "{{seconds}} s till nästa poäng",
+    "maxCapLabel": "Max {{minutes}} min",
+    "maxReached": "Max nått (60 min = 60 p)! 🎉",
+    "stop": "Avsluta passet",
     "stopConfirm": "Avsluta nu? Du har tränat i {{minutes}} min och samlat {{points}} poäng.",
     "stopConfirmYes": "Ja, avsluta och logga",
     "keepGoing": "Fortsätt träna",
-    "tooShort": "Det har gått mindre än en minut (0 poäng). Träna minst 1 minut så börjar poängen ticka in!",
-    "discard": "Avbryt timern",
-    "doneHeading": "Maxtak nått! 🎉",
-    "doneBody": "60 minuter klara — grymt jobbat! Du har maxat passet och samlat 60 poäng till laget.",
+    "tooShort": "Det har gått mindre än en minut. Träna minst 1 minut så får du din första poäng!",
+    "discard": "Avbryt klockan",
+    "doneHeading": "Max nått! 🎉",
+    "doneBody": "60 minuter — grymt jobbat! Du har samlat 60 poäng till laget.",
     "logIt": "Logga passet ({{points}} p)",
     "finishHeading": "Hur vill du logga passet?",
-    "finishHelp": "Timern ger {{minutes}} poäng (1 p/min). Vill du ge laget ännu mer kan du lägga till en video.",
-    "evidenceTimer": "Bara timern",
+    "finishHelp": "Klockan ger {{minutes}} poäng (1 p/min). Vill du ge laget ännu mer kan du lägga till en video.",
+    "evidenceTimer": "Bara klockan",
     "submit": "Logga passet",
     "back": "Tillbaka",
-    "notifTitle": "Maxtaket nått (60 min)! ⏱️",
+    "notifTitle": "60 minuter klara! ⏱️",
     "notifBody": "Bra kämpat! Öppna appen och logga dina 60 poäng till laget.",
-    "rejected": "Timern gick inte att använda den här gången. Avbryt timern och logga passet som vanligt i stället — det räknas ändå."
+    "rejected": "Klockan gick inte att använda den här gången. Avbryt klockan och logga passet i efterhand i stället — det räknas ändå."
   },
   "adultFeedback": {
     "cardTitle": "Säg vad du tycker",
     "cardButton": "Skicka feedback",
     "heading": "Säg vad du tycker",
-    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Annat" },
+    "kinds": {
+      "idea": "Idé",
+      "problem": "Problem",
+      "other": "Annat"
+    },
     "placeholder": "Skriv här",
     "counter": "{{count}}/{{max}}",
     "warning": "Skriv inte namn eller uppgifter om barn.",
@@ -358,8 +352,17 @@
     "progress": "Fråga {{step}} av 2",
     "funQuestion": "Var det kul i dag?",
     "wantQuestion": "Vad vill du ha mer av?",
-    "fun": { "happy": "Kul", "meh": "Så där", "sad": "Inte kul" },
-    "want": { "drills": "Övningar", "challenges": "Utmaningar", "badges": "Märken", "unsure": "Vet inte" },
+    "fun": {
+      "happy": "Kul",
+      "meh": "Så där",
+      "sad": "Inte kul"
+    },
+    "want": {
+      "drills": "Övningar",
+      "challenges": "Utmaningar",
+      "badges": "Märken",
+      "unsure": "Vet inte"
+    },
     "skip": "Hoppa över",
     "error": "Det gick inte att skicka. Försök igen.",
     "thanksHeading": "Tack!",

@@ -188,6 +188,16 @@ describe('TrainingLogsService — weekly click-only cap (ADR-0038 Decision 4)', 
     });
   });
 
+  it('stores activity type `other` when the app sends none (ADR-0038 amendment 2026-11-17)', async () => {
+    const { service, logRepository } = buildService({});
+
+    await service.logTraining('player-1', { durationMinutes: 20 });
+
+    expect(logRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ activityType: ActivityType.OTHER }),
+    );
+  });
+
   it('still saves the 4th, still counts it for the streak and the weekly goal, but pays 0', async () => {
     const {
       service,
