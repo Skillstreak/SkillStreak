@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Mitä jokaisen pelaajan pitää saavuttaa tällä viikolla?",
-    "sub": "Jokaisen pelaajan pitää saavuttaa tavoite itse — valitse lasketaanko se minuutteina vai kertoina, ja millainen harjoittelu kelpaa.",
+    "sub": "Jokaisen pelaajan pitää saavuttaa tavoite itse — valitse lasketaanko se minuutteina vai kertoina. Kaikki treeni lasketaan.",
     "unitMinutes": "⏱️ Minuutit",
     "unitSessions": "🔁 Kertojen määrä",
     "unitHelper": "Yksi kerta = yksi kirjattu harjoitus, kestosta riippumatta.",

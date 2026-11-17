@@ -263,6 +263,16 @@ describe('DrillLibraryService: unreviewed drills are not served', () => {
     ).toEqual(reviewed.sort());
   });
 
+  it('never includes author, authorConsentedNamed or sourceNote in a listing (Juridik R1)', () => {
+    const list = service.list();
+    expect(list.length).toBeGreaterThan(0);
+    for (const item of list) {
+      expect(item).not.toHaveProperty('author');
+      expect(item).not.toHaveProperty('authorConsentedNamed');
+      expect(item).not.toHaveProperty('sourceNote');
+    }
+  });
+
   it('cannot reach an unreviewed drill by slug either', () => {
     // The listing and the lookup are separate paths, and hiding a drill
     // from one while leaving it fetchable by the other would be the more

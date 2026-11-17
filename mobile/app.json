@@ -20,6 +20,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "allowBackup": false,
       "predictiveBackGestureEnabled": false,
       "package": "xyz.skillstreak.app",
       "blockedPermissions": [

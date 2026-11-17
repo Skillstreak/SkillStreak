@@ -14,6 +14,7 @@ import { AdminImprovementSuggestionsService } from './admin-improvement-suggesti
 import { AdminPlanningDocsService } from './admin-planning-docs.service';
 import { AdminSessionService } from './admin-session.service';
 import { AdminQuickFeedbackService } from './admin-quick-feedback.service';
+import { AdminTeamsService } from './admin-teams.service';
 import { QuickFeedbackModule } from '../quick-feedback/quick-feedback.module';
 
 /**
@@ -72,6 +73,7 @@ import { QuickFeedbackModule } from '../quick-feedback/quick-feedback.module';
     AdminImprovementSuggestionsService,
     AdminPlanningDocsService,
     AdminQuickFeedbackService,
+    AdminTeamsService,
   ],
 })
 export class AdminModule {}

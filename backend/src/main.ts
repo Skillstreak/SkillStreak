@@ -132,6 +132,12 @@ async function bootstrap() {
     next();
   });
 
+  // Don't advertise the framework. The headers that matter are set by
+  // securityHeaders below and the HSTS middleware above; Helmet was tried
+  // here and dropped again — with its CSP switched off it added little but
+  // a CodeQL alert.
+  app.disable('x-powered-by');
+
   // See the middleware for why each of these three is here.
   app.use(securityHeaders);
 

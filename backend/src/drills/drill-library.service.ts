@@ -50,7 +50,11 @@ export interface Drill {
  * invites a caller to start branching on it, which would recreate at the
  * edges the filtering this service does once at the centre.
  */
-export type DrillSummary = Omit<Drill, 'body' | 'coachReviewed'>;
+// author, authorConsentedNamed and sourceNote stay server-side (Juridik R1).
+export type DrillSummary = Omit<
+  Drill,
+  'body' | 'coachReviewed' | 'author' | 'sourceNote'
+>;
 
 /**
  * The coach drill library (ADR-0029 Decision 2).
@@ -128,8 +132,6 @@ export class DrillLibraryService {
           focus: drill.focus,
           durationMinutes: drill.durationMinutes,
           locale: drill.locale,
-          author: drill.author,
-          sourceNote: drill.sourceNote,
         }))
         .sort((a, b) => a.title.localeCompare(b.title, 'sv'))
     );

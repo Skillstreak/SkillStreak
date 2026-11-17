@@ -236,3 +236,110 @@ format check, and decisions 2–4 are unaffected.
   is currently live on the account.
 - New email template (cancel link, to the old address, sent at confirm
   time) alongside the two existing request-time templates.
+
+## Amendment — 2026-11-08: while parental consent is not yet approved, the current address decides
+
+Owner-approved 2026-11-08, closing a consent gap found by that day's
+security audit. Appended; nothing above is withdrawn, and accounts whose
+parental consent is already **approved** keep the flow above exactly as
+written (notice at request time, cancel link at confirm time, 24h grace).
+
+### The finding
+
+Nothing in this ADR's flow looked at `parentalConsentStatus`, and the
+consent-reminder endpoint lets a player remind *themselves*. Together:
+
+1. A player whose consent is still pending requests a contact change to
+   their own mailbox, and confirms it from there (the code goes to the new
+   address — by design, decision 1).
+2. The parent receives only the informational notice and, at confirm
+   time, a cancel link. If they do nothing for 24h, the change applies
+   lazily on the next read.
+3. The player self-reminds. `ConsentService.sendReminder` mints a fresh
+   consent token — killing the link the parent already held — and mails it
+   to the effective contact, now the child's own address.
+4. The child approves. It is recorded as `ConsentMethod.EMAIL_LINK`: a
+   parental consent nobody gave, unlocking media upload and everything
+   else gated on approval.
+
+This ADR's grace period was designed against a *hijacked session* on an
+account whose parent had already consented. While consent is pending the
+threat is different — the account holder themselves wants the parent out
+of the loop — and the current address is the only parent in it.
+
+### The decision (non-approved accounts only: pending, not requested, revoked)
+
+1. **The request mails both addresses.** The new one gets the code, as
+   before. The current one gets an *actionable* mail instead of the
+   notice: one link to a page with two buttons, **approve** and **stop**.
+   The mail names the requested address — the notice deliberately does
+   not, but this one asks a parent to approve a specific address, which
+   they cannot do without seeing it (escaped, like the screen name).
+2. **Approve** applies the change immediately if the new address has
+   already confirmed. If it has not, the approval is recorded and the
+   change applies the moment the new address confirms, with no grace
+   period. It never applies before that: an address that has not proven
+   it exists does not become a child's parent contact, so decision 1's
+   invariant holds on this path too. **Stop** discards the change and
+   bumps `token_version`, the same "this wasn't me" semantics as the
+   cancel link.
+3. **If only the new address confirms**, the change applies after the
+   same 24h grace as before. No separate cancel link is minted on this
+   path; the request-time link is extended to the grace deadline and
+   does that job, so the parent holds one link throughout, not two.
+4. **Consent reminders are refused while a change is unresolved** —
+   `409 consent_reminder_blocked_pending_contact_change`, for the
+   self-service and the captain path alike, checked before the cooldown
+   is claimed. *Refuse* was chosen over *keep reminding the current
+   address*, because any reminder mints a new token, and minting one
+   would replace the link the parent already holds even when it went to
+   the same address. Refusing is the only option that leaves that link
+   untouched for the whole window. A change whose grace has already
+   elapsed is applied first and does not block (it has taken effect).
+5. **No other path lets the new address act as the parent early.** PT
+   consent requests (ADR-0023), public-sharing consent requests
+   (ADR-0030) and erasure (ADR-0013) already refuse while
+   `hasPendingContactChange` is true; every mail that goes "to the
+   parent" reads the effective contact, which is the current address
+   until the change applies; and the pending address is only ever sent
+   the confirmation code. Unchanged, re-verified for this amendment.
+
+The token is 32 random bytes, hex (`contact-change-review-token.util.ts`,
+the consent-token shape rather than the 8-character typed code), unique,
+single-use (both decisions consume it), and expires with the change it
+governs: the confirmation code's 15 minutes at request time, extended to
+the grace deadline at confirm. A re-request (still allowed while the
+previous one is unconfirmed) replaces the token and clears any approval,
+so approving a change to one address can never carry over to another.
+The flow is chosen once, at request time, and carried by the row, so a
+consent approval landing mid-change does not switch flows under a link
+already mailed.
+
+### Accepted residual
+
+The same one signup already carries: **if the parent ignores the mail
+for 24h after the new address confirms, the change goes through**, and
+from then on reminders and every other parent-bound mail go to the new
+address. A child who controls the new address can then approve their own
+consent. The owner accepted this explicitly on 2026-11-08 — it is no
+weaker than onboarding, where a child can type their own address as the
+parent's in the first place — and it is pinned by an e2e test labelled
+`ACCEPTED RESIDUAL` so it stays a deliberate property, not an accident.
+
+### Implementation
+
+- Migration `1790000000000-AddContactChangeOldAddressReview`, additive:
+  `contact_change_review_code` (unique), `contact_change_review_code_
+  expires_at`, `contact_change_approved_by_current_at` on
+  `player_private_info`. A change already in flight when it deploys has
+  no review code and finishes on the original flow; the reminder refusal
+  covers it regardless, since that reads the pending state, not these
+  columns.
+- Routes, unauthenticated and throttled like the cancel link: `GET
+  /api/v1/players/contact-change-review/:token` (preview, no side
+  effects) and `POST …/:token?decision=approve|stop`.
+- `POST /players/me/contact-change-confirm` gains an additive
+  `applied: boolean`; older app builds ignore it.
+- New mail template `contact-change-review-email.template.ts` and page
+  templates `contact-change-review-page.templates.ts`, all nine locales,
+  Swedish first.

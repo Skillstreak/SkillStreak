@@ -93,7 +93,8 @@ export interface CreatePlayerResponse {
 // --- 3. POST /training-logs ---------------------------------------------------
 
 export interface CreateTrainingLogRequest {
-  activityType: ActivityType;
+  /** ADR-0038 amendment 2026-11-17: no longer sent; the server stores `other`. */
+  activityType?: ActivityType;
   durationMinutes: number;
   challengeId?: string;
   /** docs/adr/0025 — a published clip offered as proof of this session.
@@ -161,8 +162,9 @@ export function isClickOnlyUsedUp(allowance: ClickOnlyAllowance | null): boolean
 // --- POST /training-timers (docs/adr/0038 Decision 2) ------------------------
 
 export interface CreateTrainingTimerRequest {
-  activityType: ActivityType;
-  plannedMinutes: number;
+  /** ADR-0038 amendment 2026-11-17: no longer sent; the server stores `other`. */
+  activityType?: ActivityType;
+  plannedMinutes?: number;
 }
 
 /** All timestamps are the server's clock — the countdown is computed from
@@ -321,7 +323,7 @@ export interface RedeemSessionResponse {
 // returning player's saved choice wins over the device's own guess
 // (src/i18n/deviceLocale.ts), which only matters pre-auth.
 export interface PlayerProfileResponse {
-  realName: string | null;
+  realName?: string | null;
   birthYear: number;
   parentContact: string;
   avatarId: string;
@@ -329,7 +331,6 @@ export interface PlayerProfileResponse {
 }
 
 export interface UpdateProfileRequest {
-  realName?: string | null;
   avatarId?: string;
   // NEW (docs/adr/0014-multi-language-support.md Consequences, Fas 4.3) —
   // same optional-PATCH-field addition as `CreatePlayerRequest.locale`
@@ -355,6 +356,10 @@ export interface ConfirmContactChangeResponse {
   // the change immediately; it starts a 24h grace period the OLD address
   // can cancel from. See docs/adr/0012's addendum.
   appliesAt: string;
+  // docs/adr/0012's 2026-11-08 amendment — true when the current address
+  // had already approved the change, so confirming applied it at once.
+  // Optional because an API older than this client won't send it.
+  applied?: boolean;
 }
 
 export interface ConfirmContactChangeRequest {

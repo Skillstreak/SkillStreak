@@ -1,0 +1,52 @@
+{
+  "village": {
+    "title": "Skillstreak Village",
+    "intro": "Her ser du holdnavne og sport. Ingen spillere, ingen tal.",
+    "ownHeading": "Dit hold",
+    "level": {
+      "calm": "Stille her",
+      "some": "Nogle hold",
+      "many": "Mange hold",
+      "veryMany": "Rigtig mange hold"
+    },
+    "empty": "Ingen hold vises her lige nu."
+  },
+  "arenas": {
+    "floorball": {
+      "name": "Floorball"
+    },
+    "football": {
+      "name": "Fodbold"
+    },
+    "handball": {
+      "name": "Håndbold"
+    },
+    "ice_hockey": {
+      "name": "Ishockey"
+    },
+    "rugby": {
+      "name": "Rugby"
+    },
+    "skiing": {
+      "name": "Skiløb"
+    },
+    "volleyball": {
+      "name": "Volleyball"
+    },
+    "basketball": {
+      "name": "Basketball"
+    },
+    "rowing": {
+      "name": "Roning"
+    },
+    "tennis": {
+      "name": "Tennis"
+    },
+    "skateboard": {
+      "name": "Skateboarding"
+    },
+    "golf": {
+      "name": "Golf"
+    }
+  }
+}

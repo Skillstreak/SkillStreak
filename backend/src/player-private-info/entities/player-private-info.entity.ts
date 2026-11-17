@@ -82,6 +82,44 @@ export class PlayerPrivateInfo {
   })
   contactChangeCancelCode!: string | null;
 
+  // docs/adr/0012's 2026-11-08 amendment — only for players whose
+  // parental consent is NOT yet approved. Mailed to the OLD address at
+  // request time (not confirm time, unlike contactChangeCancelCode): one
+  // link that can either approve the change or stop it. High-entropy
+  // (32 random bytes, hex — the consent-token shape, not the 8-char human
+  // code, because it is never typed and gates a parent's decision), single-
+  // use, and expiring. Null for an approved account's change, which keeps
+  // the original notify + cancel-at-confirm flow. Deliberately NOT
+  // encrypted, same exact-match-lookup reasoning as contactChangeCode.
+  @Column({
+    name: 'contact_change_review_code',
+    type: 'varchar',
+    nullable: true,
+    unique: true,
+  })
+  contactChangeReviewCode!: string | null;
+
+  // Set to the confirmation code's expiry at request time, then pushed
+  // out to contactChangeApplyAt at confirm time, so the link is live for
+  // exactly as long as the change it governs is unresolved.
+  @Column({
+    name: 'contact_change_review_code_expires_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  contactChangeReviewCodeExpiresAt!: Date | null;
+
+  // The old address pressed "approve" before the new address confirmed.
+  // The change is held until the new address proves it exists, then
+  // applies at that moment without the 24h grace. Reset by every new
+  // request, so an approval can never carry over to a different address.
+  @Column({
+    name: 'contact_change_approved_by_current_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  contactChangeApprovedByCurrentAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

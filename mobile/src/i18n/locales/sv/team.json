@@ -39,6 +39,7 @@
     "reminderSentToast": "Påminnelse skickad.",
     "consentNoLongerPendingToast": "Den här spelaren väntar inte längre på godkännande.",
     "reminderErrorToast": "Något gick fel. Testa igen.",
+    "reminderBlockedPendingContactChangeToast": "Spelarens kontaktadress håller på att bytas. Du kan skicka en påminnelse när bytet är klart.",
     "reissueSentToast": "Inloggningskod skickad till förälder/vårdnadshavare.",
     "reissueRateLimitedToast": "En kod skickades nyss — vänta någon minut innan du skickar en till."
   },

@@ -22,15 +22,8 @@
     "zeroPointsToast": "Passet är sparat och räknas för din streak 🔥 Du har använt veckans {{limit}} snabbloggningar, så det blev 0 poäng den här gången. Testa timern nästa gång — då får laget poäng!"
   },
   "activitySheet": {
-    "heading": "Vad tränade du?",
     "durationHeading": "Hur länge?",
     "submit": "Klart!",
-    "activities": {
-      "fitness": "Kondition",
-      "drill": "Teknik/övning",
-      "running": "Löpning",
-      "other": "Annat"
-    },
     "durations": {
       "d10": "10 min",
       "d15": "15 min",
@@ -43,12 +36,15 @@
     "evidence": {
       "none": "Bara logga",
       "video": "Med video",
-      "videoShared": "Med video — dela med laget",
-      "timer": "Med timer"
+      "videoShared": "Med video — dela med laget"
     },
-    "submitTimer": "Starta timern",
+    "startTimerButton": "Starta träningsklockan ⏱️",
+    "startTimerHelp": "Klockan räknar uppåt — 1 poäng per minut (max 60 min)",
+    "showManualLog": "Glömde du starta klockan? Logga i efterhand →",
+    "hideManualLog": "Dölj ↑",
     "clickOnlyRemaining": "{{remaining}} av {{limit}} snabbloggningar kvar denna vecka",
-    "clickOnlyUsedUp": "Veckans snabbloggningar är slut. Passet räknas ändå för din streak, men ger 0 poäng fram till måndag. Timern ger poäng!"
+    "clickOnlyUsedUp": "Veckans snabbloggningar är slut. Passet räknas ändå för din streak, men ger 0 poäng fram till måndag. Timern ger poäng!",
+    "startHeading": "Dags att träna! 💪"
   },
   "goalBonusTakeover": {
     "headline": "Laget nådde veckans mål!",
@@ -120,6 +116,7 @@
     "contactChangeRateLimited": "Du har redan bett om en ändring nyligen — vänta lite innan du försöker igen.",
     "contactChangeGenericError": "Något gick fel. Kolla uppgiften och testa igen.",
     "contactChangeConfirmedToast": "Bekräftat! Träder i kraft om ca {{hours}} tim. Den gamla adressen kan avbryta via mejlet vi skickat dit.",
+    "contactChangeAppliedToast": "Klart! Kontaktadressen är bytt.",
     "codeInvalid": "Den koden fungerar inte längre. Kolla att du skrev rätt, eller be om en ny.",
     "codeGenericError": "Något gick fel. Kolla din uppkoppling och testa igen.",
     "erasureTeamInfoError": "Kunde inte hämta laginformation. Försök igen.",
@@ -130,11 +127,6 @@
     "erasureStaleState": "Något har ändrats i laget sedan du öppnade den här vyn. Kolla din profil och försök igen.",
     "erasureCancelledToast": "Klart! Ditt konto raderas inte. 🎉",
     "erasureCancelError": "Något gick fel. Ladda om sidan och testa igen.",
-    "editName": {
-      "heading": "Ditt namn",
-      "sub": "Frivilligt — visas aldrig för andra i laget, bara du ser det här.",
-      "placeholder": "För- och efternamn"
-    },
     "editAvatar": {
       "heading": "Välj avatar",
       "sub": "Ingen bild behövs — välj en figur du gillar."
@@ -155,9 +147,6 @@
     "view": {
       "heading": "Din profil",
       "avatarLabel": "Avatar",
-      "nameLabel": "Namn",
-      "nameNotSet": "Inte angivet",
-      "addName": "Lägg till",
       "birthYearLabel": "Födelseår",
       "birthYearHelper": "Går inte att ändra själv — hör av dig till lagets tränare om det behöver rättas.",
       "contactLabel": "Kontaktadress",
@@ -306,33 +295,42 @@
     "notifBody": "10–15 minuter räcker. Din streak väntar!"
   },
   "trainingTimer": {
-    "heading": "Kör hårt! 💪",
-    "explainer": "Timern visar att tiden gick. Du kan låsa telefonen — klockan fortsätter ändå.",
-    "ofMinutes": "av {{minutes}} min",
-    "remainingA11y": "{{time}} kvar",
-    "stop": "Avsluta",
-    "stopConfirm": "Avsluta nu? Du får poäng för {{minutes}} min.",
+    "heading": "Träningsklocka 💪",
+    "explainer": "Klockan räknar uppåt och du får 1 poäng per minut (max 60 min). Du kan låsa telefonen — klockan fortsätter ändå.",
+    "stopwatchA11y": "Tränat {{time}}",
+    "runningPoints": "+{{points}} poäng till laget 🔥",
+    "zeroPointsHelp": "0 poäng (första poängen efter 1 min)",
+    "firstPointIn": "{{seconds}} s till första poängen",
+    "nextPointIn": "{{seconds}} s till nästa poäng",
+    "maxCapLabel": "Max {{minutes}} min",
+    "maxReached": "Max nått (60 min = 60 p)! 🎉",
+    "stop": "Avsluta passet",
+    "stopConfirm": "Avsluta nu? Du har tränat i {{minutes}} min och samlat {{points}} poäng.",
     "stopConfirmYes": "Ja, avsluta och logga",
     "keepGoing": "Fortsätt träna",
-    "tooShort": "Det har gått mindre än en minut, så det finns inget att logga än. Kör en stund till, eller avbryt timern.",
-    "discard": "Avbryt timern",
-    "doneHeading": "Tiden är ute! 🎉",
-    "doneBody": "{{minutes}} min klara. Snyggt jobbat!",
-    "logIt": "Logga passet",
+    "tooShort": "Det har gått mindre än en minut. Träna minst 1 minut så får du din första poäng!",
+    "discard": "Avbryt klockan",
+    "doneHeading": "Max nått! 🎉",
+    "doneBody": "60 minuter — grymt jobbat! Du har samlat 60 poäng till laget.",
+    "logIt": "Logga passet ({{points}} p)",
     "finishHeading": "Hur vill du logga passet?",
-    "finishHelp": "Timern räknar {{minutes}} min. Vill du ge laget ännu mer kan du lägga till en video.",
-    "evidenceTimer": "Bara timern",
-    "submit": "Logga",
+    "finishHelp": "Klockan ger {{minutes}} poäng (1 p/min). Vill du ge laget ännu mer kan du lägga till en video.",
+    "evidenceTimer": "Bara klockan",
+    "submit": "Logga passet",
     "back": "Tillbaka",
-    "notifTitle": "Tiden är ute! ⏱️",
-    "notifBody": "Bra kämpat! Öppna appen och logga ditt pass.",
-    "rejected": "Timern gick inte att använda den här gången. Avbryt timern och logga passet som vanligt i stället — det räknas ändå."
+    "notifTitle": "60 minuter klara! ⏱️",
+    "notifBody": "Bra kämpat! Öppna appen och logga dina 60 poäng till laget.",
+    "rejected": "Klockan gick inte att använda den här gången. Avbryt klockan och logga passet i efterhand i stället — det räknas ändå."
   },
   "adultFeedback": {
     "cardTitle": "Säg vad du tycker",
     "cardButton": "Skicka feedback",
     "heading": "Säg vad du tycker",
-    "kinds": { "idea": "Idé", "problem": "Problem", "other": "Annat" },
+    "kinds": {
+      "idea": "Idé",
+      "problem": "Problem",
+      "other": "Annat"
+    },
     "placeholder": "Skriv här",
     "counter": "{{count}}/{{max}}",
     "warning": "Skriv inte namn eller uppgifter om barn.",
@@ -354,8 +352,17 @@
     "progress": "Fråga {{step}} av 2",
     "funQuestion": "Var det kul i dag?",
     "wantQuestion": "Vad vill du ha mer av?",
-    "fun": { "happy": "Kul", "meh": "Så där", "sad": "Inte kul" },
-    "want": { "drills": "Övningar", "challenges": "Utmaningar", "badges": "Märken", "unsure": "Vet inte" },
+    "fun": {
+      "happy": "Kul",
+      "meh": "Så där",
+      "sad": "Inte kul"
+    },
+    "want": {
+      "drills": "Övningar",
+      "challenges": "Utmaningar",
+      "badges": "Märken",
+      "unsure": "Vet inte"
+    },
     "skip": "Hoppa över",
     "error": "Det gick inte att skicka. Försök igen.",
     "thanksHeading": "Tack!",

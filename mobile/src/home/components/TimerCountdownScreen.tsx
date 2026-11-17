@@ -6,7 +6,14 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
 import { evidencePointsPreview } from '../../api/types';
-import { elapsedWholeMinutes, remainingMs } from '../../api/trainingTimer';
+import {
+  currentPoints,
+  elapsedMs,
+  elapsedSeconds,
+  elapsedWholeMinutes,
+  formatStopwatch,
+  MAX_TIMER_MINUTES,
+} from '../../api/trainingTimer';
 import type { ActiveTimer } from '../../api/trainingTimer';
 
 /** What a finished timer can be logged with — ADR-0038 Decision 5: the
@@ -81,10 +88,13 @@ export function TimerCountdownScreen({
     setChoice('timer');
   }, [timer.timerId]);
 
-  const remaining = remainingMs(timer);
-  const isDone = remaining <= 0;
+  const elapsed = elapsedMs(timer);
+  const seconds = elapsedSeconds(timer);
   const minutesSoFar = elapsedWholeMinutes(timer);
-  const activityLabel = t(`activitySheet.activities.${timer.activityType}`);
+  const points = currentPoints(timer);
+  const maxCap = timer.plannedMinutes || MAX_TIMER_MINUTES;
+  const isDone = minutesSoFar >= maxCap;
+  const secondsUntilNextPoint = points >= maxCap ? 0 : 60 - (seconds % 60);
 
   const goToFinish = (minutes: number) => {
     setFinishMinutes(minutes);
@@ -156,12 +166,13 @@ export function TimerCountdownScreen({
       <>
         <Text style={styles.heading}>{t('trainingTimer.doneHeading')}</Text>
         <Text style={styles.body}>
-          {t('trainingTimer.doneBody', { minutes: timer.plannedMinutes })}
+          {t('trainingTimer.doneBody', { minutes: maxCap })}
         </Text>
         <PrimaryButton
-          label={t('trainingTimer.logIt')}
-          onPress={() => goToFinish(timer.plannedMinutes)}
+          label={t('trainingTimer.logIt', { points: maxCap })}
+          onPress={() => goToFinish(maxCap)}
         />
+        {discardButton}
       </>
     );
   } else if (phase === 'confirmStop') {
@@ -178,7 +189,7 @@ export function TimerCountdownScreen({
       ) : (
         <>
           <Text style={styles.body}>
-            {t('trainingTimer.stopConfirm', { minutes: minutesSoFar })}
+            {t('trainingTimer.stopConfirm', { minutes: minutesSoFar, points: minutesSoFar })}
           </Text>
           <PrimaryButton
             label={t('trainingTimer.stopConfirmYes')}
@@ -208,18 +219,31 @@ export function TimerCountdownScreen({
     <Modal visible={visible} animationType="slide" onRequestClose={handleBack}>
       <View style={styles.screen}>
         <View style={styles.clockBlock}>
-          <Text style={styles.activity}>{activityLabel}</Text>
           <Text
             style={styles.clock}
             accessibilityRole="timer"
-            accessibilityLabel={t('trainingTimer.remainingA11y', {
-              time: formatClock(remaining),
+            accessibilityLabel={t('trainingTimer.stopwatchA11y', {
+              time: formatStopwatch(elapsed),
             })}
           >
-            {formatClock(remaining)}
+            {formatStopwatch(elapsed)}
           </Text>
-          <Text style={styles.ofMinutes}>
-            {t('trainingTimer.ofMinutes', { minutes: timer.plannedMinutes })}
+          <View style={styles.pointsPill}>
+            <Text style={styles.pointsPillText}>
+              {points > 0
+                ? t('trainingTimer.runningPoints', { points })
+                : t('trainingTimer.zeroPointsHelp')}
+            </Text>
+          </View>
+          <Text style={styles.nextPointText}>
+            {isDone
+              ? t('trainingTimer.maxReached')
+              : points === 0
+              ? t('trainingTimer.firstPointIn', { seconds: secondsUntilNextPoint })
+              : t('trainingTimer.nextPointIn', { seconds: secondsUntilNextPoint })}
+          </Text>
+          <Text style={styles.capNote}>
+            {t('trainingTimer.maxCapLabel', { minutes: maxCap })}
           </Text>
         </View>
         <View style={styles.actions}>
@@ -245,21 +269,37 @@ const styles = StyleSheet.create({
     marginTop: 24,
     gap: 4,
   },
-  activity: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 16,
-    color: colors.textMuted,
-  },
   clock: {
     fontFamily: fonts.headingBold,
     fontSize: 84,
     color: colors.ink,
     fontVariant: ['tabular-nums'],
   },
-  ofMinutes: {
+  pointsPill: {
+    backgroundColor: colors.pendingBg,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.flame,
+  },
+  pointsPillText: {
+    fontFamily: fonts.headingBold,
+    fontSize: 16,
+    color: colors.flame,
+  },
+  nextPointText: {
     fontFamily: fonts.body,
-    fontSize: 15,
+    fontSize: 14,
+    color: colors.textBody,
+    marginTop: 4,
+  },
+  capNote: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
     color: colors.textMuted,
+    marginTop: 2,
   },
   actions: {
     gap: 12,

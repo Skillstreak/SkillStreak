@@ -1,0 +1,52 @@
+{
+  "village": {
+    "title": "Skillstreak Village",
+    "intro": "Täällä näkyvät joukkueiden nimet ja lajit. Ei pelaajia, ei lukuja.",
+    "ownHeading": "Joukkueesi",
+    "level": {
+      "calm": "Rauhallista",
+      "some": "Muutama joukkue",
+      "many": "Monta joukkuetta",
+      "veryMany": "Todella monta joukkuetta"
+    },
+    "empty": "Täällä ei näytetä joukkueita juuri nyt."
+  },
+  "arenas": {
+    "floorball": {
+      "name": "Salibandy"
+    },
+    "football": {
+      "name": "Jalkapallo"
+    },
+    "handball": {
+      "name": "Käsipallo"
+    },
+    "ice_hockey": {
+      "name": "Jääkiekko"
+    },
+    "rugby": {
+      "name": "Rugby"
+    },
+    "skiing": {
+      "name": "Hiihto"
+    },
+    "volleyball": {
+      "name": "Lentopallo"
+    },
+    "basketball": {
+      "name": "Koripallo"
+    },
+    "rowing": {
+      "name": "Soutu"
+    },
+    "tennis": {
+      "name": "Tennis"
+    },
+    "skateboard": {
+      "name": "Skeittaus"
+    },
+    "golf": {
+      "name": "Golf"
+    }
+  }
+}

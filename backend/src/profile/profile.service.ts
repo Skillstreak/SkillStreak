@@ -12,9 +12,12 @@ import { MailService } from '../mail/mail.service';
 import { buildContactChangeCancelEmail } from '../mail/templates/contact-change-cancel-email.template';
 import { buildContactChangeConfirmEmail } from '../mail/templates/contact-change-confirm-email.template';
 import { buildContactChangeNotifyOldEmail } from '../mail/templates/contact-change-notify-old-email.template';
+import { buildContactChangeReviewEmail } from '../mail/templates/contact-change-review-email.template';
 import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
+import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { PlayersService } from '../players/players.service';
 import { RedisService } from '../redis/redis.service';
+import { generateContactChangeReviewToken } from './contact-change-review-token.util';
 
 // 15 minutes — same window as session-reissue codes (ADR-0004 Part 3),
 // same reasoning: a short, single-sitting confirmation action, not a
@@ -51,6 +54,27 @@ export interface RequestContactChangeResponse {
 export interface ConfirmContactChangeResponse {
   confirmed: true;
   appliesAt: string;
+  // Added 2026-11-08 (ADR-0012 amendment): true when the current address
+  // had already approved the change, so confirming applied it at once and
+  // `appliesAt` is now. Additive — clients that predate it ignore it and
+  // read `appliesAt` as before.
+  applied: boolean;
+}
+
+export type ContactChangeReviewDecision = 'approve' | 'stop';
+
+export interface ContactChangeReviewPreview {
+  screenName: string;
+  newContact: string;
+  locale: PlayerLocale;
+}
+
+export interface ContactChangeReviewResult {
+  decision: ContactChangeReviewDecision;
+  // approve only: false means the approval is on file and the change
+  // waits for the new address to confirm.
+  appliedNow: boolean;
+  locale: PlayerLocale;
 }
 
 // `false` means "there was nothing pending to cancel" — an expected,
@@ -149,6 +173,24 @@ export class ProfileService {
       await this.playerPrivateInfoService.getParentContact(playerId);
     const { code, expiresAt } = generateHumanCode(CONTACT_CHANGE_CODE_TTL_MS);
 
+    // docs/adr/0012's 2026-11-08 amendment (security audit, same day).
+    // While parental consent is not yet approved, the current address is
+    // the only parent in the loop — and the original flow let a child
+    // move it to their own mailbox, confirm from there, and after 24h of
+    // parental silence mail themselves a consent link. So for these
+    // accounts the current address gets a decision at request time, not
+    // a heads-up: one link that can approve (applies now) or stop. The
+    // link lives exactly as long as the change does — the code's 15
+    // minutes now, extended to the grace deadline on confirm.
+    //
+    // Decided once, here, and carried by the row (a review code present
+    // or not) rather than re-read at confirm time, so a consent approval
+    // landing mid-change cannot switch flows under a link already mailed.
+    const review =
+      player.parentalConsentStatus === ParentalConsentStatus.APPROVED
+        ? null
+        : { code: generateContactChangeReviewToken(), expiresAt };
+
     await this.dataSource.transaction(async (manager) => {
       // Refuse while a CONFIRMED change is still in flight — code-critic
       // finding, 2026-08-08, and the most consequential bug in this area.
@@ -180,7 +222,7 @@ export class ProfileService {
       await this.playerPrivateInfoService.setPendingContactChange(
         manager,
         playerId,
-        { pendingContact: newContact, code, expiresAt },
+        { pendingContact: newContact, code, expiresAt, review },
       );
     });
 
@@ -190,6 +232,7 @@ export class ProfileService {
       newContact,
       oldContact,
       code,
+      review?.code ?? null,
     );
 
     return { requested: true, expiresAt: expiresAt.toISOString() };
@@ -214,7 +257,7 @@ export class ProfileService {
       CONTACT_CHANGE_GRACE_PERIOD_MS,
     );
 
-    await this.dataSource.transaction(async (manager) => {
+    const outcome = await this.dataSource.transaction(async (manager) => {
       const info =
         await this.playerPrivateInfoService.findValidByContactChangeCode(
           manager,
@@ -230,21 +273,141 @@ export class ProfileService {
       if (!info || info.playerId !== playerId || !info.pendingParentContact) {
         throw new InvalidOrExpiredContactChangeCodeException();
       }
+
+      // 2026-11-08 amendment, review path. The current address already
+      // approved: the new address has now proven it exists, so the change
+      // applies at once — no grace period is protecting anyone from a
+      // decision the current address itself made.
+      if (info.contactChangeApprovedByCurrentAt !== null) {
+        await this.playerPrivateInfoService.applyPendingContactChangeNow(
+          manager,
+          info,
+        );
+        return 'applied' as const;
+      }
+
+      // Review path, no decision yet: the ordinary 24h grace, but no
+      // cancel code — the approve/stop link the current address got at
+      // request time does that job, and is extended to the grace deadline
+      // so it can still stop the change right up to the end.
+      if (info.contactChangeReviewCode !== null) {
+        await this.playerPrivateInfoService.startContactChangeGracePeriod(
+          manager,
+          playerId,
+          { applyAt, cancelCode: null, reviewCodeExpiresAt: applyAt },
+        );
+        return 'grace-review' as const;
+      }
+
+      // Approved account: the original ADR-0012 addendum flow, unchanged.
       await this.playerPrivateInfoService.startContactChangeGracePeriod(
         manager,
         playerId,
         { applyAt, cancelCode },
       );
+      return 'grace-cancel' as const;
     });
 
-    await this.sendCancelEmailBestEffort(
-      player.screenName,
-      player.locale,
-      oldContact,
-      cancelCode,
-    );
+    if (outcome === 'applied') {
+      return {
+        confirmed: true,
+        appliesAt: new Date().toISOString(),
+        applied: true,
+      };
+    }
 
-    return { confirmed: true, appliesAt: applyAt.toISOString() };
+    if (outcome === 'grace-cancel') {
+      await this.sendCancelEmailBestEffort(
+        player.screenName,
+        player.locale,
+        oldContact,
+        cancelCode,
+      );
+    }
+
+    return {
+      confirmed: true,
+      appliesAt: applyAt.toISOString(),
+      applied: false,
+    };
+  }
+
+  /**
+   * GET side of the current address's approve/stop link (2026-11-08
+   * amendment) — no side effects; email clients and scanners prefetch.
+   */
+  async previewContactChangeReview(
+    token: string,
+  ): Promise<ContactChangeReviewPreview | null> {
+    const preview =
+      await this.playerPrivateInfoService.previewByReviewCode(token);
+    if (!preview) return null;
+    const player = await this.playersService.findByIdOrThrow(preview.playerId);
+    return {
+      screenName: player.screenName,
+      newContact: preview.pendingContact,
+      locale: player.locale,
+    };
+  }
+
+  /**
+   * POST side of the approve/stop link. Unauthenticated by necessity, like
+   * the cancel link — the token itself is the credential, and it only ever
+   * went to the current address. Single-use: both decisions consume it.
+   * Returns null for an unknown, expired or already-used token, which the
+   * controller renders as the friendly dead-link page.
+   *
+   * - approve, new address already confirmed: applies now.
+   * - approve, not yet confirmed: recorded; applies the moment the new
+   *   address confirms (never before — an address that has not proven it
+   *   exists does not become a child's parent contact).
+   * - stop: discards the change and bumps token_version, exactly like the
+   *   cancel link — "this wasn't me" is when every session should go.
+   */
+  async reviewContactChange(
+    token: string,
+    decision: ContactChangeReviewDecision,
+  ): Promise<ContactChangeReviewResult | null> {
+    return this.dataSource.transaction(async (manager) => {
+      const info = await this.playerPrivateInfoService.findValidByReviewCode(
+        manager,
+        token,
+      );
+      if (!info) {
+        return null;
+      }
+      const player = await this.playersService.findByIdForUpdate(
+        manager,
+        info.playerId,
+      );
+
+      if (decision === 'stop') {
+        await this.playerPrivateInfoService.cancelPendingContactChange(
+          manager,
+          info.playerId,
+        );
+        await this.playersService.bumpTokenVersion(
+          manager,
+          info.playerId,
+          player.tokenVersion + 1,
+        );
+        return { decision, appliedNow: false, locale: player.locale };
+      }
+
+      if (info.contactChangeApplyAt !== null) {
+        await this.playerPrivateInfoService.applyPendingContactChangeNow(
+          manager,
+          info,
+        );
+        return { decision, appliedNow: true, locale: player.locale };
+      }
+
+      await this.playerPrivateInfoService.markContactChangeApprovedByCurrent(
+        manager,
+        info.playerId,
+      );
+      return { decision, appliedNow: false, locale: player.locale };
+    });
   }
 
   /**
@@ -371,6 +534,7 @@ export class ProfileService {
     newContact: string,
     oldContact: string | null,
     code: string,
+    reviewToken: string | null,
   ): Promise<void> {
     // Best-effort, same posture as every other mail send in this app
     // (ConsentService, SessionService) — a failure here must never undo
@@ -397,10 +561,20 @@ export class ProfileService {
     }
 
     if (!oldContact) return;
-    const notifyEmail = buildContactChangeNotifyOldEmail({
-      screenName,
-      locale,
-    });
+    // Not-yet-approved account (2026-11-08 amendment): the current address
+    // gets the actionable approve/stop mail instead of the notice.
+    const notifyEmail = reviewToken
+      ? buildContactChangeReviewEmail({
+          screenName,
+          newContact,
+          reviewUrl: `${this.appPublicUrl()}/api/v1/players/contact-change-review/${reviewToken}`,
+          graceHours: Math.round(CONTACT_CHANGE_GRACE_PERIOD_MS / 3_600_000),
+          locale,
+        })
+      : buildContactChangeNotifyOldEmail({
+          screenName,
+          locale,
+        });
     try {
       await this.mailService.sendMail({
         to: oldContact,
@@ -428,10 +602,7 @@ export class ProfileService {
       );
       return;
     }
-    const appPublicUrl =
-      this.configService.get<string>('APP_PUBLIC_URL') ??
-      DEFAULT_APP_PUBLIC_URL;
-    const cancelUrl = `${appPublicUrl}/api/v1/players/contact-change-cancel/${cancelCode}`;
+    const cancelUrl = `${this.appPublicUrl()}/api/v1/players/contact-change-cancel/${cancelCode}`;
     const cancelEmail = buildContactChangeCancelEmail({
       screenName,
       cancelUrl,
@@ -451,5 +622,11 @@ export class ProfileService {
         `Failed to send contact-change cancel email to the old address: ${message}`,
       );
     }
+  }
+
+  private appPublicUrl(): string {
+    return (
+      this.configService.get<string>('APP_PUBLIC_URL') ?? DEFAULT_APP_PUBLIC_URL
+    );
   }
 }

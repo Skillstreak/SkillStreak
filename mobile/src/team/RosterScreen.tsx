@@ -68,6 +68,14 @@ export function RosterScreen({ teamId, onBack, onNotCaptain }: RosterScreenProps
         setSheetTarget(null);
         setToastMessage(t('k2.consentNoLongerPendingToast'));
         void fetchRoster();
+      } else if (
+        err instanceof ApiError &&
+        err.code === 'consent_reminder_blocked_pending_contact_change'
+      ) {
+        // ADR-0012's 2026-11-08 amendment: refused while the teammate's
+        // contact address is mid-change, so the parent's existing consent
+        // link is not replaced. Temporary — keep the sheet's target.
+        setToastMessage(t('k2.reminderBlockedPendingContactChangeToast'));
       } else {
         setToastMessage(t('k2.reminderErrorToast'));
       }

@@ -39,6 +39,7 @@
     "reminderSentToast": "Påmindelse sendt.",
     "consentNoLongerPendingToast": "Denne spiller venter ikke længere på godkendelse.",
     "reminderErrorToast": "Noget gik galt. Prøv igen.",
+    "reminderBlockedPendingContactChangeToast": "Spillerens kontaktadresse er ved at blive skiftet. Du kan sende en påmindelse, når det er klaret.",
     "reissueSentToast": "Login-kode sendt til forælder/værge.",
     "reissueRateLimitedToast": "Der blev lige sendt en kode — vent et minut, før du sender en ny."
   },

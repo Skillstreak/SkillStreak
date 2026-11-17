@@ -93,3 +93,39 @@ A log stores its timer id as well as its tier, so both remain auditable.
 - No location of any kind is recorded by the timer. It records *that* a
   clock ran, never *where*.
 - Existing logs are not re-rated.
+
+## Amendment 2026-11-17 — the clock counts up, and nothing is chosen first (owner)
+
+The project owner, 2026-11-17:
+
+> *"Istället för att välja träningstyp och antal minuter så startar man
+> bara en klocka som räknar upp och då får man 1p per minut istället."*
+
+This builds on I-010 (2026-11-12), which had already turned the
+countdown into an up-counting clock with a 60-minute ceiling and running
+points but still asked for a kind of training first.
+
+1. **One button starts the clock.** The app asks neither the kind of
+   training nor a planned length. `POST /training-timers` takes an empty
+   body; `activityType` and `plannedMinutes` stay accepted so older builds
+   keep working. With no `plannedMinutes` the server opens a 60-minute
+   window (`MAX_TIMER_MINUTES`).
+2. **The clock counts up and pays 1 point per whole minute**, up to 60.
+   This is the existing ×1 `TIMED` tier, unchanged on the server: Decision
+   2's `min(durationMinutes, plannedMinutes, elapsed whole minutes)` with a
+   planned length of 60 is exactly "1 point per minute, at most 60".
+   Decisions 3 and 5 are unchanged — stopping early pays the minutes done,
+   and a clip still raises the tier.
+3. **`activityType` is optional on `POST /training-logs` too**, and a log
+   without one is stored as `other`. The column and enum stay: existing
+   rows keep their value and older builds still send one.
+4. **Logging afterwards stays, behind a small link** ("Glömde du starta
+   klockan?"), with minutes but no kind of training. Owner's choice the
+   same day: Decision 4's reason still holds — a forgotten clock must not
+   cost a child their streak — and so does its pricing, ×0.1 for 3 a week
+   and 0 after.
+
+Consequence: per-activity weekly goals can no longer be met, since the
+app no longer records an activity. ADR-0015's amendment of the same date
+restricts goals to totals. The usage report's per-activity breakdown will
+show new logs as `other`.

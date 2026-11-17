@@ -1,5 +1,3 @@
-import { ActivityType } from '../training-logs/activity-type.enum';
-
 // The fixed preset from docs/design/phase2-flows.md's CB2 / ADR-0005
 // Decision 2, widened from 5 to 10 values by
 // docs/adr/0015-weekly-goal-per-player-completion.md Decision 1 (each
@@ -46,20 +44,12 @@ export const TARGET_UNIT_BY_TARGET_METRIC: Record<
   [WeeklyGoalTargetMetric.TOTAL_PASS]: 'sessions',
 };
 
-// ADR-0005 Decision 2's progress formula, extended by ADR-0015 Decision 1:
-// every metric except total-minuter/total-pass (which count every logged
-// minute/session regardless of activity) maps 1:1 onto an ActivityType
-// filter — each `*_PASS` value maps to the same ActivityType as its
-// `*_MINUTER` counterpart.
-export const ACTIVITY_TYPE_BY_TARGET_METRIC: Partial<
-  Record<WeeklyGoalTargetMetric, ActivityType>
-> = {
-  [WeeklyGoalTargetMetric.FITNESS_MINUTER]: ActivityType.FITNESS,
-  [WeeklyGoalTargetMetric.DRILL_MINUTER]: ActivityType.DRILL,
-  [WeeklyGoalTargetMetric.RUNNING_MINUTER]: ActivityType.RUNNING,
-  [WeeklyGoalTargetMetric.OTHER_MINUTER]: ActivityType.OTHER,
-  [WeeklyGoalTargetMetric.FITNESS_PASS]: ActivityType.FITNESS,
-  [WeeklyGoalTargetMetric.DRILL_PASS]: ActivityType.DRILL,
-  [WeeklyGoalTargetMetric.RUNNING_PASS]: ActivityType.RUNNING,
-  [WeeklyGoalTargetMetric.OTHER_PASS]: ActivityType.OTHER,
-};
+// ADR-0015 amendment 2026-11-17: the app no longer records what kind of
+// training a session was (ADR-0038 amendment of the same date), so a goal
+// can only be set on totals. The per-activity values stay in the enum
+// because existing Challenge rows may still carry them; they now count
+// every logged minute/session, exactly like their total-* counterpart.
+export const SETTABLE_TARGET_METRICS = [
+  WeeklyGoalTargetMetric.TOTAL_MINUTER,
+  WeeklyGoalTargetMetric.TOTAL_PASS,
+] as const;

@@ -74,7 +74,7 @@
   },
   "kb2": {
     "heading": "Was soll jede Spielerin/jeder Spieler diese Woche schaffen?",
-    "sub": "Jede Person im Team muss das Ziel selbst erreichen — wähle, ob es in Minuten oder Einheiten gezählt wird, und welche Trainingsart zählt.",
+    "sub": "Jede Person im Team muss das Ziel selbst erreichen — wähle, ob es in Minuten oder Einheiten gezählt wird. Jedes Training zählt.",
     "unitMinutes": "⏱️ Minuten",
     "unitSessions": "🔁 Anzahl Einheiten",
     "unitHelper": "Eine Einheit = ein geloggtes Training, egal wie lang es war.",

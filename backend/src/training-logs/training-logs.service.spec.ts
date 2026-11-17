@@ -188,6 +188,16 @@ describe('TrainingLogsService — weekly click-only cap (ADR-0038 Decision 4)', 
     });
   });
 
+  it('stores activity type `other` when the app sends none (ADR-0038 amendment 2026-11-17)', async () => {
+    const { service, logRepository } = buildService({});
+
+    await service.logTraining('player-1', { durationMinutes: 20 });
+
+    expect(logRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ activityType: ActivityType.OTHER }),
+    );
+  });
+
   it('still saves the 4th, still counts it for the streak and the weekly goal, but pays 0', async () => {
     const {
       service,
@@ -486,6 +496,37 @@ describe('TrainingTimersService.start (ADR-0038 Decision 2)', () => {
       startedAt: '2026-10-07T10:00:00.000Z',
       plannedMinutes: 30,
       endsAt: '2026-10-07T10:30:00.000Z',
+    });
+  });
+
+  it('defaults plannedMinutes to 60 when omitted (I-010 up-counting stopwatch)', async () => {
+    const { service } = buildTimersService();
+
+    await expect(
+      service.start('player-1', {
+        activityType: ActivityType.FITNESS,
+      }),
+    ).resolves.toEqual({
+      timerId: 'timer-2',
+      startedAt: '2026-10-07T10:00:00.000Z',
+      plannedMinutes: 60,
+      endsAt: '2026-10-07T11:00:00.000Z',
+    });
+  });
+
+  it('caps plannedMinutes at 60 when an excessive value is supplied', async () => {
+    const { service } = buildTimersService();
+
+    await expect(
+      service.start('player-1', {
+        activityType: ActivityType.DRILL,
+        plannedMinutes: 90,
+      }),
+    ).resolves.toEqual({
+      timerId: 'timer-2',
+      startedAt: '2026-10-07T10:00:00.000Z',
+      plannedMinutes: 60,
+      endsAt: '2026-10-07T11:00:00.000Z',
     });
   });
 

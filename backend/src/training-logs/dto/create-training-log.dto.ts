@@ -15,8 +15,13 @@ import { ActivityType } from '../activity-type.enum';
 export const MAX_DURATION_MINUTES = 8 * 60;
 
 export class CreateTrainingLogDto {
+  /**
+   * ADR-0038 amendment 2026-11-17: no longer asked in the app. Optional so
+   * older builds that still send it keep working; absent means `other`.
+   */
+  @IsOptional()
   @IsEnum(ActivityType)
-  activityType!: ActivityType;
+  activityType?: ActivityType;
 
   @IsInt()
   @Min(1)

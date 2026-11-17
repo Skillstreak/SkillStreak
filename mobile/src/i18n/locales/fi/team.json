@@ -39,6 +39,7 @@
     "reminderSentToast": "Muistutus lähetetty.",
     "consentNoLongerPendingToast": "Tämä pelaaja ei enää odota hyväksyntää.",
     "reminderErrorToast": "Jokin meni pieleen. Yritä uudelleen.",
+    "reminderBlockedPendingContactChangeToast": "Pelaajan yhteysosoitetta ollaan vaihtamassa. Voit lähettää muistutuksen, kun vaihto on valmis.",
     "reissueSentToast": "Kirjautumiskoodi lähetetty vanhemmalle/huoltajalle.",
     "reissueRateLimitedToast": "Koodi lähetettiin juuri — odota hetki ennen kuin lähetät uuden."
   },

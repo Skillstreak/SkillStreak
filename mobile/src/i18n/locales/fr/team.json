@@ -39,6 +39,7 @@
     "reminderSentToast": "Rappel envoyé.",
     "consentNoLongerPendingToast": "Ce joueur n'attend plus d'approbation.",
     "reminderErrorToast": "Une erreur s'est produite. Réessaie.",
+    "reminderBlockedPendingContactChangeToast": "L'adresse de contact de ce joueur est en cours de changement. Tu pourras envoyer un rappel une fois que ce sera fait.",
     "reissueSentToast": "Code de connexion envoyé au parent/tuteur.",
     "reissueRateLimitedToast": "Un code vient d'être envoyé — attends une minute avant d'en renvoyer un."
   },
