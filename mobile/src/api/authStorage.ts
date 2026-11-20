@@ -1,4 +1,5 @@
 import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage';
+import { resetUiMetrics } from './uiMetricsClient';
 
 // `sessionToken` is the JWT scoped to a single playerId, issued once at
 // POST /players — there's no separate login step (per
@@ -23,6 +24,9 @@ export async function setSessionToken(token: string): Promise<void> {
 }
 
 export async function clearSessionToken(): Promise<void> {
+  // I-003: every logout path ends here, so the click-statistics opt-in of
+  // the account leaving can never keep counting for the next one.
+  resetUiMetrics();
   await secureDeleteItem(SESSION_TOKEN_KEY);
   // L1: clear local micro-challenge state too, so it does not leak to the
   // next account on a shared device. Try every key independently; log only

@@ -43,6 +43,8 @@ import { ErasureCheckEmailScreen } from './erasure/ErasureCheckEmailScreen';
 import { ErasureStatusCard } from './erasure/ErasureStatusCard';
 import { ParentalGate } from '../components/ParentalGate';
 import { TrainingReminderCard } from './TrainingReminderCard';
+import { AnonymousStatsCard } from './AnonymousStatsCard';
+import { trackScreen } from '../api/uiMetricsClient';
 import { PtRelationshipsScreen } from './PtRelationshipsScreen';
 import { BugReportScreen } from './bugReport/BugReportScreen';
 import { BugReportSentScreen } from './bugReport/BugReportSentScreen';
@@ -129,6 +131,10 @@ export function ProfileScreen({
   const [toastDurationMs, setToastDurationMs] = useState(2000);
 
   const [view, setView] = useState<ProfileView>('view');
+
+  useEffect(() => {
+    trackScreen('screen.profile');
+  }, []);
 
 
   const [avatarSelection, setAvatarSelection] = useState<string | null>(null);
@@ -830,6 +836,12 @@ export function ProfileScreen({
             a concept every child needs to meet, so it appears only once one
             actually exists. */}
         {PT_ENABLED ? <PtRelationshipsScreen /> : null}
+
+        {/* I-003. Off by default; under 13 the parent turns it on. */}
+        <AnonymousStatsCard
+          isSelfVerification={isSelfVerification}
+          onRequireGate={(action) => setGatedAction(() => action)}
+        />
 
         <SecondaryLink label={t('profileScreen.view.back')} onPress={onBack} />
         <SecondaryLink label={t('profileScreen.view.logout')} onPress={() => void handleLogout()} />
