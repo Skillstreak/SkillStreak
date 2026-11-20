@@ -39,10 +39,10 @@
       "finishedAt": "2026-11-08"
     },
     "IOS": {
-      "buildId": "b673a517-d403-451b-a92e-1a712c5344f0",
-      "commit": "b3f9749488a66153a299dcbcb63df619e65588bf",
+      "buildId": "e91f6bf7-8284-4651-8edf-7898616b4cd4",
+      "commit": "473c0cc567807202ae2ad11246f5083ecf5df493",
       "profile": "production",
-      "buildNumber": "30",
+      "buildNumber": "32",
       "finishedAt": "2026-11-20"
     }
   }
