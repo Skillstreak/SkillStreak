@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Peruuta",
     "rotateConfirmConfirm": "Vaihda koodi",
     "rotateSuccessToast": "Uusi joukkuekoodi: {{inviteCode}}",
-    "rotateErrorToast": "Koodia ei voitu vaihtaa juuri nyt. Yritä uudelleen."
+    "rotateErrorToast": "Koodia ei voitu vaihtaa juuri nyt. Yritä uudelleen.",
+    "approveParentCapToast": "Hyväksyntä ei onnistunut. Pyydä apua valmentajalta."
   },
   "k2": {
     "heading": "Joukkue tarkemmin",

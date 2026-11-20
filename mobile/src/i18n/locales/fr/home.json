@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Ton profil",
-    "workingTitle": "nom provisoire"
+    "workingTitle": "nom provisoire",
+    "villageAccessibilityLabel": "Ouvrir Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Impossible de charger tes données. Vérifie ta connexion.",
@@ -167,7 +168,8 @@
       "removeNameConfirm": "Ton nom sera supprimé de ton profil. Tu ne pourras pas le rajouter dans l'appli.",
       "removeNameConfirmButton": "Oui, supprimer",
       "nameRemovedToast": "Nom supprimé"
-    }
+    },
+    "contactChangeParentCap": "Cette adresse est déjà liée à 5 équipes. Choisis-en une autre."
   },
   "erasureCheckEmail": {
     "heading": "Va voir ta boîte mail",

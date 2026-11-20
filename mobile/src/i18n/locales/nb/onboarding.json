@@ -97,7 +97,8 @@
     "invalidParentContact": "Den kontaktinformasjonen ser ikke riktig ut — sjekk at det er en ekte e-postadresse eller et telefonnummer.",
     "invalidScreenName": "Det navnet funker ikke helt — prøv et annet!",
     "invalidBirthYear": "Hmm, det året ser ikke riktig ut. Prøv igjen.",
-    "genericValidationError": "Noe gikk galt. Sjekk opplysningene og prøv igjen."
+    "genericValidationError": "Noe gikk galt. Sjekk opplysningene og prøv igjen.",
+    "parentTeamCapReached": "Denne foreldreadressen er allerede knyttet til 5 lag. Bruk en annen adresse."
   },
   "shared": {
     "genericError": "Noe gikk galt. Sjekk tilkoblingen din og prøv igjen."

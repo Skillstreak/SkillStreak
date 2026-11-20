@@ -9,6 +9,7 @@ import {
   encryptPii,
   requirePiiEncryptionKeyFromEnv,
 } from '../common/crypto/pii-encryption.util';
+import { parentContactIndex } from '../common/crypto/parent-contact-index.util';
 import { Coach } from '../coaches/entities/coach.entity';
 import {
   ConsentMethod,
@@ -163,6 +164,10 @@ async function run(): Promise<void> {
       privateInfoRepo.create({
         playerId: captain.id,
         parentContact: encryptPii(
+          SEED_CAPTAIN_PARENT_CONTACT,
+          piiEncryptionKey,
+        ),
+        parentContactIndex: parentContactIndex(
           SEED_CAPTAIN_PARENT_CONTACT,
           piiEncryptionKey,
         ),

@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Oma profiilisi",
-    "workingTitle": "työnimi"
+    "workingTitle": "työnimi",
+    "villageAccessibilityLabel": "Avaa Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Tietojasi ei saatu ladattua. Tarkista verkkoyhteytesi.",
@@ -167,7 +168,8 @@
       "removeNameConfirm": "Nimi poistetaan profiilistasi. Et voi lisätä sitä takaisin sovelluksessa.",
       "removeNameConfirmButton": "Kyllä, poista",
       "nameRemovedToast": "Nimi poistettu"
-    }
+    },
+    "contactChangeParentCap": "Tämä osoite on jo liitetty viiteen joukkueeseen. Valitse toinen."
   },
   "erasureCheckEmail": {
     "heading": "Tarkista sähköpostisi",

@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Jurisdiction } from '../../common/age/article8-age';
+import type { VillageSportCode } from '../../village/village.types';
 
 // A Team is only ever reachable via its invite_code — no public listing/
 // searchability, satisfying CLAUDE.md's "closed team bubbles" constraint
@@ -68,6 +69,51 @@ export class Team {
   set is_test(value: boolean) {
     this.isTest = value;
   }
+
+  /**
+   * The team's sport, for Skillstreak Village (I-004, ADR-0040). One value
+   * per team, defaulting to floorball because every team that exists today
+   * is a floorball team. Not a child's data and not a location.
+   */
+  @Column({
+    name: 'sport',
+    type: 'varchar',
+    length: 32,
+    default: 'FLOORBALL',
+  })
+  sport!: VillageSportCode;
+
+  /**
+   * ADR-0040 — whether this team appears in Skillstreak Village. Off by
+   * default; only the team's captain (own parental consent approved, via
+   * `PlayersService.assertIsCaptainOfTeam`) can change it. While false the
+   * team's name is never shown to another team, it does not count toward
+   * the k-anonymity threshold or the activity level, and its own players
+   * see no other team's name either (reciprocal).
+   */
+  @Column({ name: 'village_opt_in', type: 'boolean', default: false })
+  villageOptIn!: boolean;
+
+  /** Audit for `villageOptIn`: when it last changed, and which player
+   * (the captain) changed it. Null until the first change. */
+  @Column({
+    name: 'village_opt_in_changed_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  villageOptInChangedAt!: Date | null;
+
+  @Column({ name: 'village_opt_in_changed_by', type: 'uuid', nullable: true })
+  villageOptInChangedBy!: string | null;
+
+  /** ADR-0040 — when the team's parents were last mailed that it joined
+   * Village. Turning it on again within 30 days does not mail again. */
+  @Column({
+    name: 'village_join_notice_sent_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  villageJoinNoticeSentAt!: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

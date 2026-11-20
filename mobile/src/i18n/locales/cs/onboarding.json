@@ -97,7 +97,8 @@
     "invalidParentContact": "Tenhle kontakt nevypadá správně — zkontroluj, že je to platná e-mailová adresa nebo telefonní číslo.",
     "invalidScreenName": "Tohle jméno úplně nefunguje — zkus jiné!",
     "invalidBirthYear": "Hmm, tenhle rok nevypadá správně. Zkus to znovu.",
-    "genericValidationError": "Něco se nepovedlo. Zkontroluj údaje a zkus to znovu."
+    "genericValidationError": "Něco se nepovedlo. Zkontroluj údaje a zkus to znovu.",
+    "parentTeamCapReached": "Tato adresa rodiče je už propojená s 5 týmy. Použij jinou adresu."
   },
   "shared": {
     "genericError": "Něco se nepovedlo. Zkontroluj připojení a zkus to znovu."

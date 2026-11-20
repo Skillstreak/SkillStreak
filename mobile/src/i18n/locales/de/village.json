@@ -4,12 +4,32 @@
     "intro": "Hier siehst du Teamnamen und Sportarten. Keine Spieler, keine Zahlen.",
     "ownHeading": "Dein Team",
     "level": {
-      "calm": "Ruhig hier",
-      "some": "Ein paar Teams",
-      "many": "Viele Teams",
-      "veryMany": "Sehr viele Teams"
+      "calm": "Gerade ruhig",
+      "some": "Einige Teams trainieren",
+      "many": "Viele Teams trainieren",
+      "veryMany": "Sehr viele Teams trainieren"
     },
-    "empty": "Gerade werden hier keine Teams angezeigt."
+    "empty": "Gerade werden hier keine Teams angezeigt.",
+    "backButton": "← Zurück",
+    "loadError": "Das Dorf konnte nicht geladen werden. Prüfe deine Verbindung.",
+    "retry": "Erneut versuchen",
+    "trainNowTitle": "Willst du die Arena heute aufwecken?",
+    "trainNowBody": "Trainiere, wann es dir passt – das bringt Punkte für das WM-Gold deines Teams.",
+    "trainNowCta": "Jetzt trainieren",
+    "optIn": {
+      "onTitle": "Euer Team ist im Dorf",
+      "onBody": "Andere Teams im Dorf sehen nur euren Teamnamen und eure Sportart – keine Spieler, Fotos, Clips oder Chats.",
+      "offTitle": "Euer Team ist nicht im Dorf",
+      "offBodyCaptain": "Als Kapitän entscheidest du. Sprich zuerst mit dem Trainer und den Eltern. Wenn ihr mitmacht, sehen andere Teams im Dorf euren Teamnamen und eure Sportart – sonst nichts. Bis dahin seht ihr auch die Namen anderer Teams nicht.",
+      "offBodyPlayer": "Andere Teams sehen euer Team nicht, und ihr seht ihre Namen nicht. Der Kapitän kann entscheiden, dem Dorf beizutreten.",
+      "turnOn": "Dem Dorf beitreten",
+      "turnOff": "Dorf verlassen",
+      "confirmTitle": "Dem Dorf beitreten?",
+      "confirmBody": "Andere Teams im Dorf sehen dann euren Teamnamen und eure Sportart. Habt ihr mit dem Trainer und den Eltern gesprochen?",
+      "confirmYes": "Ja, beitreten",
+      "cancel": "Abbrechen",
+      "error": "Das hat nicht geklappt. Versuch es noch einmal."
+    }
   },
   "arenas": {
     "floorball": {

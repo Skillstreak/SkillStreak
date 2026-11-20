@@ -535,6 +535,13 @@ export class PlayersService {
     requesterId: string,
     targetPlayerId: string,
     decision: TeamJoinStatus.APPROVED | TeamJoinStatus.REJECTED,
+    /**
+     * ADR-0040 — runs inside the approval's transaction, before the status
+     * flips, only for APPROVED. The parent-contact team cap lives in
+     * PlayerPrivateInfoModule, which this service must never import (see
+     * the class comment), so the caller passes the check in.
+     */
+    beforeApprove?: (manager: EntityManager) => Promise<void>,
   ): Promise<Player> {
     await this.assertIsCaptainOfTeam(requesterId, teamId);
     const target = await this.findByIdOrThrow(targetPlayerId);
@@ -544,8 +551,29 @@ export class PlayersService {
     if (target.teamJoinStatus !== TeamJoinStatus.PENDING) {
       throw new TeamJoinNotPendingException();
     }
-    target.teamJoinStatus = decision;
-    return this.playerRepository.save(target);
+    if (decision !== TeamJoinStatus.APPROVED || !beforeApprove) {
+      target.teamJoinStatus = decision;
+      return this.playerRepository.save(target);
+    }
+    return this.dataSource.transaction(async (manager) => {
+      // Re-read under a row lock: a concurrent reject (or approve) must
+      // not be overwritten by this one.
+      const locked = await manager
+        .getRepository(Player)
+        .createQueryBuilder('player')
+        .setLock('pessimistic_write')
+        .where('player.id = :id', { id: targetPlayerId })
+        .getOne();
+      if (!locked || locked.teamId !== teamId) {
+        throw new TeamMismatchException();
+      }
+      if (locked.teamJoinStatus !== TeamJoinStatus.PENDING) {
+        throw new TeamJoinNotPendingException();
+      }
+      await beforeApprove(manager);
+      locked.teamJoinStatus = decision;
+      return manager.getRepository(Player).save(locked);
+    });
   }
 
   /**

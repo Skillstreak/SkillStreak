@@ -135,6 +135,13 @@ export class OnboardingService {
           dto,
         );
 
+        // ADR-0040's 5-teams-per-parent cap is deliberately NOT checked
+        // here: nothing about this address is verified yet, and checking it
+        // unauthenticated would both let anyone probe whether an address is
+        // at the cap and (when unverified accounts counted) let anyone lock
+        // an address out. It is enforced where a membership starts to
+        // count — parental consent approval and the captain's join approval.
+
         const player = await this.playersService.createShell(manager, {
           teamId: team.id,
           screenName: dto.screenName,

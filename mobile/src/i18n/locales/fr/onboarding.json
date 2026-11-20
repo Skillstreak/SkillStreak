@@ -97,7 +97,8 @@
     "invalidParentContact": "Ce contact ne semble pas correct — vérifie qu'il s'agit d'une vraie adresse e-mail ou d'un numéro de téléphone.",
     "invalidScreenName": "Ce nom ne fonctionne pas vraiment — essaie-en un autre !",
     "invalidBirthYear": "Hmm, cette année ne semble pas correcte. Réessaie.",
-    "genericValidationError": "Quelque chose s'est mal passé. Vérifie tes informations et réessaie."
+    "genericValidationError": "Quelque chose s'est mal passé. Vérifie tes informations et réessaie.",
+    "parentTeamCapReached": "Cette adresse de parent est déjà liée à 5 équipes. Utilise une autre adresse."
   },
   "shared": {
     "genericError": "Quelque chose s'est mal passé. Vérifie ta connexion et réessaie."

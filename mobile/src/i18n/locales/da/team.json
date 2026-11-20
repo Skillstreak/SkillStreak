@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Annuller",
     "rotateConfirmConfirm": "Skift kode",
     "rotateSuccessToast": "Ny holdkode: {{inviteCode}}",
-    "rotateErrorToast": "Kunne ikke skifte koden lige nu. Prøv igen."
+    "rotateErrorToast": "Kunne ikke skifte koden lige nu. Prøv igen.",
+    "approveParentCapToast": "Kunne ikke godkende. Bed træneren om hjælp."
   },
   "k2": {
     "heading": "Holdet i detaljer",

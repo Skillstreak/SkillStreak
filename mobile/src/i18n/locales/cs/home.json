@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Tvůj profil",
-    "workingTitle": "pracovní název"
+    "workingTitle": "pracovní název",
+    "villageAccessibilityLabel": "Otevřít Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Nepodařilo se načíst tvoje data. Zkontroluj připojení.",
@@ -167,7 +168,8 @@
       "removeNameConfirm": "Jméno bude odstraněno z tvého profilu. V aplikaci ho už nepůjde přidat zpět.",
       "removeNameConfirmButton": "Ano, odstranit",
       "nameRemovedToast": "Jméno odstraněno"
-    }
+    },
+    "contactChangeParentCap": "Tato adresa je už propojená s 5 týmy. Zvol jinou."
   },
   "erasureCheckEmail": {
     "heading": "Zkontroluj si e-mail",

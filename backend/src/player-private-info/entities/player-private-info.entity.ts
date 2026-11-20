@@ -1,5 +1,6 @@
 import {
   Column,
+  Index,
   CreateDateColumn,
   Entity,
   PrimaryColumn,
@@ -26,6 +27,21 @@ export class PlayerPrivateInfo {
   // Required — needed to run the consent flow (who do we ask for approval).
   @Column({ name: 'parent_contact', type: 'varchar' })
   parentContact!: string;
+
+  // ADR-0040 — keyed blind index of the normalised parent_contact
+  // (common/crypto/parent-contact-index.util.ts), so "same parent?" can be
+  // asked in SQL without decrypting. Kept in step with parentContact on
+  // every write (createForNewPlayer, applyPendingContactChange). Nullable
+  // only so a row the backfill migration could not read does not block
+  // anything; such a row simply never matches.
+  @Index('idx_player_private_info_parent_contact_index')
+  @Column({
+    name: 'parent_contact_index',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  parentContactIndex!: string | null;
 
   // docs/adr/0012-profile-page-and-contact-email-change.md — the pending
   // new value during a contact-email change, encrypted the same way

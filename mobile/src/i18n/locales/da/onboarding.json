@@ -97,7 +97,8 @@
     "invalidParentContact": "De kontaktoplysninger ser ikke rigtige ud — tjek, at det er en rigtig e-mailadresse eller et telefonnummer.",
     "invalidScreenName": "Det navn virker ikke helt rigtigt — prøv et andet!",
     "invalidBirthYear": "Hmm, det år ser ikke rigtigt ud. Prøv igen.",
-    "genericValidationError": "Noget gik galt. Tjek oplysningerne, og prøv igen."
+    "genericValidationError": "Noget gik galt. Tjek oplysningerne, og prøv igen.",
+    "parentTeamCapReached": "Denne forældreadresse er allerede knyttet til 5 hold. Brug en anden adresse."
   },
   "shared": {
     "genericError": "Noget gik galt. Tjek din forbindelse, og prøv igen."

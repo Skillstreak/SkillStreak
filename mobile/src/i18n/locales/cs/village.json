@@ -4,12 +4,32 @@
     "intro": "Tady vidíš názvy týmů a sporty. Žádní hráči, žádná čísla.",
     "ownHeading": "Tvůj tým",
     "level": {
-      "calm": "Tady je klid",
-      "some": "Pár týmů",
-      "many": "Hodně týmů",
-      "veryMany": "Opravdu hodně týmů"
+      "calm": "Teď je klid",
+      "some": "Několik týmů trénuje",
+      "many": "Hodně týmů trénuje",
+      "veryMany": "Opravdu hodně týmů trénuje"
     },
-    "empty": "Momentálně se tu nezobrazují žádné týmy."
+    "empty": "Momentálně se tu nezobrazují žádné týmy.",
+    "backButton": "← Zpět",
+    "loadError": "Vesnici se nepodařilo načíst. Zkontroluj připojení.",
+    "retry": "Zkusit znovu",
+    "trainNowTitle": "Chceš dnes probudit arénu?",
+    "trainNowBody": "Zatrénuj si, kdy se ti to hodí – přidá to body k týmovému zlatu z MS.",
+    "trainNowCta": "Trénovat",
+    "optIn": {
+      "onTitle": "Váš tým je ve vesnici",
+      "onBody": "Ostatní týmy ve vesnici vidí jen název vašeho týmu a sport – žádné hráče, fotky, klipy ani chat.",
+      "offTitle": "Váš tým není ve vesnici",
+      "offBodyCaptain": "Jako kapitán rozhoduješ ty. Nejdřív si promluv s trenérem a rodiči. Když se připojíte, ostatní týmy ve vesnici uvidí název vašeho týmu a sport – nic víc. Do té doby neuvidíte ani vy názvy ostatních týmů.",
+      "offBodyPlayer": "Ostatní týmy váš tým nevidí a vy nevidíte jejich názvy. Kapitán se může rozhodnout připojit se k vesnici.",
+      "turnOn": "Připojit se k vesnici",
+      "turnOff": "Opustit vesnici",
+      "confirmTitle": "Připojit se k vesnici?",
+      "confirmBody": "Ostatní týmy ve vesnici uvidí název vašeho týmu a sport. Mluvili jste s trenérem a rodiči?",
+      "confirmYes": "Ano, připojit",
+      "cancel": "Zrušit",
+      "error": "Změnu se nepodařilo uložit. Zkus to znovu."
+    }
   },
   "arenas": {
     "floorball": {

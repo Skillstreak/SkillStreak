@@ -4,12 +4,32 @@
     "intro": "Täällä näkyvät joukkueiden nimet ja lajit. Ei pelaajia, ei lukuja.",
     "ownHeading": "Joukkueesi",
     "level": {
-      "calm": "Rauhallista",
-      "some": "Muutama joukkue",
-      "many": "Monta joukkuetta",
-      "veryMany": "Todella monta joukkuetta"
+      "calm": "Rauhallista juuri nyt",
+      "some": "Muutama joukkue treenaa",
+      "many": "Monta joukkuetta treenaa",
+      "veryMany": "Todella monta joukkuetta treenaa"
     },
-    "empty": "Täällä ei näytetä joukkueita juuri nyt."
+    "empty": "Täällä ei näytetä joukkueita juuri nyt.",
+    "backButton": "← Takaisin",
+    "loadError": "Kylää ei voitu ladata. Tarkista yhteys.",
+    "retry": "Yritä uudelleen",
+    "trainNowTitle": "Herätätkö areenan tänään?",
+    "trainNowBody": "Treenaa silloin kun sinulle sopii – se tuo pisteitä joukkueen MM-kultaan.",
+    "trainNowCta": "Treenaa nyt",
+    "optIn": {
+      "onTitle": "Joukkueenne on mukana kylässä",
+      "onBody": "Kylän muut joukkueet näkevät vain joukkueenne nimen ja lajin – ei pelaajia, kuvia, klippejä eikä chattia.",
+      "offTitle": "Joukkueenne ei ole mukana kylässä",
+      "offBodyCaptain": "Kapteenina sinä päätät. Puhu ensin valmentajan ja vanhempien kanssa. Jos liitytte, kylän muut joukkueet näkevät joukkueenne nimen ja lajin – ei muuta. Siihen asti ette näe muidenkaan joukkueiden nimiä.",
+      "offBodyPlayer": "Muut joukkueet eivät näe joukkuettanne, ettekä te näe niiden nimiä. Kapteeni voi päättää liittyä kylään.",
+      "turnOn": "Liity kylään",
+      "turnOff": "Poistu kylästä",
+      "confirmTitle": "Liitytäänkö kylään?",
+      "confirmBody": "Kylän muut joukkueet näkevät joukkueenne nimen ja lajin. Oletteko puhuneet valmentajan ja vanhempien kanssa?",
+      "confirmYes": "Kyllä, liity",
+      "cancel": "Peruuta",
+      "error": "Muutos ei onnistunut. Yritä uudelleen."
+    }
   },
   "arenas": {
     "floorball": {

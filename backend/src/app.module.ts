@@ -13,6 +13,7 @@ import { DrillsModule } from './drills/drills.module';
 import { ClipTaggingModule } from './clip-tagging/clip-tagging.module';
 import { TrainingPlansModule } from './training-plans/training-plans.module';
 import { TrainerPostsModule } from './trainer-posts/trainer-posts.module';
+import { VillageModule } from './village/village.module';
 import { PrCampaignsModule } from './pr-campaigns/pr-campaigns.module';
 import { BugReportsModule } from './bug-reports/bug-reports.module';
 import { QuickFeedbackModule } from './quick-feedback/quick-feedback.module';
@@ -164,6 +165,7 @@ import { WeeklyGoalModule } from './weekly-goal/weekly-goal.module';
     ClipTaggingModule,
     TrainingPlansModule,
     TrainerPostsModule,
+    VillageModule,
     BugReportsModule,
     QuickFeedbackModule,
     ImprovementSuggestionsModule,
