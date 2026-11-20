@@ -197,3 +197,45 @@ part (paid tier, automatic goals, video-sourced ideas, no human verifier);
 feeding generated content into the drill library, which ADR-0029 keeps as
 operator-curated Markdown with no runtime write path; and any change to
 what the model is allowed to receive.
+
+## Amendment — 2026-11-20: drill approval can also be recorded in the staff console
+
+Owner decision, 2026-11-20. Drill files in `backend/src/drills/library/`
+whose front matter says `coachReviewed: false` — the twelve drafted by the
+in-house agent Hermes on 2026-11-16 are the first — were held back until
+someone edited the file to `true` and a release shipped. Staff can now also
+approve or reject them from the console (**Drill review**, admin only), and
+the decision takes effect without a redeploy.
+
+What this changes, and what it does not:
+
+- **Visibility rule.** A file that says `coachReviewed: true` is visible
+  as before, whatever the database says — it was reviewed as a git diff.
+  A file that says `false` is visible only while a `drill_review` row
+  approves it. No row, or a rejection, keeps it out.
+- **What is recorded.** One current row per drill: slug, `approved` or
+  `rejected`, the reviewing staff account (`reviewed_by_staff_account_id`,
+  SET NULL if that account is ever deleted), `reviewed_at`, and a required
+  `rejection_reason` on a rejection — the same shape as `trainer_post`'s
+  review. A later decision replaces the earlier one, so a rejection after
+  an approval is the take-down.
+- **An approval is of a text, not a name.** The row stores the SHA-256 of
+  the file the reviewer read. If the file changes in a later release, the
+  approval stops matching and the drill is "awaiting review" again; and a
+  decision sent from a screen showing an older version is refused (409).
+- **The drill text still lives only in git.** There is still no drill
+  table and no runtime write path for drill *content* — this records a
+  verdict on content that shipped in the image, which keeps the
+  "Explicitly out of scope" line above (no generated content written into
+  the library at runtime) true.
+- **Read per request, not cached.** Prod runs two API pods; the approval
+  set is read from Postgres on each library read so a take-down holds on
+  both at once. On a database error it fails closed to the git-reviewed
+  drills only. `/health`'s `drills` count includes console approvals, with
+  the lookup bounded to 500 ms so a probe never waits on Postgres.
+- **Who.** `AdminAuthGuard` — the operator, not trainers. A `pt` account
+  cannot approve material into the library it reads from.
+
+Approving here is the same human control as setting `coachReviewed: true`
+in a reviewed diff; it is not an automated check and must not be described
+as one (ADR-0029 Decision 5).

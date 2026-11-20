@@ -6,12 +6,14 @@ import { AccountErasureModule } from './account-erasure/account-erasure.module';
 import { AdminModule } from './admin/admin.module';
 import { AppConfigModule } from './config/app-config.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { UiMetricsModule } from './ui-metrics/ui-metrics.module';
 import { ClientErrorsModule } from './client-errors/client-errors.module';
 import { ContactModule } from './contact/contact.module';
 import { DrillsModule } from './drills/drills.module';
 import { ClipTaggingModule } from './clip-tagging/clip-tagging.module';
 import { TrainingPlansModule } from './training-plans/training-plans.module';
 import { TrainerPostsModule } from './trainer-posts/trainer-posts.module';
+import { VillageModule } from './village/village.module';
 import { PrCampaignsModule } from './pr-campaigns/pr-campaigns.module';
 import { BugReportsModule } from './bug-reports/bug-reports.module';
 import { QuickFeedbackModule } from './quick-feedback/quick-feedback.module';
@@ -155,6 +157,7 @@ import { WeeklyGoalModule } from './weekly-goal/weekly-goal.module';
     // "Report a problem" submission (POST /api/v1/bug-reports, JwtAuthGuard,
     // deliberately not consent-gated; see that module/service's docstrings).
     AnalyticsModule,
+    UiMetricsModule,
     ClientErrorsModule,
     ContactModule,
     DrillsModule,
@@ -162,6 +165,7 @@ import { WeeklyGoalModule } from './weekly-goal/weekly-goal.module';
     ClipTaggingModule,
     TrainingPlansModule,
     TrainerPostsModule,
+    VillageModule,
     BugReportsModule,
     QuickFeedbackModule,
     ImprovementSuggestionsModule,

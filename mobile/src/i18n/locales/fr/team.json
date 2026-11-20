@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Annuler",
     "rotateConfirmConfirm": "Changer le code",
     "rotateSuccessToast": "Nouveau code d'équipe : {{inviteCode}}",
-    "rotateErrorToast": "Impossible de changer le code pour l'instant. Réessaie."
+    "rotateErrorToast": "Impossible de changer le code pour l'instant. Réessaie.",
+    "approveParentCapToast": "Impossible d'accepter. Demande de l'aide à l'entraîneur."
   },
   "k2": {
     "heading": "Équipe en détail",

@@ -49,7 +49,7 @@ export class DrillsController {
     @Query('locale') locale?: string,
   ): Promise<DrillSummary[]> {
     await this.drillAccessService.assertMayRead(staffAccountId, role);
-    return this.drillLibraryService.list({ ageBand, focus, locale });
+    return await this.drillLibraryService.list({ ageBand, focus, locale });
   }
 
   @Get(':slug')
@@ -59,7 +59,7 @@ export class DrillsController {
     @Param('slug') slug: string,
   ): Promise<Drill> {
     await this.drillAccessService.assertMayRead(staffAccountId, role);
-    const drill = this.drillLibraryService.findBySlug(slug);
+    const drill = await this.drillLibraryService.findBySlug(slug);
     if (!drill) throw new NotFoundException('No such drill.');
     return drill;
   }

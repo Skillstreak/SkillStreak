@@ -97,7 +97,8 @@
     "invalidParentContact": "Diese Kontaktangabe sieht nicht richtig aus — prüf, ob es eine echte E-Mail-Adresse oder Telefonnummer ist.",
     "invalidScreenName": "Dieser Name funktioniert nicht ganz — probier einen anderen!",
     "invalidBirthYear": "Hmm, dieses Jahr sieht nicht richtig aus. Versuch es noch einmal.",
-    "genericValidationError": "Etwas ist schiefgelaufen. Prüf deine Angaben und versuch es noch einmal."
+    "genericValidationError": "Etwas ist schiefgelaufen. Prüf deine Angaben und versuch es noch einmal.",
+    "parentTeamCapReached": "Diese Elternadresse ist bereits mit 5 Teams verknüpft. Bitte nutze eine andere Adresse."
   },
   "shared": {
     "genericError": "Etwas ist schiefgelaufen. Prüf deine Verbindung und versuch es noch einmal."

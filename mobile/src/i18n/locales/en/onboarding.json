@@ -97,7 +97,8 @@
     "invalidParentContact": "That contact info doesn't look right — check that it's a real email address or phone number.",
     "invalidScreenName": "That name doesn't quite work — try another one!",
     "invalidBirthYear": "Hmm, that year doesn't look right. Try again.",
-    "genericValidationError": "Something went wrong. Check your details and try again."
+    "genericValidationError": "Something went wrong. Check your details and try again.",
+    "parentTeamCapReached": "This parent address is already linked to 5 teams. Please use a different address."
   },
   "shared": {
     "genericError": "Something went wrong. Check your connection and try again."

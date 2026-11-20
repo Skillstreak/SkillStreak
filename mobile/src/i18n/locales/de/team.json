@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Abbrechen",
     "rotateConfirmConfirm": "Code ändern",
     "rotateSuccessToast": "Neuer Teamcode: {{inviteCode}}",
-    "rotateErrorToast": "Der Code konnte gerade nicht geändert werden. Versuch es noch mal."
+    "rotateErrorToast": "Der Code konnte gerade nicht geändert werden. Versuch es noch mal.",
+    "approveParentCapToast": "Bestätigung nicht möglich. Bitte frag den Trainer um Hilfe."
   },
   "k2": {
     "heading": "Team im Detail",

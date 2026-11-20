@@ -108,6 +108,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         setTeamNameError(t('flow.teamNameRejected'));
         setFocusTeamName(true);
         setStep('O1a');
+      } else if (err instanceof ApiError && err.code === 'parent_team_cap_reached') {
+        // ADR-0040 — one parent contact, at most 5 teams. Stay on O5, where
+        // the parent contact was just typed.
+        setO5Error(t('flow.parentTeamCapReached'));
       } else if (err instanceof ApiError && err.code === 'invite_code_taken_concurrently') {
         // Since 2026-11-08 this means two server-generated codes collided
         // (not expected at 40 bits) — nothing the child typed is wrong, so

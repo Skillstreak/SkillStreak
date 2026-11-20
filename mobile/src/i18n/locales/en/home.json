@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Your profile",
-    "workingTitle": "working title"
+    "workingTitle": "working title",
+    "villageAccessibilityLabel": "Open Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Couldn't load your data. Check your connection.",
@@ -161,8 +162,14 @@
       "trainerLinked": "Trainer mode",
       "trainerLinkAccounts": "Link your trainer account",
       "trainerUnlink": "Unlink the trainer account",
-      "trainerLinkFailed": "That didn't work just now. Try again."
-    }
+      "trainerLinkFailed": "That didn't work just now. Try again.",
+      "nameLabel": "Real name",
+      "removeName": "Remove name",
+      "removeNameConfirm": "Your name will be removed from your profile. You can't add it back in the app.",
+      "removeNameConfirmButton": "Yes, remove",
+      "nameRemovedToast": "Name removed"
+    },
+    "contactChangeParentCap": "This address is already linked to 5 teams. Please choose another."
   },
   "erasureCheckEmail": {
     "heading": "Check your inbox",
@@ -282,6 +289,14 @@
     "successCta": "Done",
     "a11yCategoryGroup": "Choose what happened",
     "a11yScreenGroup": "Choose where in the app it happened"
+  },
+  "anonymousStats": {
+    "heading": "App usage statistics",
+    "body": "If you turn this on, the app counts how often screens are opened and buttons are pressed. We don't learn who pressed, what time of day, or anything you wrote or filmed. It is off until you turn it on, and you can turn it off at any time.",
+    "info": "The counts are kept for 365 days and then deleted. Like every request to our server, the upload arrives from your device's IP address; it is used for about a minute to stop abuse, appears in our ordinary server logs, which are deleted after at most 30 days,, and is never stored with the counts.",
+    "confirmBody": "Do you want to turn on the statistics? The app only sends how many times screens and buttons were used. You can turn it off at any time.",
+    "confirmNo": "No thanks",
+    "confirmYes": "Turn on"
   },
   "trainingReminder": {
     "heading": "Training reminder",

@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Avbryt",
     "rotateConfirmConfirm": "Bytt kode",
     "rotateSuccessToast": "Ny lagkode: {{inviteCode}}",
-    "rotateErrorToast": "Kunne ikke bytte koden akkurat nå. Prøv igjen."
+    "rotateErrorToast": "Kunne ikke bytte koden akkurat nå. Prøv igjen.",
+    "approveParentCapToast": "Kunne ikke godkjenne. Be treneren om hjelp."
   },
   "k2": {
     "heading": "Laget i detalj",

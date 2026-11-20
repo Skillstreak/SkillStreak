@@ -8,7 +8,7 @@ export type VillageLevel = 'CALM' | 'SOME' | 'MANY' | 'VERY_MANY';
 export interface VillageArena {
   /** One-off per response. Never a team id; do not store or log it. */
   slot: string;
-  /** Already passed through `displayTeamNameFor` on the server. */
+  /** Already masked on the server (`villageTeamName`, ADR-0040). */
   name: string;
 }
 
@@ -16,13 +16,21 @@ export interface VillageSport {
   /** Backend value, e.g. FLOORBALL. Mapped to a mascot key by `sportKey`. */
   sport: string;
   level: VillageLevel;
-  /** Empty unless at least 10 other qualified teams exist for the sport. */
+  /** Empty unless the viewer's team is opted in and at least 10 other
+   * opted-in teams exist for the sport. */
   arenas: VillageArena[];
 }
 
 export interface VillageView {
   generatedAt: string;
-  ownArena: { sport: string; name: string; optedIn: boolean } | null;
+  ownArena: {
+    sport: string;
+    name: string;
+    /** Whether the viewer's own team is in the village (default false). */
+    optedIn: boolean;
+    /** True for the captain allowed to change `optedIn`. */
+    canManage: boolean;
+  };
   sports: VillageSport[];
 }
 

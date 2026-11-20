@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Din profil",
-    "workingTitle": "arbejdstitel"
+    "workingTitle": "arbejdstitel",
+    "villageAccessibilityLabel": "Åbn Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Kunne ikke hente dine data. Tjek din forbindelse.",
@@ -161,8 +162,14 @@
       "trainerLinked": "Trænertilstand",
       "trainerLinkAccounts": "Forbind med din trænerkonto",
       "trainerUnlink": "Afbryd forbindelsen til trænerkontoen",
-      "trainerLinkFailed": "Det gik ikke lige nu. Prøv igen."
-    }
+      "trainerLinkFailed": "Det gik ikke lige nu. Prøv igen.",
+      "nameLabel": "Rigtigt navn",
+      "removeName": "Fjern navnet",
+      "removeNameConfirm": "Navnet fjernes fra din profil. Du kan ikke tilføje det igen i appen.",
+      "removeNameConfirmButton": "Ja, fjern",
+      "nameRemovedToast": "Navnet er fjernet"
+    },
+    "contactChangeParentCap": "Denne adresse er allerede knyttet til 5 hold. Vælg en anden."
   },
   "erasureCheckEmail": {
     "heading": "Tjek din indbakke",
@@ -282,6 +289,14 @@
     "successCta": "Færdig",
     "a11yCategoryGroup": "Vælg hvad der skete",
     "a11yScreenGroup": "Vælg hvor i appen det skete"
+  },
+  "anonymousStats": {
+    "heading": "Statistik over appbrug",
+    "body": "Hvis du slår det til, tæller appen, hvor ofte skærme åbnes og knapper trykkes. Vi får ikke at vide, hvem der trykkede, hvilket tidspunkt på dagen, eller noget du har skrevet eller filmet. Det er slået fra, indtil du slår det til, og du kan slå det fra når som helst.",
+    "info": "Tallene gemmes i 365 dage og slettes derefter. Som alle forespørgsler til vores server kommer uploaden fra din enheds IP-adresse; den bruges i cirka et minut til at stoppe misbrug, vises i vores almindelige serverlogs, som slettes efter højst 30 dage, og gemmes aldrig sammen med tallene.",
+    "confirmBody": "Vil du slå statistikken til? Appen sender kun, hvor mange gange skærme og knapper er brugt. Du kan slå det fra når som helst.",
+    "confirmNo": "Nej tak",
+    "confirmYes": "Slå til"
   },
   "trainingReminder": {
     "heading": "Træningspåmindelse",

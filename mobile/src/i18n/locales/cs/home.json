@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Tvůj profil",
-    "workingTitle": "pracovní název"
+    "workingTitle": "pracovní název",
+    "villageAccessibilityLabel": "Otevřít Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Nepodařilo se načíst tvoje data. Zkontroluj připojení.",
@@ -161,8 +162,14 @@
       "trainerLinked": "Trenérský režim",
       "trainerLinkAccounts": "Propojit s trenérským účtem",
       "trainerUnlink": "Odpojit trenérský účet",
-      "trainerLinkFailed": "Teď to nevyšlo. Zkus to znovu."
-    }
+      "trainerLinkFailed": "Teď to nevyšlo. Zkus to znovu.",
+      "nameLabel": "Skutečné jméno",
+      "removeName": "Odstranit jméno",
+      "removeNameConfirm": "Jméno bude odstraněno z tvého profilu. V aplikaci ho už nepůjde přidat zpět.",
+      "removeNameConfirmButton": "Ano, odstranit",
+      "nameRemovedToast": "Jméno odstraněno"
+    },
+    "contactChangeParentCap": "Tato adresa je už propojená s 5 týmy. Zvol jinou."
   },
   "erasureCheckEmail": {
     "heading": "Zkontroluj si e-mail",
@@ -282,6 +289,14 @@
     "successCta": "Hotovo",
     "a11yCategoryGroup": "Vyber, co se stalo",
     "a11yScreenGroup": "Vyber, kde v aplikaci se to stalo"
+  },
+  "anonymousStats": {
+    "heading": "Statistika používání aplikace",
+    "body": "Když ji zapneš, aplikace počítá, jak často se otevírají obrazovky a mačkají tlačítka. Nedozvíme se, kdo tlačítko stiskl, v kterou denní dobu, ani nic z toho, co jsi napsal nebo natočil. Je vypnutá, dokud ji nezapneš, a kdykoli ji můžeš vypnout.",
+    "info": "Čísla uchováváme 365 dní a pak je mažeme. Jako každý požadavek na náš server přichází odeslání z IP adresy tvého zařízení; používá se asi minutu k zastavení zneužití, objeví se v našich běžných serverových záznamech, které mažeme nejpozději po 30 dnech, a nikdy se neukládá spolu s čísly.",
+    "confirmBody": "Chceš statistiku zapnout? Aplikace posílá jen to, kolikrát byly obrazovky a tlačítka použity. Kdykoli ji můžeš vypnout.",
+    "confirmNo": "Ne, děkuji",
+    "confirmYes": "Zapnout"
   },
   "trainingReminder": {
     "heading": "Připomenutí tréninku",

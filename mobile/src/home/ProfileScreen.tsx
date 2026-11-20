@@ -43,6 +43,8 @@ import { ErasureCheckEmailScreen } from './erasure/ErasureCheckEmailScreen';
 import { ErasureStatusCard } from './erasure/ErasureStatusCard';
 import { ParentalGate } from '../components/ParentalGate';
 import { TrainingReminderCard } from './TrainingReminderCard';
+import { AnonymousStatsCard } from './AnonymousStatsCard';
+import { trackScreen } from '../api/uiMetricsClient';
 import { PtRelationshipsScreen } from './PtRelationshipsScreen';
 import { BugReportScreen } from './bugReport/BugReportScreen';
 import { BugReportSentScreen } from './bugReport/BugReportSentScreen';
@@ -130,9 +132,19 @@ export function ProfileScreen({
 
   const [view, setView] = useState<ProfileView>('view');
 
+  useEffect(() => {
+    trackScreen('screen_profile');
+  }, []);
+
 
   const [avatarSelection, setAvatarSelection] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
+
+  // Real names can no longer be added in the app (screen names only), but a
+  // player who entered one earlier must still be able to remove it. Two taps:
+  // the first arms the confirm, the second clears.
+  const [confirmingNameRemoval, setConfirmingNameRemoval] = useState(false);
+  const [nameRemoving, setNameRemoving] = useState(false);
 
   const [contactInput, setContactInput] = useState('');
   const [contactError, setContactError] = useState<string | null>(null);
@@ -224,6 +236,22 @@ export function ProfileScreen({
     }
   };
 
+  const handleRemoveName = async () => {
+    setNameRemoving(true);
+    try {
+      await updateProfile({ realName: null });
+      setProfile((prev) => (prev ? { ...prev, realName: null } : prev));
+      setConfirmingNameRemoval(false);
+      setToastDurationMs(2000);
+      setToastMessage(t('profileScreen.view.nameRemovedToast'));
+    } catch {
+      setToastDurationMs(2000);
+      setToastMessage(t('shared.genericErrorTryAgain'));
+    } finally {
+      setNameRemoving(false);
+    }
+  };
+
   const handleRequestChange = async () => {
     const trimmed = contactInput.trim();
     if (!trimmed) return;
@@ -235,6 +263,8 @@ export function ProfileScreen({
     } catch (err) {
       if (err instanceof ApiError && err.code === 'contact_change_rate_limited') {
         setContactError(t('profileScreen.contactChangeRateLimited'));
+      } else if (err instanceof ApiError && err.code === 'parent_team_cap_reached') {
+        setContactError(t('profileScreen.contactChangeParentCap'));
       } else {
         setContactError(t('profileScreen.contactChangeGenericError'));
       }
@@ -762,6 +792,31 @@ export function ProfileScreen({
           />
         </View>
 
+        {profile.realName ? (
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>{t('profileScreen.view.nameLabel')}</Text>
+            <Text style={styles.fieldValue}>{profile.realName}</Text>
+            {confirmingNameRemoval ? (
+              <>
+                <Text style={styles.fieldHelper}>{t('profileScreen.view.removeNameConfirm')}</Text>
+                <PrimaryButton
+                  label={t('profileScreen.view.removeNameConfirmButton')}
+                  onPress={() => void handleRemoveName()}
+                  loading={nameRemoving}
+                />
+                <SecondaryLink
+                  label={t('shared.cancel')}
+                  onPress={() => setConfirmingNameRemoval(false)}
+                />
+              </>
+            ) : (
+              <SecondaryLink
+                label={t('profileScreen.view.removeName')}
+                onPress={() => setConfirmingNameRemoval(true)}
+              />
+            )}
+          </View>
+        ) : null}
 
         <View style={styles.card}>
           <Text style={styles.fieldLabel}>{t('profileScreen.view.birthYearLabel')}</Text>
@@ -783,6 +838,11 @@ export function ProfileScreen({
             a concept every child needs to meet, so it appears only once one
             actually exists. */}
         {PT_ENABLED ? <PtRelationshipsScreen /> : null}
+
+        {/* I-003 (docs/adr/0039 Decision 2). Off by default, and only for
+            accounts that consent for themselves: an under-13 account never
+            sees it and its client never sends. */}
+        {isSelfVerification ? <AnonymousStatsCard /> : null}
 
         <SecondaryLink label={t('profileScreen.view.back')} onPress={onBack} />
         <SecondaryLink label={t('profileScreen.view.logout')} onPress={() => void handleLogout()} />

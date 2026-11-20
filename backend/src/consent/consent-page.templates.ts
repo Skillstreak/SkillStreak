@@ -560,3 +560,36 @@ export function renderConsentAlreadyUsedPage(): string {
     `,
   );
 }
+
+/**
+ * POST, ADR-0040 — the address is already the verified parent contact of
+ * members in 5 other teams, so this approval was not recorded (rolled
+ * back; the link still works if the situation changes). Swedish and
+ * English; other locales fall back to Swedish, like the invalid page.
+ */
+export function renderConsentParentTeamCapPage(locale: PlayerLocale): string {
+  if (locale === PlayerLocale.EN) {
+    return page(
+      'Could not approve — SkillStreak',
+      `
+    <h1 style="margin:0 0 16px;font-size:22px;">Could not approve</h1>
+    <p style="margin:0;font-size:15px;line-height:1.5;">
+      This email address is already the parent contact for children in 5 teams, which is the
+      most one address can have. Nothing was approved. Please use a different address for this
+      child, or contact us at hello@skillstreak.xyz.
+    </p>
+    `,
+    );
+  }
+  return page(
+    'Kunde inte godkänna — SkillStreak',
+    `
+    <h1 style="margin:0 0 16px;font-size:22px;">Kunde inte godkänna</h1>
+    <p style="margin:0;font-size:15px;line-height:1.5;">
+      Den här e-postadressen är redan förälderkontakt för barn i 5 lag, vilket är det högsta en
+      adress kan ha. Inget har godkänts. Använd en annan adress för det här barnet, eller kontakta
+      oss på hello@skillstreak.xyz.
+    </p>
+    `,
+  );
+}

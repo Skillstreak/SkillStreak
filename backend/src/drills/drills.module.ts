@@ -5,9 +5,11 @@ import { StaffAuthModule } from '../staff-auth/staff-auth.module';
 import { DrillAccessService } from './drill-access.service';
 import { DrillGroupsController } from './drill-groups.controller';
 import { DrillGroupsService } from './drill-groups.service';
+import { AdminDrillReviewsController } from './admin-drill-reviews.controller';
 import { DrillLibraryService } from './drill-library.service';
 import { DrillsController } from './drills.controller';
 import { DrillGroup, DrillGroupDrill } from './entities/drill-group.entity';
+import { DrillReview } from './entities/drill-review.entity';
 
 /**
  * The coach drill library (ADR-0029 Mechanism 1) and a trainer's own
@@ -18,6 +20,8 @@ import { DrillGroup, DrillGroupDrill } from './entities/drill-group.entity';
  * Groups do have rows, and that is the one trade this module makes: they
  * reference a `staff_account` and a drill slug, never a player or a team.
  * See the entity and the migration for why that boundary is drawn there.
+ * `drill_review` (ADR-0035's 2026-11-20 amendment) is the same kind of
+ * row: a slug, a staff verdict and the staff account that gave it.
  *
  * The same files are intended to be ADR-0028 Phase 1's RAG corpus — one
  * corpus, two consumers. If that ships, it reads this directory rather
@@ -27,9 +31,13 @@ import { DrillGroup, DrillGroupDrill } from './entities/drill-group.entity';
   imports: [
     StaffAuthModule,
     PtModule,
-    TypeOrmModule.forFeature([DrillGroup, DrillGroupDrill]),
+    TypeOrmModule.forFeature([DrillGroup, DrillGroupDrill, DrillReview]),
   ],
-  controllers: [DrillsController, DrillGroupsController],
+  controllers: [
+    DrillsController,
+    DrillGroupsController,
+    AdminDrillReviewsController,
+  ],
   providers: [DrillLibraryService, DrillGroupsService, DrillAccessService],
   // DrillAccessService is exported for TrainingPlansModule: plan
   // generation is gated exactly like the library it generates from,

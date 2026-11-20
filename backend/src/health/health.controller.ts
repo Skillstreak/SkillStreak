@@ -34,9 +34,12 @@ interface HealthResponse {
   drills: number;
 }
 
-// Liveness check only — no DB/Redis calls here on purpose. This confirms the
-// API process is up; it does not (yet) confirm Postgres/Redis connectivity,
-// since the API doesn't talk to either datastore until Phase 1.
+// Liveness check only. This confirms the API process is up; it does not
+// confirm Postgres/Redis connectivity, and must never fail because of them.
+// The one database read here — the drill count's console approvals
+// (ADR-0035's 2026-11-20 amendment) — is bounded to 500 ms and fails
+// closed to the git-reviewed count, so a slow or absent Postgres changes
+// the number, never the status (see DrillLibraryService.countVisible).
 //
 // Deliberately unauthenticated, and deliberately carries nothing but these
 // two fields: the version is not a secret (it is a public git tag and a
@@ -48,7 +51,7 @@ export class HealthController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  check(): HealthResponse {
+  async check(): Promise<HealthResponse> {
     // Read from the environment rather than package.json: the value is
     // stamped by the image build (Dockerfile's APP_VERSION arg), so it
     // describes the artifact actually running, which a version committed
@@ -56,7 +59,9 @@ export class HealthController {
     return {
       status: 'ok',
       version: process.env.APP_VERSION ?? 'dev',
-      drills: this.drillLibraryService.list().length,
+      // Drills visible to coaches right now: git-reviewed plus any the
+      // staff console has approved.
+      drills: await this.drillLibraryService.countVisible(),
     };
   }
 }

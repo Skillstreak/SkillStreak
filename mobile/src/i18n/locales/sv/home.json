@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Din profil",
-    "workingTitle": "arbetstitel"
+    "workingTitle": "arbetstitel",
+    "villageAccessibilityLabel": "Öppna Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Kunde inte hämta din data. Kolla din uppkoppling.",
@@ -161,8 +162,14 @@
       "trainerLinked": "Tränarläge",
       "trainerLinkAccounts": "Koppla ihop med ditt tränarkonto",
       "trainerUnlink": "Koppla från tränarkontot",
-      "trainerLinkFailed": "Det gick inte just nu. Testa igen."
-    }
+      "trainerLinkFailed": "Det gick inte just nu. Testa igen.",
+      "nameLabel": "Riktigt namn",
+      "removeName": "Ta bort namnet",
+      "removeNameConfirm": "Namnet tas bort från din profil. Du kan inte lägga tillbaka det i appen.",
+      "removeNameConfirmButton": "Ja, ta bort",
+      "nameRemovedToast": "Namnet är borttaget"
+    },
+    "contactChangeParentCap": "Den här adressen är redan kopplad till 5 lag. Välj en annan."
   },
   "erasureCheckEmail": {
     "heading": "Kolla inkorgen",
@@ -282,6 +289,14 @@
     "successCta": "Klart",
     "a11yCategoryGroup": "Välj vad som hände",
     "a11yScreenGroup": "Välj var i appen det hände"
+  },
+  "anonymousStats": {
+    "heading": "Statistik över appanvändning",
+    "body": "Om du slår på det räknar appen hur ofta skärmar öppnas och knappar trycks. Vi får inte veta vem som tryckte, vilken tid på dagen eller något du skrivit eller filmat. Det är av tills du slår på det, och du kan stänga av det när du vill.",
+    "info": "Siffrorna sparas i 365 dagar och raderas sedan. Som alla anrop till vår server kommer uppladdningen från din enhets IP-adress; den används i ungefär en minut för att stoppa missbruk, syns i våra vanliga serverloggar, som raderas efter högst 30 dagar, och sparas aldrig tillsammans med siffrorna.",
+    "confirmBody": "Vill du slå på statistiken? Appen skickar bara hur många gånger skärmar och knappar använts. Du kan stänga av det när du vill.",
+    "confirmNo": "Nej tack",
+    "confirmYes": "Slå på"
   },
   "trainingReminder": {
     "heading": "Träningspåminnelse",

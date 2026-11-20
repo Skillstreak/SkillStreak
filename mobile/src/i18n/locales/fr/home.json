@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Ton profil",
-    "workingTitle": "nom provisoire"
+    "workingTitle": "nom provisoire",
+    "villageAccessibilityLabel": "Ouvrir Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Impossible de charger tes données. Vérifie ta connexion.",
@@ -161,8 +162,14 @@
       "trainerLinked": "Mode entraîneur",
       "trainerLinkAccounts": "Relier ton compte entraîneur",
       "trainerUnlink": "Délier le compte entraîneur",
-      "trainerLinkFailed": "Ça n'a pas marché là. Réessaie."
-    }
+      "trainerLinkFailed": "Ça n'a pas marché là. Réessaie.",
+      "nameLabel": "Vrai nom",
+      "removeName": "Supprimer le nom",
+      "removeNameConfirm": "Ton nom sera supprimé de ton profil. Tu ne pourras pas le rajouter dans l'appli.",
+      "removeNameConfirmButton": "Oui, supprimer",
+      "nameRemovedToast": "Nom supprimé"
+    },
+    "contactChangeParentCap": "Cette adresse est déjà liée à 5 équipes. Choisis-en une autre."
   },
   "erasureCheckEmail": {
     "heading": "Va voir ta boîte mail",
@@ -282,6 +289,14 @@
     "successCta": "Terminé",
     "a11yCategoryGroup": "Choisis ce qui s'est passé",
     "a11yScreenGroup": "Choisis où dans l'appli c'est arrivé"
+  },
+  "anonymousStats": {
+    "heading": "Statistiques d'utilisation de l'appli",
+    "body": "Si tu l'actives, l'appli compte combien de fois les écrans sont ouverts et les boutons utilisés. Nous ne savons pas qui a appuyé, à quelle heure, ni rien de ce que tu as écrit ou filmé. C'est désactivé tant que tu ne l'actives pas, et tu peux le désactiver à tout moment.",
+    "info": "Les chiffres sont conservés 365 jours puis supprimés. Comme toute requête vers notre serveur, l'envoi provient de l'adresse IP de ton appareil ; elle sert environ une minute à bloquer les abus, apparaît dans nos journaux de serveur habituels, supprimés au plus tard après 30 jours, et n'est jamais enregistrée avec les chiffres.",
+    "confirmBody": "Veux-tu activer les statistiques ? L'appli envoie seulement combien de fois les écrans et les boutons ont été utilisés. Tu peux les désactiver à tout moment.",
+    "confirmNo": "Non merci",
+    "confirmYes": "Activer"
   },
   "trainingReminder": {
     "heading": "Rappel d'entraînement",

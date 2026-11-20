@@ -23,6 +23,8 @@ import { AdultFeedbackModal } from './components/AdultFeedbackModal';
 import { Toast } from '../components/Toast';
 import { LoadingOrRetry } from '../components/LoadingOrRetry';
 import { LeaderboardScreen } from '../leaderboard/LeaderboardScreen';
+import { VillageScreen } from '../village/VillageScreen';
+import { VILLAGE_ENABLED } from '../api/config';
 import {
   getClickOnlyAllowance,
   getMe,
@@ -47,6 +49,7 @@ import {
 import type { ActiveTimer } from '../api/trainingTimer';
 import { colors } from '../theme/colors';
 import { UploadFlow } from '../clips/upload/UploadFlow';
+import { trackButton } from '../api/uiMetricsClient';
 import type {
   ClickOnlyAllowance,
   CreateTrainingLogRequest,
@@ -175,7 +178,8 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   // GoalScreen/TeamScreen already use for their own sub-views. 'profile'
   // added Fas 4.1 (docs/adr/0012-profile-page-and-contact-email-change.md),
   // reached via AppHeader's avatar circle.
-  const [view, setView] = useState<'home' | 'leaderboard' | 'profile'>('home');
+  // 'village' added for I-004 (docs/adr/0040), reached via AppHeader.
+  const [view, setView] = useState<'home' | 'leaderboard' | 'profile' | 'village'>('home');
 
   // I-002 — weekly quick-feedback card. Starts "handled" so the card never
   // flashes before the local flag has been read.
@@ -316,6 +320,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   /** docs/adr/0038 Decision 2 — the server starts the clock; the phone
    * only displays it. */
   const startTimer = async () => {
+    trackButton('btn_start_timer');
     setSheetLoading(true);
     setSheetError(null);
     try {
@@ -356,6 +361,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
    * upload-then-log path as an untimed video log, carrying the timer. */
   const handleTimerLog = (minutesDone: number, choice: TimerLogChoice) => {
     if (!activeTimer) return;
+    trackButton('btn_log_training');
     const base = {
       durationMinutes: minutesDone,
       timerId: activeTimer.timerId,
@@ -386,6 +392,9 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
     durationMinutes: number,
     evidence: EvidenceChoice,
   ) => {
+    // I-003: the log button on the sheet, counted once per press — not in
+    // writeTrainingLog, which also runs for retries and fallbacks.
+    trackButton('btn_log_training');
     if (evidence !== 'none') {
       setSheetOpen(false);
       setPendingEvidenceLog({ durationMinutes, evidence });
@@ -597,6 +606,19 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
     );
   }
 
+  if (view === 'village') {
+    return (
+      <VillageScreen
+        alreadyLoggedToday={me.streak.alreadyLoggedToday}
+        onBack={() => setView('home')}
+        onTrainNow={() => {
+          setView('home');
+          handleOpenSheet();
+        }}
+      />
+    );
+  }
+
   // Two independent gates, added 2026-07-27 (team-join approval alongside
   // the existing parental-consent one) — both must clear before gameplay
   // unlocks. WaitingCard shows whichever is still pending (or both).
@@ -669,6 +691,9 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
         screenName={me.player.screenName}
         avatarId={me.player.avatarId}
         onAvatarPress={() => setView('profile')}
+        // The village is team-scoped (the server refuses a pending join),
+        // so the entry point only appears once both gates have cleared.
+        onVillagePress={isApproved && VILLAGE_ENABLED ? () => setView('village') : undefined}
       />
 
       <View style={styles.content}>

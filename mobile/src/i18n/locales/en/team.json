@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Cancel",
     "rotateConfirmConfirm": "Change code",
     "rotateSuccessToast": "New team code: {{inviteCode}}",
-    "rotateErrorToast": "Couldn't change the code right now. Try again."
+    "rotateErrorToast": "Couldn't change the code right now. Try again.",
+    "approveParentCapToast": "Couldn't approve. Ask your coach for help."
   },
   "k2": {
     "heading": "Full team list",

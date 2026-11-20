@@ -5,6 +5,7 @@ import {
   ConsentNotPendingException,
   ConsentReminderBlockedPendingContactChangeException,
   ConsentReminderRateLimitedException,
+  ParentTeamCapReachedException,
 } from '../common/errors/exceptions';
 import { isSelfVerificationAge } from '../common/age/self-verification-age.util';
 import { PlayerLocale } from '../common/locale/player-locale.enum';
@@ -15,6 +16,7 @@ import { ConsentMethod } from '../player-private-info/entities/parental-consent-
 import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
 import { generateConsentToken } from '../players/consent-token.util';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { PlayersService } from '../players/players.service';
 import { RedisService } from '../redis/redis.service';
 import { TeamsService } from '../teams/teams.service';
@@ -36,6 +38,12 @@ export interface ConsentPreview {
 export interface ConsentApprovalResult {
   screenName: string;
   isSelfVerification: boolean;
+  locale: PlayerLocale;
+}
+
+/** ADR-0040 — the parent contact is already verified in 5 other teams. */
+export interface ConsentCapReachedResult {
+  capReached: true;
   locale: PlayerLocale;
 }
 
@@ -91,7 +99,27 @@ export class ConsentService {
    * Returns null if the token was already consumed/invalid/expired, which
    * the controller renders as a friendly "already confirmed" page.
    */
-  async approve(token: string): Promise<ConsentApprovalResult | null> {
+  async approve(
+    token: string,
+  ): Promise<ConsentApprovalResult | ConsentCapReachedResult | null> {
+    let capLocale: PlayerLocale | null = null;
+    try {
+      return await this.approveInTransaction(token, (locale) => {
+        capLocale = locale;
+      });
+    } catch (error) {
+      if (error instanceof ParentTeamCapReachedException && capLocale) {
+        // Rolled back: consent stays pending, the token stays usable.
+        return { capReached: true, locale: capLocale };
+      }
+      throw error;
+    }
+  }
+
+  private approveInTransaction(
+    token: string,
+    onCapReached: (locale: PlayerLocale) => void,
+  ): Promise<ConsentApprovalResult | null> {
     return this.dataSource.transaction(async (manager) => {
       const player = await this.playersService.approveByConsentToken(
         manager,
@@ -99,6 +127,29 @@ export class ConsentService {
       );
       if (!player) {
         return null;
+      }
+
+      // ADR-0040 — approving consent is where an approved membership
+      // starts to count toward the parent-contact cap (5 teams), so it is
+      // checked here, under the same advisory lock, by the person who
+      // proved they own the address. A pending join is checked again
+      // when the captain approves it.
+      if (player.teamJoinStatus === TeamJoinStatus.APPROVED) {
+        try {
+          await this.playerPrivateInfoService.assertParentTeamCapAllows(
+            manager,
+            await this.playerPrivateInfoService.findIndexForPlayer(
+              manager,
+              player.id,
+            ),
+            player.teamId,
+          );
+        } catch (error) {
+          if (error instanceof ParentTeamCapReachedException) {
+            onCapReached(player.locale);
+          }
+          throw error;
+        }
       }
 
       const isSelfVerification = isSelfVerificationAge(
