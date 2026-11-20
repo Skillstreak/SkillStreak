@@ -273,3 +273,7 @@ __marimo__/
 # site/build/render-privacy.mjs. Committing it would create a second copy
 # of a legal document that can silently drift from the source.
 site/privacy/
+
+# Claude Code agent worktrees: full repo copies (1+ GB) that EAS would otherwise
+# upload with every build, since EAS packs untracked files that git does not ignore.
+.claude/worktrees/
