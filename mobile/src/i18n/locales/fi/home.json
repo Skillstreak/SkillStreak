@@ -162,7 +162,12 @@
       "trainerLinked": "Valmentajatila",
       "trainerLinkAccounts": "Yhdistä valmentajatiliisi",
       "trainerUnlink": "Katkaise yhteys valmentajatiliin",
-      "trainerLinkFailed": "Se ei onnistunut juuri nyt. Yritä uudelleen."
+      "trainerLinkFailed": "Se ei onnistunut juuri nyt. Yritä uudelleen.",
+      "nameLabel": "Oikea nimi",
+      "removeName": "Poista nimi",
+      "removeNameConfirm": "Nimi poistetaan profiilistasi. Et voi lisätä sitä takaisin sovelluksessa.",
+      "removeNameConfirmButton": "Kyllä, poista",
+      "nameRemovedToast": "Nimi poistettu"
     }
   },
   "erasureCheckEmail": {

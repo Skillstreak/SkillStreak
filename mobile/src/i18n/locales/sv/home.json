@@ -162,7 +162,12 @@
       "trainerLinked": "Tränarläge",
       "trainerLinkAccounts": "Koppla ihop med ditt tränarkonto",
       "trainerUnlink": "Koppla från tränarkontot",
-      "trainerLinkFailed": "Det gick inte just nu. Testa igen."
+      "trainerLinkFailed": "Det gick inte just nu. Testa igen.",
+      "nameLabel": "Riktigt namn",
+      "removeName": "Ta bort namnet",
+      "removeNameConfirm": "Namnet tas bort från din profil. Du kan inte lägga tillbaka det i appen.",
+      "removeNameConfirmButton": "Ja, ta bort",
+      "nameRemovedToast": "Namnet är borttaget"
     }
   },
   "erasureCheckEmail": {

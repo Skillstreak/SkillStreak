@@ -162,7 +162,12 @@
       "trainerLinked": "Mode entraîneur",
       "trainerLinkAccounts": "Relier ton compte entraîneur",
       "trainerUnlink": "Délier le compte entraîneur",
-      "trainerLinkFailed": "Ça n'a pas marché là. Réessaie."
+      "trainerLinkFailed": "Ça n'a pas marché là. Réessaie.",
+      "nameLabel": "Vrai nom",
+      "removeName": "Supprimer le nom",
+      "removeNameConfirm": "Ton nom sera supprimé de ton profil. Tu ne pourras pas le rajouter dans l'appli.",
+      "removeNameConfirmButton": "Oui, supprimer",
+      "nameRemovedToast": "Nom supprimé"
     }
   },
   "erasureCheckEmail": {

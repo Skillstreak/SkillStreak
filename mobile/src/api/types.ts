@@ -331,6 +331,9 @@ export interface PlayerProfileResponse {
 }
 
 export interface UpdateProfileRequest {
+  // Only ever null from the app: real names can be removed here, never added
+  // (screen names only). The backend still accepts a string for older clients.
+  realName?: null;
   avatarId?: string;
   // NEW (docs/adr/0014-multi-language-support.md Consequences, Fas 4.3) —
   // same optional-PATCH-field addition as `CreatePlayerRequest.locale`

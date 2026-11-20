@@ -162,7 +162,12 @@
       "trainerLinked": "Modo entrenador",
       "trainerLinkAccounts": "Vincular tu cuenta de entrenador",
       "trainerUnlink": "Desvincular la cuenta de entrenador",
-      "trainerLinkFailed": "Eso no ha funcionado ahora. Inténtalo otra vez."
+      "trainerLinkFailed": "Eso no ha funcionado ahora. Inténtalo otra vez.",
+      "nameLabel": "Nombre real",
+      "removeName": "Borrar nombre",
+      "removeNameConfirm": "Tu nombre se borrará de tu perfil. No podrás volver a añadirlo en la app.",
+      "removeNameConfirmButton": "Sí, borrar",
+      "nameRemovedToast": "Nombre borrado"
     }
   },
   "erasureCheckEmail": {
