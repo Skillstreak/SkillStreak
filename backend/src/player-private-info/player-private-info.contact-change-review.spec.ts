@@ -1,3 +1,5 @@
+import { parentContactIndex } from '../common/crypto/parent-contact-index.util';
+import { encryptPii } from '../common/crypto/pii-encryption.util';
 import { PlayerPrivateInfoService } from './player-private-info.service';
 
 // docs/adr/0012's 2026-11-08 amendment — the persistence half of the
@@ -149,19 +151,22 @@ describe('PlayerPrivateInfoService — single use of the review token', () => {
 
   it('applyPendingContactChangeNow moves the pending value live and leaves no pending state behind', async () => {
     const { service, manager, update } = build();
+    const ciphertext = encryptPii('New@Example.com', TEST_KEY);
 
     await service.applyPendingContactChangeNow(
       manager as never,
       {
         playerId: 'player-1',
-        pendingParentContact: 'new-ciphertext',
+        pendingParentContact: ciphertext,
       } as never,
     );
 
     expect(update).toHaveBeenCalledWith(
       { playerId: 'player-1' },
       {
-        parentContact: 'new-ciphertext',
+        parentContact: ciphertext,
+        // ADR-0040: the blind index follows the live column.
+        parentContactIndex: parentContactIndex('new@example.com', TEST_KEY),
         pendingParentContact: null,
         contactChangeCode: null,
         contactChangeCodeExpiresAt: null,

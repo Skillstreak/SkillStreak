@@ -168,7 +168,8 @@
       "removeNameConfirm": "Tu nombre se borrará de tu perfil. No podrás volver a añadirlo en la app.",
       "removeNameConfirmButton": "Sí, borrar",
       "nameRemovedToast": "Nombre borrado"
-    }
+    },
+    "contactChangeParentCap": "Esta dirección ya está vinculada a 5 equipos. Elige otra."
   },
   "erasureCheckEmail": {
     "heading": "Revisa tu bandeja de entrada",

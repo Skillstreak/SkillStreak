@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { Challenge } from '../challenges/entities/challenge.entity';
 import { Player } from '../players/entities/player.entity';
 import { PlayersModule } from '../players/players.module';
+import { PlayerPrivateInfoModule } from '../player-private-info/player-private-info.module';
 import { Team } from '../teams/entities/team.entity';
 import { TeamsModule } from '../teams/teams.module';
 import { TeamPoolModule } from '../team-pool/team-pool.module';
@@ -38,6 +39,9 @@ import { WeeklyGoalService } from './weekly-goal.service';
     // belongs to TeamsService (the one place a team's code is ever
     // written). No cycle: TeamsModule depends only on ModerationModule.
     TeamsModule,
+    // ADR-0040 — the parent-contact team cap checked at join approval.
+    // No cycle: PlayerPrivateInfoModule imports only its own entities.
+    PlayerPrivateInfoModule,
   ],
   controllers: [WeeklyGoalController],
   providers: [WeeklyGoalService],

@@ -168,7 +168,8 @@
       "removeNameConfirm": "Dein Name wird aus deinem Profil entfernt. Du kannst ihn in der App nicht wieder hinzufügen.",
       "removeNameConfirmButton": "Ja, entfernen",
       "nameRemovedToast": "Name entfernt"
-    }
+    },
+    "contactChangeParentCap": "Diese Adresse ist bereits mit 5 Teams verknüpft. Bitte wähle eine andere."
   },
   "erasureCheckEmail": {
     "heading": "Schau in dein Postfach",

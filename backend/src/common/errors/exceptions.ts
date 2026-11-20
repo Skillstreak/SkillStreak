@@ -1477,3 +1477,22 @@ export class TrainerPostNotFoundException extends AppException {
     super('trainer_post_not_found', 'No such post.', HttpStatus.NOT_FOUND);
   }
 }
+
+// --- ADR-0040 (Village enable gate): one parent contact, at most 5 teams ----
+
+/**
+ * The parent contact on this account is already the parent contact of
+ * approved members in the maximum number of distinct teams (owner's rule,
+ * 2026-11-20: a parent may have children in at most 5 teams). Raised at
+ * onboarding, at the captain's join approval, and at a contact-change
+ * request. Deliberately says nothing about which teams.
+ */
+export class ParentTeamCapReachedException extends AppException {
+  constructor() {
+    super(
+      'parent_team_cap_reached',
+      'This parent contact is already linked to the maximum number of teams.',
+      HttpStatus.CONFLICT,
+    );
+  }
+}

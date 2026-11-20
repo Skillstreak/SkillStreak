@@ -106,6 +106,15 @@ export class Team {
   @Column({ name: 'village_opt_in_changed_by', type: 'uuid', nullable: true })
   villageOptInChangedBy!: string | null;
 
+  /** ADR-0040 — when the team's parents were last mailed that it joined
+   * Village. Turning it on again within 30 days does not mail again. */
+  @Column({
+    name: 'village_join_notice_sent_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  villageJoinNoticeSentAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

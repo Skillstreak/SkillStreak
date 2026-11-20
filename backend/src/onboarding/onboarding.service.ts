@@ -135,6 +135,17 @@ export class OnboardingService {
           dto,
         );
 
+        // ADR-0040 — one parent contact, at most 5 teams. Checked for every
+        // new account, not only the auto-approved captain of a new team: a
+        // pending join into a sixth team would only fail later at the
+        // captain's approval, so refusing here is the kinder place. The
+        // approval step re-checks (PlayersService.decideTeamJoin).
+        await this.playerPrivateInfoService.assertParentTeamCapAllows(
+          manager,
+          this.playerPrivateInfoService.indexFor(dto.parentContact),
+          team.id,
+        );
+
         const player = await this.playersService.createShell(manager, {
           teamId: team.id,
           screenName: dto.screenName,

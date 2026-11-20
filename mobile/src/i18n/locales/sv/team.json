@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Avbryt",
     "rotateConfirmConfirm": "Byt kod",
     "rotateSuccessToast": "Ny lagkod: {{inviteCode}}",
-    "rotateErrorToast": "Kunde inte byta koden just nu. Testa igen."
+    "rotateErrorToast": "Kunde inte byta koden just nu. Testa igen.",
+    "approveParentCapToast": "Det gick inte: förälderns adress är redan kopplad till 5 lag."
   },
   "k2": {
     "heading": "Laget i detalj",

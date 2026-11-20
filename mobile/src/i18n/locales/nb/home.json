@@ -168,7 +168,8 @@
       "removeNameConfirm": "Navnet fjernes fra profilen din. Du kan ikke legge det til igjen i appen.",
       "removeNameConfirmButton": "Ja, fjern",
       "nameRemovedToast": "Navnet er fjernet"
-    }
+    },
+    "contactChangeParentCap": "Denne adressen er allerede knyttet til 5 lag. Velg en annen."
   },
   "erasureCheckEmail": {
     "heading": "Sjekk innboksen",

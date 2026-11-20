@@ -28,7 +28,8 @@
     "rotateConfirmCancel": "Cancel",
     "rotateConfirmConfirm": "Change code",
     "rotateSuccessToast": "New team code: {{inviteCode}}",
-    "rotateErrorToast": "Couldn't change the code right now. Try again."
+    "rotateErrorToast": "Couldn't change the code right now. Try again.",
+    "approveParentCapToast": "Couldn't approve: the parent's address is already linked to 5 teams."
   },
   "k2": {
     "heading": "Full team list",

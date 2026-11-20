@@ -21,12 +21,16 @@ describe('VillageController', () => {
       assertIsCaptainOfTeam: jest.fn(() => Promise.resolve(player)),
     };
     const configService = { get: jest.fn(() => enabled) };
+    const joinNotice = {
+      notifyIfDue: jest.fn(() => Promise.resolve({ sent: true })),
+    };
     const controller = new VillageController(
       villageService as never,
       playersService as never,
       configService as never,
+      joinNotice as never,
     );
-    return { controller, villageService, playersService };
+    return { controller, villageService, playersService, joinNotice };
   }
 
   it('GET runs the team-membership gate before reading', async () => {
@@ -116,4 +120,30 @@ describe('VillageController', () => {
       expect(villageService.setOptIn).not.toHaveBeenCalled();
     },
   );
+
+  it("turning ON fires the parents' join notice; turning OFF does not", async () => {
+    const { controller, joinNotice } = setup({
+      teamId: 'team-a',
+      isCaptain: true,
+      parentalConsentStatus: ParentalConsentStatus.APPROVED,
+    });
+    await controller.setOptIn('p1', { optedIn: false });
+    expect(joinNotice.notifyIfDue).not.toHaveBeenCalled();
+    await controller.setOptIn('p1', { optedIn: true });
+    expect(joinNotice.notifyIfDue).toHaveBeenCalledWith('team-a');
+  });
+
+  it('a failing join notice never fails the toggle', async () => {
+    const { controller, joinNotice, villageService } = setup({
+      teamId: 'team-a',
+      isCaptain: true,
+      parentalConsentStatus: ParentalConsentStatus.APPROVED,
+    });
+    joinNotice.notifyIfDue.mockRejectedValueOnce(new Error('smtp down'));
+    await expect(controller.setOptIn('p1', { optedIn: true })).resolves.toEqual(
+      { optedIn: true },
+    );
+    expect(villageService.setOptIn).toHaveBeenCalledWith('team-a', true, 'p1');
+    await new Promise((r) => setImmediate(r));
+  });
 });

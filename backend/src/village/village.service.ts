@@ -172,29 +172,36 @@ export class VillageService {
 
   /** The one definition of a qualifying team (ADR-0040 Decision 5). */
   private qualifiedTeamsQuery(bucketStart: Date) {
-    return this.teamRepository
-      .createQueryBuilder('t')
-      .select('t.id', 'id')
-      .addSelect('t.name', 'name')
-      .addSelect('t.sport', 'sport')
-      .where('t.village_opt_in = true')
-      .andWhere('t.is_test = false')
-      .andWhere('t.created_at <= :createdBefore', {
-        createdBefore: new Date(
-          bucketStart.getTime() - VILLAGE_MIN_TEAM_AGE_MS,
-        ),
-      })
-      .andWhere(
-        `(SELECT COUNT(*) FROM "player" p
+    return (
+      this.teamRepository
+        .createQueryBuilder('t')
+        .select('t.id', 'id')
+        .addSelect('t.name', 'name')
+        .addSelect('t.sport', 'sport')
+        .where('t.village_opt_in = true')
+        .andWhere('t.is_test = false')
+        .andWhere('t.created_at <= :createdBefore', {
+          createdBefore: new Date(
+            bucketStart.getTime() - VILLAGE_MIN_TEAM_AGE_MS,
+          ),
+        })
+        // ADR-0040: approved members with DISTINCT parent contacts. Reads
+        // only the keyed blind index from player_private_info (never the
+        // address); a member whose index is NULL does not count.
+        .andWhere(
+          `(SELECT COUNT(DISTINCT ppi.parent_contact_index)
+            FROM "player" p
+            JOIN "player_private_info" ppi ON ppi.player_id = p.id
            WHERE p.team_id = t.id
              AND p.team_join_status = :joinApproved
              AND p.parental_consent_status = :consentApproved) >= :minMembers`,
-        {
-          joinApproved: TeamJoinStatus.APPROVED,
-          consentApproved: ParentalConsentStatus.APPROVED,
-          minMembers: VILLAGE_MIN_QUALIFIED_MEMBERS,
-        },
-      );
+          {
+            joinApproved: TeamJoinStatus.APPROVED,
+            consentApproved: ParentalConsentStatus.APPROVED,
+            minMembers: VILLAGE_MIN_QUALIFIED_MEMBERS,
+          },
+        )
+    );
   }
 
   private async findActiveTeamIds(

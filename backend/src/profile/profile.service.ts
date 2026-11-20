@@ -15,6 +15,7 @@ import { buildContactChangeNotifyOldEmail } from '../mail/templates/contact-chan
 import { buildContactChangeReviewEmail } from '../mail/templates/contact-change-review-email.template';
 import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { PlayersService } from '../players/players.service';
 import { RedisService } from '../redis/redis.service';
 import { generateContactChangeReviewToken } from './contact-change-review-token.util';
@@ -218,6 +219,17 @@ export class ProfileService {
         );
       if (existing?.contactChangeApplyAt != null) {
         throw new ContactChangeAlreadyConfirmedException();
+      }
+      // ADR-0040 — one parent contact, at most 5 teams. Without this an
+      // address already at the cap could be attached to a sixth team by
+      // onboarding with a fresh address and changing it afterwards. Only
+      // an approved membership counts toward the cap, so only then.
+      if (player.teamJoinStatus === TeamJoinStatus.APPROVED) {
+        await this.playerPrivateInfoService.assertParentTeamCapAllows(
+          manager,
+          this.playerPrivateInfoService.indexFor(newContact),
+          player.teamId,
+        );
       }
       await this.playerPrivateInfoService.setPendingContactChange(
         manager,

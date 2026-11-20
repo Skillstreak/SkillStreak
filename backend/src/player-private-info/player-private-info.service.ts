@@ -1,8 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { decryptPii, encryptPii } from '../common/crypto/pii-encryption.util';
+import {
+  isEmailContact,
+  normaliseParentContact,
+  parentContactIndex,
+} from '../common/crypto/parent-contact-index.util';
+import { ParentTeamCapReachedException } from '../common/errors/exceptions';
+import { PlayerLocale } from '../common/locale/player-locale.enum';
+import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import {
   ConsentMethod,
@@ -15,7 +23,9 @@ import { PlayerPrivateInfo } from './entities/player-private-info.entity';
 // addendum §1. It exposes narrow, purpose-specific methods only:
 //  - createForNewPlayer / recordConsentEvent: the consent flow (onboarding).
 //  - getRealName: the (not-yet-built) coach-only admin view.
-// Nothing here returns parent_contact/real_name in bulk or as part of any
+//  - getParentEmailRecipients: the one bulk read of parent_contact, for
+//    ADR-0040's Village join notice and nothing else.
+// Nothing here returns parent_contact/real_name as part of any
 // player-facing/leaderboard-shaped query.
 //
 // Fas 4 encryption-at-rest, 2026-07-28 — being the sole gatekeeper for
@@ -27,6 +37,17 @@ import { PlayerPrivateInfo } from './entities/player-private-info.entity';
 // AES-256-GCM, not Postgres' pgcrypto, and the
 // EncryptPlayerPrivateInfo1785200000000 migration for the one-time
 // backfill of rows that predate this change.
+/** Owner's rule (2026-11-20, ADR-0040): one parent contact may be the
+ * parent of approved members in at most this many distinct teams. */
+export const MAX_TEAMS_PER_PARENT_CONTACT = 5;
+
+export interface ParentEmailRecipient {
+  /** Decrypted address. Callers must not log it. */
+  email: string;
+  /** Locale of the first matching child, for the mail's language. */
+  locale: PlayerLocale;
+}
+
 @Injectable()
 export class PlayerPrivateInfoService {
   constructor(
@@ -54,9 +75,100 @@ export class PlayerPrivateInfoService {
       repository.create({
         playerId,
         parentContact: encryptPii(parentContact, key),
+        parentContactIndex: parentContactIndex(parentContact, key),
         realName: realName ? encryptPii(realName, key) : null,
       }),
     );
+  }
+
+  /** Blind index for a contact not yet stored (onboarding, contact change). */
+  indexFor(parentContact: string): string {
+    return parentContactIndex(parentContact, this.encryptionKey);
+  }
+
+  /**
+   * ADR-0040 cap: refuses when `index` is already the parent contact of
+   * approved members in MAX_TEAMS_PER_PARENT_CONTACT distinct teams OTHER
+   * than `teamId` (joining a team the parent is already in never counts
+   * twice). Must run inside the transaction that makes the membership
+   * approved: it takes a transaction-scoped advisory lock on the index, so
+   * two concurrent approvals for the same parent serialise instead of
+   * both passing at 4. The lock key is derived from the index, never the
+   * address. A null index (a row the backfill could not read) is not
+   * checked.
+   */
+  async assertParentTeamCapAllows(
+    manager: EntityManager,
+    index: string | null,
+    teamId: string,
+  ): Promise<void> {
+    if (!index) return;
+    await manager.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
+      `parent-team-cap:${index}`,
+    ]);
+    const rows: Array<{ teams: string }> = await manager.query(
+      `SELECT COUNT(DISTINCT p.team_id)::text AS teams
+         FROM "player" p
+         JOIN "player_private_info" ppi ON ppi.player_id = p.id
+        WHERE ppi.parent_contact_index = $1
+          AND p.team_join_status = $2
+          AND p.team_id <> $3`,
+      [index, TeamJoinStatus.APPROVED, teamId],
+    );
+    const teams = Number(rows[0]?.teams ?? 0);
+    if (teams >= MAX_TEAMS_PER_PARENT_CONTACT) {
+      throw new ParentTeamCapReachedException();
+    }
+  }
+
+  /** The stored blind index for an existing player (join approval). */
+  async findIndexForPlayer(
+    manager: EntityManager,
+    playerId: string,
+  ): Promise<string | null> {
+    const info = await manager.getRepository(PlayerPrivateInfo).findOne({
+      where: { playerId },
+      select: { playerId: true, parentContactIndex: true },
+    });
+    return info?.parentContactIndex ?? null;
+  }
+
+  /**
+   * ADR-0040 Village join notice — the one bulk read of parent_contact
+   * this module exposes, for exactly that informational mail. Returns each
+   * distinct EMAIL contact once (a parent with two children on the team
+   * gets one mail); phone contacts are skipped, since nothing here can
+   * text. Reads the live column (a pending, unconfirmed change is not
+   * mailed). Callers must not log what this returns.
+   */
+  async getParentEmailRecipients(
+    players: Array<{ id: string; locale: PlayerLocale }>,
+  ): Promise<ParentEmailRecipient[]> {
+    if (players.length === 0) return [];
+    const localeById = new Map(players.map((p) => [p.id, p.locale]));
+    const rows = await this.privateInfoRepository.find({
+      where: { playerId: In(players.map((p) => p.id)) },
+      select: { playerId: true, parentContact: true },
+    });
+    const key = this.encryptionKey;
+    const byNormalised = new Map<string, ParentEmailRecipient>();
+    for (const row of rows) {
+      let contact: string;
+      try {
+        contact = decryptPii(row.parentContact, key);
+      } catch {
+        continue;
+      }
+      if (!isEmailContact(contact)) continue;
+      const normalised = normaliseParentContact(contact);
+      if (!byNormalised.has(normalised)) {
+        byNormalised.set(normalised, {
+          email: contact.trim(),
+          locale: localeById.get(row.playerId) ?? PlayerLocale.SV,
+        });
+      }
+    }
+    return [...byNormalised.values()];
   }
 
   async recordConsentEvent(
@@ -417,6 +529,11 @@ export class PlayerPrivateInfoService {
       { playerId },
       {
         parentContact: pendingContactCiphertext,
+        // ADR-0040: the blind index follows the live column.
+        parentContactIndex: parentContactIndex(
+          decryptPii(pendingContactCiphertext, this.encryptionKey),
+          this.encryptionKey,
+        ),
         pendingParentContact: null,
         // Already null on the lazy-apply path (confirm cleared them), but
         // not on applyPendingContactChangeNow's: one method that leaves

@@ -13,13 +13,16 @@ Three things must be done before either switch is turned on, in any
 environment (the beta is the live app):
 
 1. **The CLAUDE.md amendment** below — the project owner's own action.
-2. **Parents informed when their team joins** (Hermes' spec), through the
-   existing parental email flow. Without it a child captain's single tap
-   is the only step between a team and the village.
-3. **Distinct-parent check for k** — a member counts toward a team's
-   qualification only if their parent email is not also behind a member of
-   another qualifying team. Without it, someone controlling 45 parent
-   addresses can, after 14 days, still pad a sport to k (Decision 5).
+   **OPEN.** The owner approved it on 2026-11-20 via the coordinating
+   session; the edit to CLAUDE.md itself was deliberately not made by an
+   agent and still needs to land (owner, or a session the owner instructs
+   directly), using the wording below.
+2. **Parents informed when their team joins** — **DONE (2026-11-20).**
+   Decision 7.
+3. **Anti-padding: distinct parents + at most 5 teams per parent** —
+   **DONE (2026-11-20).** Decisions 5 and 8. The owner's rule replaced the
+   earlier "parent not behind any other qualifying team" idea, since a
+   parent may genuinely have children in several teams.
 
 Village crosses the closed team bubble, and CLAUDE.md names exactly one
 exception to it today (ADR-0030, a player's own clips). ADR-0029
@@ -106,7 +109,8 @@ full history would need an append-only table.
 **5. k-anonymity, hardened against padding.** A sport lists no names, and
 its level stays CALM, until at least **10 other qualifying teams** share
 it. A team qualifies only if it is opted in, not a test team, at least
-**14 days old**, and has at least **5 members whose team join and
+**14 days old**, and has at least **5 members with distinct parent
+contacts** (compared by blind index, Decision 8) **whose team join and
 parental consent are both approved** — so defeating k with throwaway
 teams costs 45 consented accounts and two weeks rather than nine sign-ups.
 The viewer's own team must qualify by the same rule before it sees
@@ -118,6 +122,35 @@ fixed for each quarter-hour bucket, so polling learns nothing finer.
 **6. Who can read it.** Authenticated players whose team join is approved
 (`assertTeamMembership`), 12 requests/min.
 
+**7. Parents are told when their team joins.** When the captain turns
+opt-in ON, every approved member's parent contact gets one informational
+mail (`mail/templates/village-joined-email.template.ts`, in the child's
+locale, Swedish fallback): the team joined, exactly what other teams see
+(the name as shown — masked if free text —, the sport, the coarse level),
+what they never see, and how to get it turned off (captain/coach, or
+hello@skillstreak.xyz). One mail per distinct address; phone-only
+contacts cannot be mailed and are skipped. Not sent on OFF, and not again
+if turned ON within 30 days (`team.village_join_notice_sent_at`, claimed
+under a row lock). Best-effort: the toggle never waits on or fails because
+of mail; if no mail at all is handed off, the claim is released so the
+next ON retries. Counts are logged, addresses never.
+
+**8. One parent contact, at most 5 teams** (owner's rule, 2026-11-20). A
+parent contact may be the parent of approved members in at most 5
+distinct teams. Enforced at onboarding (any new account against a team),
+at the captain's join approval (inside the approval transaction, under a
+transaction-scoped advisory lock keyed by the blind index, so concurrent
+approvals cannot both pass at 4), and at a contact-change request for an
+approved member. Error `parent_team_cap_reached` (409), localised in the
+app. Existing data over the cap is grandfathered, not removed.
+
+Comparison uses `player_private_info.parent_contact_index`: an HMAC-SHA256
+of the normalised contact (trimmed; email lower-cased; phone reduced to
+"+" and digits) under a key derived from `PII_ENCRYPTION_KEY` with a fixed
+label. `parent_contact` itself stays AES-GCM with a random IV and is never
+compared or logged. The index is backfilled by the migration and kept in
+step on every write of `parent_contact`.
+
 ## Consequences
 
 - Until a sport has 10 qualifying teams, Village shows only the team's own
@@ -126,5 +159,11 @@ fixed for each quarter-hour bucket, so polling learns nothing finer.
   text and will show masked. Hermes' `TeamNameBuilder` is a separate
   change.
 - `team.sport` has no UI yet; every team is floorball until one is added.
-- **Still owed**: the three items under "Gate before enabling", and a
-  staff "hide this name" status.
+- **Still owed**: the CLAUDE.md amendment (gate item 1) and a staff "hide
+  this name" status.
+- The cap is checked when a contact change is *requested*; a change that
+  sits in its grace period while the parent joins other teams could land
+  over the cap. Accepted as a narrow edge.
+- The cap and the distinct-parent rule raise the cost of padding a sport
+  to k (now ≥ 9 distinct parent addresses, 45 consented accounts, 14
+  days); they do not make it impossible.

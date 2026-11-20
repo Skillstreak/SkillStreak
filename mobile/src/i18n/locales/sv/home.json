@@ -168,7 +168,8 @@
       "removeNameConfirm": "Namnet tas bort från din profil. Du kan inte lägga tillbaka det i appen.",
       "removeNameConfirmButton": "Ja, ta bort",
       "nameRemovedToast": "Namnet är borttaget"
-    }
+    },
+    "contactChangeParentCap": "Den här adressen är redan kopplad till 5 lag. Välj en annan."
   },
   "erasureCheckEmail": {
     "heading": "Kolla inkorgen",

@@ -108,6 +108,9 @@ describe('VillageService', () => {
     expect(sql).toContain('t.created_at <= :createdBefore');
     expect(sql).toContain('p.team_join_status = :joinApproved');
     expect(sql).toContain('p.parental_consent_status = :consentApproved');
+    // ADR-0040: distinct parent contacts, by blind index only.
+    expect(sql).toContain('COUNT(DISTINCT ppi.parent_contact_index)');
+    expect(sql).not.toMatch(/parent_contact[^_]/);
     const params = Object.assign(
       {},
       ...clauses.map((c) => c[1] ?? {}),

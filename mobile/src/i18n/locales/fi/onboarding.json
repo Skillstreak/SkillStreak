@@ -97,7 +97,8 @@
     "invalidParentContact": "Tuo yhteystieto ei näytä oikealta — tarkista, että se on oikea sähköpostiosoite tai puhelinnumero.",
     "invalidScreenName": "Tuo nimi ei oikein toimi — kokeile jotain muuta!",
     "invalidBirthYear": "Hmm, tuo vuosi ei näytä oikealta. Yritä uudelleen.",
-    "genericValidationError": "Jokin meni pieleen. Tarkista tiedot ja yritä uudelleen."
+    "genericValidationError": "Jokin meni pieleen. Tarkista tiedot ja yritä uudelleen.",
+    "parentTeamCapReached": "Tämä huoltajan osoite on jo liitetty viiteen joukkueeseen. Käytä toista osoitetta."
   },
   "shared": {
     "genericError": "Jokin meni pieleen. Tarkista verkkoyhteytesi ja yritä uudelleen."

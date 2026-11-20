@@ -257,6 +257,8 @@ export function ProfileScreen({
     } catch (err) {
       if (err instanceof ApiError && err.code === 'contact_change_rate_limited') {
         setContactError(t('profileScreen.contactChangeRateLimited'));
+      } else if (err instanceof ApiError && err.code === 'parent_team_cap_reached') {
+        setContactError(t('profileScreen.contactChangeParentCap'));
       } else {
         setContactError(t('profileScreen.contactChangeGenericError'));
       }

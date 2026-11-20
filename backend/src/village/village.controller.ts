@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Logger,
   Put,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { PlayersService } from '../players/players.service';
 import { SetVillageOptInDto } from './dto/set-village-opt-in.dto';
+import { VillageJoinNoticeService } from './village-join-notice.service';
 import { VillageService } from './village.service';
 import type { VillageView } from './village.types';
 
@@ -25,10 +27,13 @@ import type { VillageView } from './village.types';
  */
 @Controller('api/v1/village')
 export class VillageController {
+  private readonly logger = new Logger(VillageController.name);
+
   constructor(
     private readonly villageService: VillageService,
     private readonly playersService: PlayersService,
     private readonly configService: ConfigService,
+    private readonly joinNotice: VillageJoinNoticeService,
   ) {}
 
   /**
@@ -82,6 +87,14 @@ export class VillageController {
     const me = await this.playersService.findByIdOrThrow(playerId);
     await this.playersService.assertIsCaptainOfTeam(playerId, me.teamId);
     await this.villageService.setOptIn(me.teamId, body.optedIn, playerId);
+    // ADR-0040 — parents are told when the team joins (ON only, at most
+    // once per 30 days). Not awaited: a mail problem must never block or
+    // fail the toggle; failures are logged by count inside.
+    if (body.optedIn) {
+      this.joinNotice.notifyIfDue(me.teamId).catch(() => {
+        this.logger.warn('Village join notice failed for a team.');
+      });
+    }
     return { optedIn: body.optedIn };
   }
 }

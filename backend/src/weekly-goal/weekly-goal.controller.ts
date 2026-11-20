@@ -22,6 +22,7 @@ import { ListTeammatesQueryDto } from '../players/dto/list-teammates-query.dto';
 import { TransferCaptaincyDto } from '../players/dto/transfer-captaincy.dto';
 import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { TeamsService } from '../teams/teams.service';
+import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
 import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
 import {
@@ -69,6 +70,7 @@ export class WeeklyGoalController {
     private readonly weeklyGoalService: WeeklyGoalService,
     private readonly playersService: PlayersService,
     private readonly teamsService: TeamsService,
+    private readonly playerPrivateInfoService: PlayerPrivateInfoService,
   ) {}
 
   // ADR-0009's 2026-11-08 amendment — the captain replaces the team's
@@ -212,11 +214,25 @@ export class WeeklyGoalController {
     @Param('playerId') targetPlayerId: string,
     @CurrentPlayerId() playerId: string,
   ): Promise<TeamJoinDecisionResponse> {
+    // ADR-0040 — one parent contact, at most 5 teams: re-checked here,
+    // under the approval's own transaction and advisory lock, because
+    // this is where a membership actually becomes approved.
     const target = await this.playersService.decideTeamJoin(
       teamId,
       playerId,
       targetPlayerId,
       TeamJoinStatus.APPROVED,
+      async (manager) => {
+        const index = await this.playerPrivateInfoService.findIndexForPlayer(
+          manager,
+          targetPlayerId,
+        );
+        await this.playerPrivateInfoService.assertParentTeamCapAllows(
+          manager,
+          index,
+          teamId,
+        );
+      },
     );
     return { playerId: target.id, teamJoinStatus: target.teamJoinStatus };
   }

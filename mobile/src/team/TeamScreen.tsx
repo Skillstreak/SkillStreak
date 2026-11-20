@@ -164,8 +164,13 @@ export function TeamScreen({
       await approveTeamJoin(teamId, player.playerId);
       setPendingJoins((prev) => prev.filter((p) => p.playerId !== player.playerId));
       setToastMessage(t('k1.approveSuccessToast', { screenName: player.screenName }));
-    } catch {
-      setToastMessage(t('k1.approveErrorToast'));
+    } catch (err) {
+      // ADR-0040 — the joiner's parent contact is already in 5 teams.
+      setToastMessage(
+        err instanceof ApiError && err.code === 'parent_team_cap_reached'
+          ? t('k1.approveParentCapToast')
+          : t('k1.approveErrorToast'),
+      );
     } finally {
       setDecidingPlayerId(null);
       setDecidingAction(null);
