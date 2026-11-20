@@ -29,7 +29,8 @@
       "confirmYes": "Yes, join",
       "cancel": "Cancel",
       "error": "Couldn't change that. Try again."
-    }
+    },
+    "previewBanner": "Preview – only you can see this. The teams below are made up, and your team cannot join until the village opens."
   },
   "arenas": {
     "floorball": {

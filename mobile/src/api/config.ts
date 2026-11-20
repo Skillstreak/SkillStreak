@@ -29,7 +29,9 @@ export const PT_ENABLED: boolean = process.env.EXPO_PUBLIC_PT_ENABLED === 'true'
 // Skillstreak Village (I-004, docs/adr/0040). The entry point only: what
 // a team shows to others is gated server-side by the team's own opt-in,
 // which is off by default. Fail-closed like PT_ENABLED: only the exact
-// string 'true' shows the entry point (the API has its own VILLAGE_ENABLED).
+// string 'true' shows the entry point for everyone (the API has its own
+// VILLAGE_ENABLED). Without it the entry still shows when GET
+// /village/access says so — the owner preview (VILLAGE_PREVIEW_PLAYER_IDS).
 export const VILLAGE_ENABLED: boolean = process.env.EXPO_PUBLIC_VILLAGE_ENABLED === 'true';
 
 // Fixed per docs/api/phase1-contract.md's "Conventions" section.

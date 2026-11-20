@@ -29,7 +29,8 @@
       "confirmYes": "Ja, gå med",
       "cancel": "Annuller",
       "error": "Det kunne ikke ændres. Prøv igen."
-    }
+    },
+    "previewBanner": "Forhåndsvisning – kun du kan se dette. Holdene nedenfor er opdigtede, og dit hold kan ikke være med, før landsbyen åbner."
   },
   "arenas": {
     "floorball": {

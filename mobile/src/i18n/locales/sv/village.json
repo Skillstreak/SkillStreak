@@ -29,7 +29,8 @@
       "confirmYes": "Ja, gå med",
       "cancel": "Avbryt",
       "error": "Det gick inte att ändra. Försök igen."
-    }
+    },
+    "previewBanner": "Förhandsvisning – bara du ser den här. Lagen nedan är påhittade, och ditt lag kan inte gå med förrän byn öppnar."
   },
   "arenas": {
     "floorball": {

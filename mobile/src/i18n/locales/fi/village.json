@@ -29,7 +29,8 @@
       "confirmYes": "Kyllä, liity",
       "cancel": "Peruuta",
       "error": "Muutos ei onnistunut. Yritä uudelleen."
-    }
+    },
+    "previewBanner": "Esikatselu – vain sinä näet tämän. Alla olevat joukkueet ovat keksittyjä, eikä joukkueesi voi liittyä ennen kuin kylä avautuu."
   },
   "arenas": {
     "floorball": {

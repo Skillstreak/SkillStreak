@@ -29,7 +29,8 @@
       "confirmYes": "Ja, bli med",
       "cancel": "Avbryt",
       "error": "Kunne ikke endre det. Prøv igjen."
-    }
+    },
+    "previewBanner": "Forhåndsvisning – bare du ser dette. Lagene nedenfor er oppdiktet, og laget ditt kan ikke bli med før landsbyen åpner."
   },
   "arenas": {
     "floorball": {

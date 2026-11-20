@@ -41,6 +41,15 @@ export interface VillageOwnArena {
 
 export interface VillageView {
   generatedAt: string;
+  /** Set only on the owner-preview response (VILLAGE_PREVIEW_PLAYER_IDS):
+   * every arena in `sports` is made up and no real team is behind it. */
+  preview?: true;
   ownArena: VillageOwnArena;
   sports: VillageSport[];
+}
+
+/** GET /village/access — whether the app should show the village entry. */
+export interface VillageAccess {
+  enabled: boolean;
+  preview: boolean;
 }
