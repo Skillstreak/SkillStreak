@@ -1,6 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { Repository } from 'typeorm';
+import {
+  DrillReviewNotFoundException,
+  DrillReviewStaleException,
+} from '../common/errors/exceptions';
+import { DrillReview, DrillReviewStatus } from './entities/drill-review.entity';
 
 /** The one author value that needs no recorded permission, because it
  *  identifies nobody. */
@@ -28,11 +36,14 @@ export interface Drill {
   author: string;
   sourceNote: string | null;
   /**
-   * Whether a coach has actually read this drill and vouched for it.
+   * Whether a coach has actually read this drill and vouched for it in
+   * git.
    *
    * Absent means false. Fail-closed on purpose: the failure this guards
    * against is unreviewed training advice reaching children, and a
-   * forgotten field must not be the thing that publishes it.
+   * forgotten field must not be the thing that publishes it. Since the
+   * 2026-11-20 amendment to ADR-0035, a `false` drill can also be approved
+   * by staff in the console — see DrillLibraryService.
    */
   coachReviewed: boolean;
   /** Markdown prose. Rendered escaped — it is text a human wrote, not markup. */
@@ -44,11 +55,10 @@ export interface Drill {
  * and except `coachReviewed`.
  *
  * That second omission is the point rather than an oversight. Nothing
- * outside this file can obtain an unreviewed drill — they are dropped in
- * the constructor — so the field would be `true` in every response it
- * ever appeared in. A flag that cannot vary tells a reader nothing and
- * invites a caller to start branching on it, which would recreate at the
- * edges the filtering this service does once at the centre.
+ * outside this file can obtain an unreviewed drill through `list` or
+ * `findBySlug` — review state is resolved here, once — so the field would
+ * say nothing a caller could use, and would invite branching on it at the
+ * edges instead of trusting the filtering at the centre.
  */
 // author, authorConsentedNamed and sourceNote stay server-side (Juridik R1).
 export type DrillSummary = Omit<
@@ -56,11 +66,59 @@ export type DrillSummary = Omit<
   'body' | 'coachReviewed' | 'author' | 'sourceNote'
 >;
 
+/** Where a `coachReviewed: false` drill stands with staff review. */
+export type DrillReviewState = 'pending' | 'approved' | 'rejected';
+
+/**
+ * A drill as the staff review queue sees it (ADR-0035's 2026-11-20
+ * amendment). Admin-only: it carries `author` and `sourceNote`, which
+ * staff may read and which never reach a player client.
+ */
+export interface DrillReviewView {
+  slug: string;
+  title: string;
+  ageBand: DrillAgeBand;
+  focus: DrillFocus;
+  durationMinutes: number;
+  locale: string;
+  author: string;
+  sourceNote: string | null;
+  body: string;
+  /** Hash of the file as this pod has it. Sent back with a decision so a
+   *  reviewer can only approve the text they actually read. */
+  contentSha256: string;
+  state: DrillReviewState;
+  /** A decision exists but was made on a different version of the file,
+   *  so it no longer applies and the drill is pending again. */
+  changedSinceReview: boolean;
+  reviewedByStaffAccountId: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+export type DrillReviewDecision =
+  | { status: DrillReviewStatus.APPROVED; contentSha256: string }
+  | {
+      status: DrillReviewStatus.REJECTED;
+      contentSha256: string;
+      reason: string;
+    };
+
+interface LoadedDrill {
+  drill: Drill;
+  contentSha256: string;
+}
+
+/** How long `/health` waits for the approval lookup before reporting the
+ *  git-reviewed count alone. A probe must not hang on Postgres, and the
+ *  startup probe has the Kubernetes default 1s timeout (k8s/api-deployment). */
+const HEALTH_LOOKUP_TIMEOUT_MS = 500;
+
 /**
  * The coach drill library (ADR-0029 Decision 2).
  *
- * **There is deliberately no table.** Drills are Markdown files in this
- * repository, read once at boot. That is the point rather than a
+ * **There is deliberately no drill table.** Drills are Markdown files in
+ * this repository, read once at boot. That is the point rather than a
  * shortcut: with no `drill` row, there is nothing for any query in this
  * app to join to a `player`, `team`, `video_clip` or `training_log_entry`
  * — Decision 1's "no per-child reference in the library" is
@@ -68,12 +126,29 @@ export type DrillSummary = Omit<
  * needs no entry in ADR-0013's per-entity erasure table, because there is
  * nothing about a child to erase.
  *
- * Moderation is `git` review: every change arrives as a diff, a human
- * reads it, and it merges through the existing flow. Decision 5 is
- * explicit that this is a *policy* control and must not be described to
- * anyone as filtered or checked content.
+ * Moderation is a human, recorded in one of two places:
  *
- * Same mechanism as the Swedish wordlist — static, reviewable,
+ *  1. **git** — `coachReviewed: true` in the file's front matter, arriving
+ *     as a reviewed diff through the existing merge flow. Visible always.
+ *  2. **the staff console** (ADR-0035's 2026-11-20 amendment) — a
+ *     `drill_review` row saying an admin approved *this exact file
+ *     content*, by SHA-256. Only consulted for `coachReviewed: false`
+ *     files. The row holds a slug, a verdict and who gave it; the drill
+ *     text itself still lives only in git.
+ *
+ * Decision 5 is still explicit that this is a *policy* control and must
+ * not be described to anyone as filtered or checked content.
+ *
+ * **Approvals are read from Postgres on every request, not cached.** Prod
+ * runs two API pods; an approval or a take-down written through one must
+ * hold on the other immediately, and an in-process cache invalidated only
+ * locally would let a rejected drill keep serving from the other pod. The
+ * lookup is a primary-key-sized read of a table with tens of rows, and it
+ * is skipped entirely when no file is awaiting review. On a database error
+ * it fails closed: console-approved drills are withheld and git-reviewed
+ * ones still serve.
+ *
+ * Same file mechanism as the Swedish wordlist — static, reviewable,
  * version-controlled data shipped into the image via `nest-cli.json`'s
  * `assets` entry and loaded with `readFileSync` relative to `__dirname`.
  *
@@ -84,64 +159,191 @@ export type DrillSummary = Omit<
 @Injectable()
 export class DrillLibraryService {
   private readonly logger = new Logger(DrillLibraryService.name);
-  private readonly drills: Drill[];
+  /** Reviewed in git — visible unconditionally. */
+  private readonly gitReviewed: Drill[];
+  /** `coachReviewed: false` — visible only with a matching DB approval. */
+  private readonly awaitingReview: LoadedDrill[];
 
-  constructor() {
-    // Unreviewed drills are dropped here, at the boundary, rather than
-    // filtered at each call site. Seven places read this library — the
-    // coach API, drill groups, the health count and the training-plan
-    // corpus among them — and a filter each of them has to remember is a
-    // filter one of them will eventually forget.
-    //
-    // This mirrors Decision 1's reasoning about there being no `drill`
-    // table at all: a draft that never enters `this.drills` cannot be
-    // served by code that does not know drafts exist.
+  constructor(
+    @InjectRepository(DrillReview)
+    private readonly reviewRepository: Repository<DrillReview>,
+  ) {
+    // Split once, here, rather than filtered at each call site. Seven
+    // places read this library — the coach API, drill groups, the health
+    // count and the training-plan corpus among them — and a filter each of
+    // them has to remember is a filter one of them will eventually forget.
+    // Every public read goes through `visible()`; only the admin-only
+    // review methods ever touch `awaitingReview` directly.
     const all = this.loadAll();
-    this.drills = all.filter((drill) => drill.coachReviewed);
+    this.gitReviewed = all
+      .filter((loaded) => loaded.drill.coachReviewed)
+      .map((loaded) => loaded.drill);
+    this.awaitingReview = all.filter((loaded) => !loaded.drill.coachReviewed);
 
-    const withheld = all.length - this.drills.length;
     this.logger.log(
-      `Drill library loaded: ${this.drills.length} coach-reviewed drill(s)` +
-        (withheld > 0
-          ? `, ${withheld} withheld awaiting review (set coachReviewed: true to publish)`
+      `Drill library loaded: ${this.gitReviewed.length} coach-reviewed drill(s)` +
+        (this.awaitingReview.length > 0
+          ? `, ${this.awaitingReview.length} visible only once approved in the staff console (or set coachReviewed: true)`
           : '') +
         '.',
     );
   }
 
-  list(filter?: {
+  async list(filter?: {
     ageBand?: string;
     focus?: string;
     locale?: string;
-  }): DrillSummary[] {
-    return (
-      this.drills
+  }): Promise<DrillSummary[]> {
+    return toSummaries(await this.visible(), filter);
+  }
+
+  async findBySlug(slug: string): Promise<Drill | null> {
+    return (await this.visible()).find((drill) => drill.slug === slug) ?? null;
+  }
+
+  /** Several at once, in the order asked, with one approval lookup rather
+   *  than one per slug. Slugs not currently visible are dropped. */
+  async findBySlugs(slugs: string[]): Promise<Drill[]> {
+    const bySlug = new Map(
+      (await this.visible()).map((drill) => [drill.slug, drill]),
+    );
+    return slugs
+      .map((slug) => bySlug.get(slug))
+      .filter((drill): drill is Drill => Boolean(drill));
+  }
+
+  /**
+   * How many drills are visible right now, for `/health`.
+   *
+   * Bounded: the probe must answer even if Postgres is slow, so after
+   * HEALTH_LOOKUP_TIMEOUT_MS it reports the git-reviewed count alone —
+   * the same fail-closed answer a database error gives.
+   */
+  async countVisible(): Promise<number> {
+    let timer: NodeJS.Timeout | undefined;
+    const fallback = new Promise<Set<string>>((resolve) => {
+      timer = setTimeout(() => resolve(new Set()), HEALTH_LOOKUP_TIMEOUT_MS);
+    });
+    try {
+      const approved = await Promise.race([this.approvedSlugs(), fallback]);
+      return this.gitReviewed.length + approved.size;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // ---- staff review: admin-only callers ---------------------------------
+
+  /** Every `coachReviewed: false` drill with its current review state. */
+  async listForReview(): Promise<DrillReviewView[]> {
+    if (!this.awaitingReview.length) return [];
+    const rows = await this.reviewRepository.find();
+    const bySlug = new Map(rows.map((row) => [row.drillSlug, row]));
+    return this.awaitingReview
+      .map((loaded) => toReviewView(loaded, bySlug.get(loaded.drill.slug)))
+      .sort((a, b) => a.title.localeCompare(b.title, 'sv'));
+  }
+
+  async findForReview(slug: string): Promise<DrillReviewView> {
+    const loaded = this.findAwaiting(slug);
+    const row = await this.reviewRepository.findOne({
+      where: { drillSlug: loaded.drill.slug },
+    });
+    return toReviewView(loaded, row ?? undefined);
+  }
+
+  /**
+   * Record a staff decision on a `coachReviewed: false` drill, replacing
+   * any earlier one — so a reject after an approval is the take-down.
+   *
+   * `contentSha256` is the hash the reviewer's screen was showing. If the
+   * file has changed since (a deploy between opening and deciding), the
+   * decision is refused rather than applied to text nobody read.
+   */
+  async decide(
+    reviewerStaffAccountId: string,
+    slug: string,
+    decision: DrillReviewDecision,
+  ): Promise<DrillReviewView> {
+    const loaded = this.findAwaiting(slug);
+    if (decision.contentSha256 !== loaded.contentSha256) {
+      throw new DrillReviewStaleException();
+    }
+
+    const row = this.reviewRepository.create({
+      drillSlug: loaded.drill.slug,
+      status: decision.status,
+      contentSha256: loaded.contentSha256,
+      reviewedByStaffAccountId: reviewerStaffAccountId,
+      reviewedAt: new Date(),
+      rejectionReason:
+        decision.status === DrillReviewStatus.REJECTED
+          ? decision.reason.trim()
+          : null,
+    });
+    await this.reviewRepository.save(row);
+
+    this.logger.log(
+      `Drill "${loaded.drill.slug}" ${decision.status} by staff account ${reviewerStaffAccountId}.`,
+    );
+    return toReviewView(loaded, row);
+  }
+
+  /** Only `coachReviewed: false` files are reviewable here. A git-reviewed
+   *  drill was approved in a diff and is changed in a diff. */
+  private findAwaiting(slug: string): LoadedDrill {
+    const loaded = this.awaitingReview.find((l) => l.drill.slug === slug);
+    if (!loaded) throw new DrillReviewNotFoundException();
+    return loaded;
+  }
+
+  // ---- visibility ---------------------------------------------------------
+
+  private async visible(): Promise<Drill[]> {
+    const approved = await this.approvedSlugs();
+    if (!approved.size) return this.gitReviewed;
+    return [
+      ...this.gitReviewed,
+      ...this.awaitingReview
+        .filter((loaded) => approved.has(loaded.drill.slug))
+        .map((loaded) => loaded.drill),
+    ];
+  }
+
+  /**
+   * Slugs of `coachReviewed: false` drills with an approval matching their
+   * current content. Fails closed: any error means "none approved".
+   */
+  private async approvedSlugs(): Promise<Set<string>> {
+    if (!this.awaitingReview.length) return new Set();
+    let rows: DrillReview[];
+    try {
+      rows = await this.reviewRepository.find({
+        where: { status: DrillReviewStatus.APPROVED },
+        select: { drillSlug: true, contentSha256: true },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Drill approvals could not be read; serving git-reviewed drills only — ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return new Set();
+    }
+    const hashBySlug = new Map(
+      rows.map((row) => [row.drillSlug, row.contentSha256]),
+    );
+    return new Set(
+      this.awaitingReview
         .filter(
-          (drill) =>
-            (!filter?.ageBand || drill.ageBand === filter.ageBand) &&
-            (!filter?.focus || drill.focus === filter.focus) &&
-            (!filter?.locale || drill.locale === filter.locale),
+          (loaded) =>
+            hashBySlug.get(loaded.drill.slug) === loaded.contentSha256,
         )
-        // Body dropped explicitly rather than by destructuring, so the
-        // listing's shape is a written decision instead of a side effect of
-        // which fields happened to be omitted.
-        .map((drill) => ({
-          slug: drill.slug,
-          title: drill.title,
-          ageBand: drill.ageBand,
-          focus: drill.focus,
-          durationMinutes: drill.durationMinutes,
-          locale: drill.locale,
-        }))
-        .sort((a, b) => a.title.localeCompare(b.title, 'sv'))
+        .map((loaded) => loaded.drill.slug),
     );
   }
 
-  findBySlug(slug: string): Drill | null {
-    return this.drills.find((drill) => drill.slug === slug) ?? null;
-  }
-
-  private loadAll(): Drill[] {
+  private loadAll(): LoadedDrill[] {
     const dir = join(__dirname, 'library');
     let files: string[];
     try {
@@ -153,10 +355,14 @@ export class DrillLibraryService {
       return [];
     }
 
-    const loaded: Drill[] = [];
+    const loaded: LoadedDrill[] = [];
     for (const file of files) {
       try {
-        loaded.push(parseDrill(file, readFileSync(join(dir, file), 'utf8')));
+        const raw = readFileSync(join(dir, file), 'utf8');
+        loaded.push({
+          drill: parseDrill(file, raw),
+          contentSha256: drillContentSha256(raw),
+        });
       } catch (error) {
         this.logger.warn(
           `Skipping drill "${file}" — ${
@@ -167,6 +373,73 @@ export class DrillLibraryService {
     }
     return loaded;
   }
+}
+
+/** The identity an approval is bound to: the file's exact bytes. */
+export function drillContentSha256(raw: string): string {
+  return createHash('sha256').update(raw, 'utf8').digest('hex');
+}
+
+function toSummaries(
+  drills: Drill[],
+  filter?: { ageBand?: string; focus?: string; locale?: string },
+): DrillSummary[] {
+  return (
+    drills
+      .filter(
+        (drill) =>
+          (!filter?.ageBand || drill.ageBand === filter.ageBand) &&
+          (!filter?.focus || drill.focus === filter.focus) &&
+          (!filter?.locale || drill.locale === filter.locale),
+      )
+      // Body dropped explicitly rather than by destructuring, so the
+      // listing's shape is a written decision instead of a side effect of
+      // which fields happened to be omitted.
+      .map((drill) => ({
+        slug: drill.slug,
+        title: drill.title,
+        ageBand: drill.ageBand,
+        focus: drill.focus,
+        durationMinutes: drill.durationMinutes,
+        locale: drill.locale,
+      }))
+      .sort((a, b) => a.title.localeCompare(b.title, 'sv'))
+  );
+}
+
+/**
+ * The review state of one awaiting drill. A row whose hash does not match
+ * the file is shown as pending with `changedSinceReview`, never as its old
+ * verdict — that verdict was about different text.
+ */
+function toReviewView(
+  loaded: LoadedDrill,
+  row: DrillReview | undefined,
+): DrillReviewView {
+  const { drill } = loaded;
+  const current =
+    row && row.contentSha256 === loaded.contentSha256 ? row : undefined;
+  return {
+    slug: drill.slug,
+    title: drill.title,
+    ageBand: drill.ageBand,
+    focus: drill.focus,
+    durationMinutes: drill.durationMinutes,
+    locale: drill.locale,
+    author: drill.author,
+    sourceNote: drill.sourceNote,
+    body: drill.body,
+    contentSha256: loaded.contentSha256,
+    state: !current
+      ? 'pending'
+      : current.status === DrillReviewStatus.APPROVED
+        ? 'approved'
+        : 'rejected',
+    changedSinceReview: Boolean(row) && !current,
+    reviewedByStaffAccountId: current?.reviewedByStaffAccountId ?? null,
+    reviewedAt: current ? current.reviewedAt.toISOString() : null,
+    rejectionReason: current?.rejectionReason ?? null,
+  };
 }
 
 /**
