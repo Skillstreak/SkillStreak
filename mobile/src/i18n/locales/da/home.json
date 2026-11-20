@@ -161,7 +161,12 @@
       "trainerLinked": "Trænertilstand",
       "trainerLinkAccounts": "Forbind med din trænerkonto",
       "trainerUnlink": "Afbryd forbindelsen til trænerkontoen",
-      "trainerLinkFailed": "Det gik ikke lige nu. Prøv igen."
+      "trainerLinkFailed": "Det gik ikke lige nu. Prøv igen.",
+      "nameLabel": "Rigtigt navn",
+      "removeName": "Fjern navnet",
+      "removeNameConfirm": "Navnet fjernes fra din profil. Du kan ikke tilføje det igen i appen.",
+      "removeNameConfirmButton": "Ja, fjern",
+      "nameRemovedToast": "Navnet er fjernet"
     }
   },
   "erasureCheckEmail": {
