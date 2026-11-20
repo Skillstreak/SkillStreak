@@ -317,7 +317,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   /** docs/adr/0038 Decision 2 — the server starts the clock; the phone
    * only displays it. */
   const startTimer = async () => {
-    trackButton('button.start_timer');
+    trackButton('btn_start_timer');
     setSheetLoading(true);
     setSheetError(null);
     try {
@@ -358,6 +358,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
    * upload-then-log path as an untimed video log, carrying the timer. */
   const handleTimerLog = (minutesDone: number, choice: TimerLogChoice) => {
     if (!activeTimer) return;
+    trackButton('btn_log_training');
     const base = {
       durationMinutes: minutesDone,
       timerId: activeTimer.timerId,
@@ -388,6 +389,9 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
     durationMinutes: number,
     evidence: EvidenceChoice,
   ) => {
+    // I-003: the log button on the sheet, counted once per press — not in
+    // writeTrainingLog, which also runs for retries and fallbacks.
+    trackButton('btn_log_training');
     if (evidence !== 'none') {
       setSheetOpen(false);
       setPendingEvidenceLog({ durationMinutes, evidence });
@@ -397,7 +401,6 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   };
 
   const writeTrainingLog = async (body: CreateTrainingLogRequest) => {
-    trackButton('button.log_training');
     // A timed log is written from the countdown screen, so its loading and
     // error states belong there; everything else reports on the sheet.
     const fromTimer = body.timerId !== undefined;
@@ -830,10 +833,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
           loading={timerLoading}
           errorText={timerError}
           onLog={handleTimerLog}
-          onDiscard={() => {
-            trackButton('button.stop_timer');
-            discardTimer();
-          }}
+          onDiscard={discardTimer}
         />
       ) : null}
 

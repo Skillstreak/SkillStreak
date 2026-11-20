@@ -2,23 +2,35 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import { API_BASE_URL, API_PREFIX } from './config';
 import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage';
+import type { UiCounterKey } from './uiCounterKeys';
+
+export type { UiCounterKey } from './uiCounterKeys';
 
 /**
- * I-003 — anonymous click statistics, client half.
+ * I-003 — anonymous click statistics, client half
+ * (docs/adr/0039-anonymous-ui-click-statistics.md).
  *
  * Counts how often each screen is opened and each button is pressed, per
- * key, and uploads the totals. Nothing else: no timestamps, no order of
- * events, no player/team/device/session id, no auth header. The request is
- * a bare `fetch` on purpose and does NOT go through `client.ts`, which
- * attaches the session token.
+ * key, and uploads the totals. Nothing else (Decision 1): no timestamps, no
+ * order of events, no player/team/device/session id, no auth header. The
+ * request is a bare `fetch` on purpose and does NOT go through `client.ts`,
+ * which attaches the session token.
  *
- * **Default is off, strictly.** While the flag is false nothing is
- * counted, nothing is held in memory and no request is made. The flag is
- * stored **per account** (keyed by player id) and switched off on logout,
- * so one person's opt-in never carries over to another child signing in on
- * the same phone. The choice itself (under 13, behind the ParentalGate) is
- * made in `AnonymousStatsCard`. The player id only names the local storage
- * slot; it is never sent.
+ * **Who may send (Decision 2).** Only self-verified accounts
+ * (`isSelfVerification`, the Art. 8 age band and adults) consent for
+ * themselves. An under-13 account is never eligible: the toggle is not
+ * rendered for it, and this client refuses to turn on for it even if asked.
+ *
+ * **Default is off, strictly, and per account (Decision 3).** The flag is
+ * stored under `skillstreak.anonymousStats.<accountId>`. Logout and an
+ * account switch delete the leaving account's flag and discard any unsent
+ * counts (never flushing them). On every start the client is off until
+ * `initUiMetrics` has read the signed-in account's own flag. The account
+ * id only names the local storage slot; it is never sent.
+ *
+ * The opt-in is enforced only here, in the app: the endpoint is anonymous
+ * by design, so the server cannot tell who sent a batch, nor whether they
+ * opted in.
  *
  * Counts are uploaded when the app goes to the background and otherwise on
  * a randomised 4–6 minute timer, so uploads are not aligned across users.
@@ -27,80 +39,103 @@ import { secureDeleteItem, secureGetItem, secureSetItem } from './secureStorage'
  * keeping it.
  */
 
-export type UiCounterKey =
-  | 'screen.home'
-  | 'screen.shorts'
-  | 'screen.goals'
-  | 'screen.team'
-  | 'screen.chat'
-  | 'screen.tips'
-  | 'screen.profile'
-  | 'button.log_training'
-  | 'button.start_timer'
-  | 'button.stop_timer'
-  | 'button.create_clip'
-  | 'button.share_clip'
-  | 'button.cheer';
-
-const STORAGE_KEY_PREFIX = 'skillstreak.anonymousStatsEnabled.';
-// Server accepts count 1..1000 per key and at most 20 keys per call.
+const STORAGE_KEY_PREFIX = 'skillstreak.anonymousStats.';
+// Server accepts count 1..1000 per key and at most 20 keys per call; the
+// key list is shorter than 20, so one call always fits.
 const MAX_COUNT_PER_KEY = 1000;
 const MIN_INTERVAL_MS = 4 * 60 * 1000;
 const MAX_INTERVAL_MS = 6 * 60 * 1000;
 
 let enabled = false;
 // The signed-in account the flag belongs to. Null before AppShell knows who
-// is signed in and after logout — and while null, nothing can be enabled.
-let currentPlayerId: string | null = null;
+// is signed in and after logout; while null, nothing can be enabled.
+let currentAccountId: string | null = null;
+// Whether that account may consent for itself (ADR-0039 Decision 2).
+let currentEligible = false;
 let counts = new Map<UiCounterKey, number>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 
-function storageKey(playerId: string): string {
-  return `${STORAGE_KEY_PREFIX}${playerId}`;
+function storageKey(accountId: string): string {
+  return `${STORAGE_KEY_PREFIX}${accountId}`;
 }
 
-export async function loadAnonymousStatsEnabled(): Promise<boolean> {
-  const playerId = currentPlayerId;
-  if (!playerId) return false;
+async function deleteStoredFlag(accountId: string): Promise<void> {
   try {
-    return (await secureGetItem(storageKey(playerId))) === 'true';
+    await secureDeleteItem(storageKey(accountId));
+  } catch {
+    // Nothing to do: the in-memory client is already off.
+  }
+}
+
+/** The signed-in account's saved choice; false when nobody eligible is
+ * signed in. */
+export async function loadAnonymousStatsEnabled(): Promise<boolean> {
+  const accountId = currentAccountId;
+  if (!accountId || !currentEligible) return false;
+  try {
+    return (await secureGetItem(storageKey(accountId))) === 'true';
   } catch {
     return false;
   }
 }
 
-/** Call once the signed-in player is known, so that account's saved
- * opt-in (and only that account's) takes effect. */
-export async function initUiMetrics(playerId: string): Promise<void> {
-  if (currentPlayerId !== playerId) applyEnabled(false);
-  currentPlayerId = playerId;
+/**
+ * Called once the signed-in account is known (and again on every start),
+ * so that account's own saved opt-in, and only that account's, applies.
+ * A different account than the one loaded is an account switch: the
+ * previous account's flag is deleted and its unsent counts discarded.
+ */
+export async function initUiMetrics(
+  accountId: string,
+  isSelfVerification: boolean,
+): Promise<void> {
+  const previous = currentAccountId;
+  if (previous !== accountId) {
+    applyEnabled(false);
+    if (previous) await deleteStoredFlag(previous);
+  }
+  currentAccountId = accountId;
+  currentEligible = isSelfVerification;
+  if (!isSelfVerification) {
+    // Under 13: never sends in v1. Clear any flag so nothing can turn it
+    // back on from this device.
+    applyEnabled(false);
+    await deleteStoredFlag(accountId);
+    return;
+  }
   const saved = await loadAnonymousStatsEnabled();
   // Logout or an account switch may have happened while reading.
-  if (currentPlayerId === playerId) applyEnabled(saved);
+  if (currentAccountId === accountId && currentEligible) applyEnabled(saved);
 }
 
-/** Logout: stop counting and forget whose flag was loaded. The stored
- * per-account flag stays, so the same account finds it as it left it. */
-export function resetUiMetrics(): void {
-  currentPlayerId = null;
+/**
+ * Logout: delete the leaving account's flag, switch the client off and
+ * discard unsent counts (never flush them). The same account signing in
+ * again starts from off.
+ */
+export async function resetUiMetrics(): Promise<void> {
+  const accountId = currentAccountId;
+  currentAccountId = null;
+  currentEligible = false;
   applyEnabled(false);
+  if (accountId) await deleteStoredFlag(accountId);
 }
 
-/** Returns the state actually applied — false when no account is known,
- * so the switch can't show "on" while nothing is enabled. */
+/** Returns the state actually applied — false when no eligible account is
+ * signed in, so the switch can't show "on" while nothing is enabled. */
 export async function setAnonymousStatsEnabled(next: boolean): Promise<boolean> {
-  const playerId = currentPlayerId;
-  if (!playerId) {
+  const accountId = currentAccountId;
+  if (!accountId || !currentEligible) {
     applyEnabled(false);
     return false;
   }
   if (next) {
-    await secureSetItem(storageKey(playerId), 'true');
+    await secureSetItem(storageKey(accountId), 'true');
   } else {
-    await secureDeleteItem(storageKey(playerId));
+    await deleteStoredFlag(accountId);
   }
-  if (currentPlayerId !== playerId) return false;
+  if (currentAccountId !== accountId || !currentEligible) return false;
   applyEnabled(next);
   return next;
 }
@@ -146,11 +181,11 @@ function track(key: UiCounterKey): void {
   counts.set(key, Math.min((counts.get(key) ?? 0) + 1, MAX_COUNT_PER_KEY));
 }
 
-export function trackScreen(key: Extract<UiCounterKey, `screen.${string}`>): void {
+export function trackScreen(key: Extract<UiCounterKey, `screen_${string}`>): void {
   track(key);
 }
 
-export function trackButton(key: Extract<UiCounterKey, `button.${string}`>): void {
+export function trackButton(key: Extract<UiCounterKey, `btn_${string}`>): void {
   track(key);
 }
 
@@ -162,6 +197,8 @@ async function flush(): Promise<void> {
     await fetch(`${API_BASE_URL}${API_PREFIX}/ui-metrics/counts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      // No cookies either: nothing that could tie a batch to anyone.
+      credentials: 'omit',
       body: JSON.stringify(body),
     });
   } catch {

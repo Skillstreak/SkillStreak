@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 import { BadRequestException, ParseArrayPipe } from '@nestjs/common';
 import { getMetadataArgsStorage } from 'typeorm';
 import request from 'supertest';
+import { AdminUiMetricsController } from './admin-ui-metrics.controller';
 import { UiCountItemDto } from './dto/ui-count-item.dto';
 import { UiClickCount, UiCounterKey } from './entities/ui-click-count.entity';
 import { createUiMetricsBodyLimit } from './ui-metrics-body-limit';
@@ -60,7 +63,7 @@ describe('POST /ui-metrics/counts validation', () => {
     const twentyOne = Object.values(UiCounterKey)
       .concat(Object.values(UiCounterKey))
       .slice(0, 21)
-      .map((key) => ({ key, count: 1 }) as UiCountItemDto);
+      .map((key) => ({ key, count: 1 }));
     const dup = [
       { key: UiCounterKey.SCREEN_HOME, count: 1 },
       { key: UiCounterKey.SCREEN_HOME, count: 2 },
@@ -95,7 +98,10 @@ describe('10 kb body limit', () => {
   }
 
   it('accepts a small body and refuses one over 10 kb with 413', async () => {
-    await request(app()).post('/c').send([{ key: 'screen_home', count: 1 }]).expect(204);
+    await request(app())
+      .post('/c')
+      .send([{ key: 'screen_home', count: 1 }])
+      .expect(204);
     const big = [{ key: 'screen_home', count: 1, pad: 'x'.repeat(11 * 1024) }];
     await request(app()).post('/c').send(big).expect(413);
   });
@@ -114,23 +120,92 @@ describe('UiMetricsService.recordCounts', () => {
     expect(sql).toContain('ui_click_count."count" + EXCLUDED."count"');
     expect(sql).toContain('senders = ui_click_count.senders + 1');
     expect(sql).toContain('Europe/Stockholm');
-    expect(params).toEqual([['screen_home', 'btn_chat_send'], [3, 7]]);
+    expect(params).toEqual([
+      ['screen_home', 'btn_chat_send'],
+      [3, 7],
+    ]);
   });
 });
 
-describe('UiMetricsService.collect', () => {
-  it('masks count when senders < 10 and shows it from 10', async () => {
+describe('UiMetricsService.collect (ADR-0039 Decision 5)', () => {
+  it('reads finished days only, never today', async () => {
+    const { service, query } = makeService();
+    await service.collect(7);
+    const [sql, params] = query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toMatch(
+      /WHERE day < \(now\(\) AT TIME ZONE 'Europe\/Stockholm'\)::date/,
+    );
+    expect(sql).not.toMatch(/day <= /);
+    expect(params).toEqual([7]);
+  });
+
+  it('a suppressed row carries neither count nor senders', async () => {
     const { service, query } = makeService();
     query.mockResolvedValue([
-      { key: 'screen_home', day: '2026-10-20', count: 500, senders: 9 },
-      { key: 'screen_chat', day: '2026-10-20', count: 42, senders: 10 },
+      { key: 'screen_home', day: '2026-10-20', count: '500', senders: '9' },
+      { key: 'screen_chat', day: '2026-10-20', count: '42', senders: '10' },
     ]);
-    const rows = await service.collect();
-    expect(rows).toEqual([
-      { key: 'screen_home', day: '2026-10-20', senders: 9, count: null, suppressed: true },
-      { key: 'screen_chat', day: '2026-10-20', senders: 10, count: 42, suppressed: false },
+    const report = await service.collect();
+    expect(report.rows).toEqual([
+      { key: 'screen_home', day: '2026-10-20', suppressed: true },
+      {
+        key: 'screen_chat',
+        day: '2026-10-20',
+        suppressed: false,
+        count: 42,
+        senders: 10,
+      },
     ]);
-    expect(JSON.stringify(rows[0])).not.toContain('500');
+    expect(Object.keys(report.rows[0]).sort()).toEqual([
+      'day',
+      'key',
+      'suppressed',
+    ]);
+    expect(JSON.stringify(report.rows[0])).not.toMatch(/500|\b9\b/);
+  });
+
+  it('says in the response that the numbers are advisory', async () => {
+    const { service } = makeService();
+    const report = await service.collect();
+    expect(report.advisory).toMatch(/advisory/i);
+    expect(report.advisory).not.toMatch(/k-anonym/i);
+  });
+
+  it('the admin view takes no team or player parameter', () => {
+    // One declared parameter (`days`): nothing that could name a team or player.
+    const { collect } = AdminUiMetricsController.prototype as unknown as {
+      collect: (this: void, days?: string) => unknown;
+    };
+    expect(collect.length).toBe(1);
+    const source = readFileSync(
+      join(__dirname, 'admin-ui-metrics.controller.ts'),
+      'utf8',
+    );
+    expect(source).not.toMatch(/@(?:Param|Query)\('(?!days')/);
+  });
+});
+
+describe('own rate limit (ADR-0039 Decision 6)', () => {
+  it('POST /counts carries its own @Throttle of 30/min (60 s window)', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      UiMetricsController.prototype,
+      'recordCounts',
+    )?.value as object;
+    // Metadata keys from @nestjs/throttler's throttler.constants.
+    expect(Reflect.getMetadata('THROTTLER:LIMITdefault', handler)).toBe(30);
+    expect(Reflect.getMetadata('THROTTLER:TTLdefault', handler)).toBe(60_000);
+  });
+});
+
+describe('bigint counters (ADR-0039 Decision 6)', () => {
+  it('count and senders are bigint columns', () => {
+    const types = Object.fromEntries(
+      getMetadataArgsStorage()
+        .columns.filter((c) => c.target === UiClickCount)
+        .map((c) => [c.propertyName, c.options.type]),
+    );
+    expect(types.count).toBe('bigint');
+    expect(types.senders).toBe('bigint');
   });
 });
 
@@ -180,12 +255,19 @@ describe('retention', () => {
   it('logs an alarm when the last success is over 48 h old, not when fresh', async () => {
     const { svc, redis } = makeRetention(true);
     const error = jest
-      .spyOn((svc as unknown as { logger: { error: () => void } }).logger, 'error')
+      .spyOn(
+        (svc as unknown as { logger: { error: () => void } }).logger,
+        'error',
+      )
       .mockImplementation(() => undefined);
-    redis.getScheduledJobLastSuccess.mockResolvedValue(Date.now() - 49 * 3600_000);
+    redis.getScheduledJobLastSuccess.mockResolvedValue(
+      Date.now() - 49 * 3600_000,
+    );
     await svc.warnIfSweepStale();
     expect(error).toHaveBeenCalledTimes(1);
-    redis.getScheduledJobLastSuccess.mockResolvedValue(Date.now() - 2 * 3600_000);
+    redis.getScheduledJobLastSuccess.mockResolvedValue(
+      Date.now() - 2 * 3600_000,
+    );
     await svc.warnIfSweepStale();
     expect(error).toHaveBeenCalledTimes(1);
   });
@@ -208,7 +290,9 @@ describe('no personal data stored', () => {
     const recordCounts = jest.fn().mockResolvedValue(undefined);
     const controller = new UiMetricsController({ recordCounts } as never);
     expect(controller.recordCounts.length).toBe(1); // body only, no @Req/@Ip
-    await controller.recordCounts([{ key: UiCounterKey.SCREEN_HOME, count: 1 }]);
+    await controller.recordCounts([
+      { key: UiCounterKey.SCREEN_HOME, count: 1 },
+    ]);
     expect(recordCounts).toHaveBeenCalledWith([
       { key: 'screen_home', count: 1 },
     ]);

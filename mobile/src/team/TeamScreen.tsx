@@ -30,6 +30,7 @@ import {
   rotateInviteCode,
 } from '../api/endpoints';
 import { PT_ENABLED } from '../api/config';
+import { trackButton } from '../api/uiMetricsClient';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 import type {
@@ -408,7 +409,13 @@ export function TeamScreen({
         <View style={styles.inviteCard}>
           <Text style={styles.inviteCodeLabel}>{t('k1.inviteCodeLabel')}</Text>
           <Text style={styles.inviteCode}>{dashboard.inviteCode}</Text>
-          <PrimaryButton label={t('k1.inviteButton')} onPress={() => setInviteSheetOpen(true)} />
+          <PrimaryButton
+            label={t('k1.inviteButton')}
+            onPress={() => {
+              trackButton('btn_invite_friend');
+              setInviteSheetOpen(true);
+            }}
+          />
           {/* ADR-0009's 2026-11-08 amendment — captain-only; the server
               enforces that too. Behind a confirmation because it breaks
               every copy of the old code already handed out. */}

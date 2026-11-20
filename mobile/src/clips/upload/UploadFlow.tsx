@@ -80,7 +80,7 @@ export function UploadFlow({ teamId, viewerPlayerId, onCancel, onConsentRevoked,
     return (
       <V4PickClip
         onPicked={(clip) => {
-          trackButton('button.create_clip');
+          trackButton('btn_record_clip');
           pickedClipRef.current = clip;
           const session = new ClipUploadSession(teamId, clip);
           sessionRef.current = session;

@@ -193,6 +193,31 @@ the page three times counts as three. Telling them apart would need a
 per-visitor identifier, which is exactly the thing above that is not
 collected.
 
+### In the app: optional usage statistics
+
+The app has a matching counter of its own, described here because it is
+the same shape (docs/adr/0039-anonymous-ui-click-statistics.md). It is
+**off unless the account holder switches it on** in their profile, and
+only accounts that give their own consent (age 13 and over, and adults)
+are offered the switch at all; an account under 13 never sees it and
+never sends anything. It can be switched off at any time, and logging out
+switches it off.
+
+When it is on, the app counts how often a fixed list of screens and
+buttons is used and sends the totals now and then: one row per screen or
+button per day (`ui_click_count`), holding the day and the running sum.
+It does not send or store who pressed, when during the day, in what
+order, or anything the person wrote or filmed, and the request carries
+no account, team, device or session identifier.
+
+Like every request to our server, the upload arrives from your device's
+IP address; it is used for about a minute to stop abuse, appears in our
+ordinary server logs, and is never stored with the counts.
+
+The counts are kept for **90 days** and then deleted. Only our own staff
+can read them, as app-wide totals for finished days, with low-volume days
+hidden.
+
 ### The signup form
 
 The website also has a form for adults who want to hear from us. It is
@@ -234,6 +259,7 @@ together.
 | Video clips | 90 days |
 | Bug reports | 90 days |
 | Error logs | 90 days |
+| Optional app usage statistics (per screen/button per day) | 90 days |
 | Generated training plans (staff) | 365 days |
 | Event registrations | 365 days |
 | Account data | Until the account is deleted |

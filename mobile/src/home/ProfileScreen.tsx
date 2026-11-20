@@ -133,7 +133,7 @@ export function ProfileScreen({
   const [view, setView] = useState<ProfileView>('view');
 
   useEffect(() => {
-    trackScreen('screen.profile');
+    trackScreen('screen_profile');
   }, []);
 
 
@@ -837,11 +837,10 @@ export function ProfileScreen({
             actually exists. */}
         {PT_ENABLED ? <PtRelationshipsScreen /> : null}
 
-        {/* I-003. Off by default; under 13 the parent turns it on. */}
-        <AnonymousStatsCard
-          isSelfVerification={isSelfVerification}
-          onRequireGate={(action) => setGatedAction(() => action)}
-        />
+        {/* I-003 (docs/adr/0039 Decision 2). Off by default, and only for
+            accounts that consent for themselves: an under-13 account never
+            sees it and its client never sends. */}
+        {isSelfVerification ? <AnonymousStatsCard /> : null}
 
         <SecondaryLink label={t('profileScreen.view.back')} onPress={onBack} />
         <SecondaryLink label={t('profileScreen.view.logout')} onPress={() => void handleLogout()} />

@@ -289,10 +289,10 @@
     "a11yScreenGroup": "Choose where in the app it happened"
   },
   "anonymousStats": {
-    "heading": "Anonymous click statistics",
-    "body": "Helps us improve the app by counting button presses and screen visits completely anonymously, with no personal data. Off by default.",
-    "info": "No personal data and no device IDs are saved.",
-    "confirmBody": "Do you want to turn on anonymous click statistics? We only count how often buttons and screens are used, with no personal data.",
+    "heading": "App usage statistics",
+    "body": "If you turn this on, the app counts how often screens are opened and buttons are pressed. We don't learn who pressed, when it happened, or anything you wrote or filmed. It is off until you turn it on, and you can turn it off at any time.",
+    "info": "The counts are kept for 90 days and then deleted. Like every request to our server, the upload arrives from your device's IP address; it is used for about a minute to stop abuse, appears in our ordinary server logs, and is never stored with the counts.",
+    "confirmBody": "Do you want to turn on the statistics? The app only sends how many times screens and buttons were used. You can turn it off at any time.",
     "confirmNo": "No thanks",
     "confirmYes": "Turn on"
   },

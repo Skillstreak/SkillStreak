@@ -1,4 +1,5 @@
-/** Rows older than this are deleted nightly (I-003; shown to parents as "90 dagar"). */
+/** Rows older than this are deleted nightly (I-003; the app copy and the
+ * privacy policy both promise 90 days). */
 export const RETENTION_DAYS = 90;
 export const UI_METRICS_RETENTION_DAYS = RETENTION_DAYS;
 
@@ -6,7 +7,9 @@ export const UI_METRICS_RETENTION_DAYS = RETENTION_DAYS;
 export const UI_METRICS_MAX_BATCH = 20;
 export const UI_METRICS_BODY_LIMIT = '10kb';
 
-/** Admin view hides `count` for any (key, day) with fewer senders than this. */
+/** Admin view hides `count` and `senders` for any (key, day) with fewer
+ * upload calls than this. Hides low-volume days; `senders` counts calls,
+ * not people, so it is no guarantee about people (ADR-0039 Decision 5). */
 export const UI_METRICS_MIN_SENDERS = 10;
 export const UI_METRICS_DEFAULT_DAYS = 30;
 

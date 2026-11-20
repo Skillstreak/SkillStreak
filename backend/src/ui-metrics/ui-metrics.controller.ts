@@ -13,15 +13,23 @@ import { UI_METRICS_MAX_BATCH } from './ui-metrics.constants';
 import { UiMetricsService } from './ui-metrics.service';
 
 /**
- * I-003 anonymous click statistics: the app uploads per-key counts.
+ * I-003 anonymous click statistics: the app uploads per-key counts
+ * (docs/adr/0039-anonymous-ui-click-statistics.md).
  *
  * Unauthenticated on purpose — the caller is not identified, so there is
  * nothing to leak or link. The body is a list of `{ key, count }` and
- * nothing else: no field exists for a device, player, team or location, and
- * `forbidNonWhitelisted` rejects any extra one. The caller's IP is used only
- * by the Redis-backed throttler (30 calls/min, short TTL) and is never
- * written to Postgres. Whether a given child's phone sends at all is the
- * parent's opt-in, enforced in the app.
+ * nothing else: no field exists for a device, player, team, time or
+ * location, and `forbidNonWhitelisted` rejects any extra one.
+ *
+ * The caller's IP reaches only the throttler below: @nestjs/throttler keys
+ * on a SHA-256 of it with a 60-second TTL in Redis. A hash of an IPv4
+ * address is trivially reversible, so the short TTL is the protection, not
+ * the hash. It is never written to Postgres or passed to the service.
+ *
+ * Whether a phone sends at all is the account's own opt-in, enforced only
+ * in the app (mobile/src/api/uiMetricsClient.ts) — this endpoint cannot
+ * know who is calling, by design. v1 sends only from self-verified
+ * accounts; under-13 accounts never send (Decision 2).
  */
 @Controller('api/v1/ui-metrics')
 export class UiMetricsController {

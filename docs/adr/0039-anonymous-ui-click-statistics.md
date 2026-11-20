@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed, 2026-11-06. For the project owner to accept or amend.
+Accepted, 2026-11-20 by the project owner. (Proposed 2026-11-06.)
 
 I-003 was founder-approved 2026-10-16 (default off, decided 2026-10-19)
 and built as PR #142 (backend) and PR #143 (mobile). The security review

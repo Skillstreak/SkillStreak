@@ -289,10 +289,10 @@
     "a11yScreenGroup": "Vælg hvor i appen det skete"
   },
   "anonymousStats": {
-    "heading": "Anonym klikstatistik",
-    "body": "Hjælper os med at forbedre appen ved at tælle knaptryk og skærmbesøg helt anonymt, uden personoplysninger. Slået fra som standard.",
-    "info": "Der gemmes ingen personoplysninger og ingen enheds-ID'er.",
-    "confirmBody": "Vil du slå anonym klikstatistik til? Vi tæller kun, hvor ofte knapper og skærme bruges, uden personoplysninger.",
+    "heading": "Statistik over appbrug",
+    "body": "Hvis du slår det til, tæller appen, hvor ofte skærme åbnes og knapper trykkes. Vi får ikke at vide, hvem der trykkede, hvornår det skete, eller noget du har skrevet eller filmet. Det er slået fra, indtil du slår det til, og du kan slå det fra når som helst.",
+    "info": "Tallene gemmes i 90 dage og slettes derefter. Som alle forespørgsler til vores server kommer uploaden fra din enheds IP-adresse; den bruges i cirka et minut til at stoppe misbrug, vises i vores almindelige serverlogs og gemmes aldrig sammen med tallene.",
+    "confirmBody": "Vil du slå statistikken til? Appen sender kun, hvor mange gange skærme og knapper er brugt. Du kan slå det fra når som helst.",
     "confirmNo": "Nej tak",
     "confirmYes": "Slå til"
   },

@@ -459,7 +459,7 @@ export function ClipsScreen({ teamId, viewerPlayerId, onOpened }: ClipsScreenPro
 
   const handleSharePublish = async () => {
     if (!shareTarget) return;
-    trackButton('button.share_clip');
+    trackButton('btn_share_clip');
     setShareSubmitting(true);
     setShareError(null);
     try {
@@ -811,7 +811,10 @@ export function ClipsScreen({ teamId, viewerPlayerId, onOpened }: ClipsScreenPro
             clips={visibleClips ?? []}
             hasMore={collection === 'team' && hasMore}
             loadingMore={loadingMore}
-            onPressClip={setActiveClip}
+            onPressClip={(clip) => {
+              trackButton('btn_open_clip');
+              setActiveClip(clip);
+            }}
             onShowMore={() => void handleShowMore()}
           />
         )}

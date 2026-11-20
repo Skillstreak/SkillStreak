@@ -11,13 +11,14 @@ import { TipsScreen } from './tips/TipsScreen';
 import { TabBar, TabKey } from './navigation/TabBar';
 import { initUiMetrics, trackScreen, type UiCounterKey } from './api/uiMetricsClient';
 
-const TAB_METRIC_KEY: Record<TabKey, Extract<UiCounterKey, `screen.${string}`>> = {
-  home: 'screen.home',
-  clips: 'screen.shorts',
-  goal: 'screen.goals',
-  team: 'screen.team',
-  chat: 'screen.chat',
-  tips: 'screen.tips',
+// I-003 (ADR-0039 Decision 4): one fixed key per tab, never per team/clip.
+const TAB_METRIC_KEY: Record<TabKey, Extract<UiCounterKey, `screen_${string}`>> = {
+  home: 'screen_home',
+  clips: 'screen_shorts',
+  goal: 'screen_goal',
+  team: 'screen_team',
+  chat: 'screen_chat',
+  tips: 'screen_tips',
 };
 import { Toast } from './components/Toast';
 import { CaptainBanner } from './components/CaptainBanner';
@@ -378,17 +379,22 @@ export function AppShell({ onSessionInvalid }: AppShellProps) {
     setActiveTab('goal');
   }, []);
 
-  // Manual tab-bar taps always land on G1's card, never on a stale 'detail'
-  // left over from a previous "Se vem som är klar" shortcut tap.
-  // I-003: both are no-ops unless the opt-in is on.
-  // Per account: waits for the signed-in player's id (ensureIdentity).
+  // I-003 (ADR-0039 Decisions 2/3): the click-statistics client stays off
+  // until the signed-in account is known, then reads that account's own
+  // opt-in. Under-13 accounts (isSelfVerification false) are never
+  // eligible. trackScreen is a no-op unless the opt-in is on.
+  const statsSelfVerified = joinGate?.isSelfVerification;
   useEffect(() => {
-    if (playerId) void initUiMetrics(playerId);
-  }, [playerId]);
+    if (playerId && statsSelfVerified !== undefined) {
+      void initUiMetrics(playerId, statsSelfVerified);
+    }
+  }, [playerId, statsSelfVerified]);
   useEffect(() => {
     trackScreen(TAB_METRIC_KEY[activeTab]);
   }, [activeTab]);
 
+  // Manual tab-bar taps always land on G1's card, never on a stale 'detail'
+  // left over from a previous "Se vem som är klar" shortcut tap.
   const handleTabSelect = useCallback((tab: TabKey) => {
     if (tab === 'goal') setGoalTabInitialView('card');
     setActiveTab(tab);

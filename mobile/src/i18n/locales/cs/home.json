@@ -289,10 +289,10 @@
     "a11yScreenGroup": "Vyber, kde v aplikaci se to stalo"
   },
   "anonymousStats": {
-    "heading": "Anonymní statistika kliknutí",
-    "body": "Pomáhá nám zlepšovat aplikaci tím, že zcela anonymně počítá stisky tlačítek a návštěvy obrazovek, bez osobních údajů. Ve výchozím stavu vypnuto.",
-    "info": "Neukládají se žádné osobní údaje ani identifikátory zařízení.",
-    "confirmBody": "Chceš zapnout anonymní statistiku kliknutí? Počítáme jen, jak často se tlačítka a obrazovky používají, bez osobních údajů.",
+    "heading": "Statistika používání aplikace",
+    "body": "Když ji zapneš, aplikace počítá, jak často se otevírají obrazovky a mačkají tlačítka. Nedozvíme se, kdo tlačítko stiskl, kdy se to stalo, ani nic z toho, co jsi napsal nebo natočil. Je vypnutá, dokud ji nezapneš, a kdykoli ji můžeš vypnout.",
+    "info": "Čísla uchováváme 90 dní a pak je mažeme. Jako každý požadavek na náš server přichází odeslání z IP adresy tvého zařízení; používá se asi minutu k zastavení zneužití, objeví se v našich běžných serverových záznamech a nikdy se neukládá spolu s čísly.",
+    "confirmBody": "Chceš statistiku zapnout? Aplikace posílá jen to, kolikrát byly obrazovky a tlačítka použity. Kdykoli ji můžeš vypnout.",
     "confirmNo": "Ne, děkuji",
     "confirmYes": "Zapnout"
   },
