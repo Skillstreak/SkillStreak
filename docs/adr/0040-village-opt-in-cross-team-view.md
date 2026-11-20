@@ -13,10 +13,8 @@ Three things must be done before either switch is turned on, in any
 environment (the beta is the live app):
 
 1. **The CLAUDE.md amendment** below — the project owner's own action.
-   **OPEN.** The owner approved it on 2026-11-20 via the coordinating
-   session; the edit to CLAUDE.md itself was deliberately not made by an
-   agent and still needs to land (owner, or a session the owner instructs
-   directly), using the wording below.
+   **DONE (2026-11-20).** Made by the coordinating session on the owner's
+   direct instruction in chat, using the wording below.
 2. **Parents informed when their team joins** — **DONE (2026-11-20).**
    Decision 7.
 3. **Anti-padding: distinct parents + at most 5 teams per parent** —
@@ -27,13 +25,13 @@ environment (the beta is the live app):
 Village crosses the closed team bubble, and CLAUDE.md names exactly one
 exception to it today (ADR-0030, a player's own clips). ADR-0029
 Decision 1 says that crossing its moves 1 or 4 "requires the project
-owner's CLAUDE.md amendment plus a new ADR". This is the new ADR. **The
-amendment is still owed, and only the project owner can make it.** Until
-then both switches stay off: the API's `VILLAGE_ENABLED` (k8s ConfigMap,
+owner's CLAUDE.md amendment plus a new ADR". This is the new ADR. The
+amendment landed 2026-11-20 with this ADR. Both switches still ship off
+and are turned on deliberately: the API's `VILLAGE_ENABLED` (k8s ConfigMap,
 only `"true"` turns it on; otherwise both endpoints 404) and the app's
 `EXPO_PUBLIC_VILLAGE_ENABLED` (only `true` shows the entry point).
 
-Suggested wording for the owner to accept, reject or edit:
+Wording as adopted in CLAUDE.md:
 
 > **Except for Skillstreak Village (ADR-0040)**: a team whose captain has
 > opted it in may show other opted-in teams exactly three things — its
@@ -186,8 +184,7 @@ a parent contact (siblings). Accepted as the cost of the comparison.
   text and will show masked. Hermes' `TeamNameBuilder` is a separate
   change.
 - `team.sport` has no UI yet; every team is floorball until one is added.
-- **Still owed**: the CLAUDE.md amendment (gate item 1) and a staff "hide
-  this name" status.
+- **Still owed**: a staff "hide this name" status.
 - **Known gaps, not closed in this change** (security review 2026-11-20):
   - The cap is checked when a contact change is *requested*, not when it
     is applied after its grace period; concurrent requests, or a change on

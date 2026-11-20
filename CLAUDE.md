@@ -58,9 +58,18 @@ docs/PROJECT.md's Privacy by Design section) before anything else:
   **while active**, so the permission is a live state that lapses rather
   than a one-time event.
 
-  Everything outside that clause is unchanged and still non-negotiable.
-  Chat, training logs, real names and another child's clips never leave
-  the team, consent or no consent.
+  **Except also for Skillstreak Village (ADR-0040)**: a team whose
+  captain has opted it in may show other opted-in teams exactly three
+  things — its team name (masked to a fixed name-builder vocabulary), its
+  sport, and a coarse per-sport activity level aggregated over at least
+  ten teams. Nothing a child wrote, recorded or earned beyond that
+  crosses. Off by default; parents are told when their team joins; a
+  parent contact counts toward at most five teams. Amended by the project
+  owner 2026-11-20.
+
+  Everything outside those two clauses is unchanged and still
+  non-negotiable. Chat, training logs, real names and another child's
+  clips never leave the team, consent or no consent.
 - **Anonymization option** — screen names (e.g. "FloorballStar15") must be
   usable instead of real names.
 - **Parental approval flow** — required before any account can upload
