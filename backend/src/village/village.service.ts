@@ -72,9 +72,14 @@ export class VillageService {
       where: { id: viewer.teamId },
     });
 
-    // Reciprocal: a team that has not opted in gets neither names nor
-    // levels — nothing derived from another team crosses to it.
-    const viewerIsIn = ownTeam.villageOptIn && !ownTeam.isTest;
+    // Reciprocal and symmetric: the viewer's own team must pass the same
+    // qualification as the teams it would see (opted in, not test, old
+    // enough, enough approved members). Otherwise it gets neither names
+    // nor levels — nothing derived from another team crosses to it.
+    const viewerIsIn =
+      ownTeam.villageOptIn &&
+      !ownTeam.isTest &&
+      (await this.teamQualifies(viewer.teamId, bucketStart));
 
     const sports: VillageSport[] = viewerIsIn
       ? await this.buildSports(viewer.teamId, bucketStart)
@@ -145,14 +150,28 @@ export class VillageService {
     });
   }
 
-  /**
-   * Opted-in, non-test teams other than the viewer's, old enough and with
-   * enough approved members. Selects only id, name and sport.
-   */
+  /** Qualifying teams other than the viewer's. Selects only id, name, sport. */
   private findQualifiedOtherTeams(
     viewerTeamId: string,
     bucketStart: Date,
   ): Promise<QualifiedTeamRow[]> {
+    return this.qualifiedTeamsQuery(bucketStart)
+      .andWhere('t.id <> :viewerTeamId', { viewerTeamId })
+      .getRawMany<QualifiedTeamRow>();
+  }
+
+  private async teamQualifies(
+    teamId: string,
+    bucketStart: Date,
+  ): Promise<boolean> {
+    const rows = await this.qualifiedTeamsQuery(bucketStart)
+      .andWhere('t.id = :teamId', { teamId })
+      .getRawMany<QualifiedTeamRow>();
+    return rows.length > 0;
+  }
+
+  /** The one definition of a qualifying team (ADR-0039 Decision 5). */
+  private qualifiedTeamsQuery(bucketStart: Date) {
     return this.teamRepository
       .createQueryBuilder('t')
       .select('t.id', 'id')
@@ -160,7 +179,6 @@ export class VillageService {
       .addSelect('t.sport', 'sport')
       .where('t.village_opt_in = true')
       .andWhere('t.is_test = false')
-      .andWhere('t.id <> :viewerTeamId', { viewerTeamId })
       .andWhere('t.created_at <= :createdBefore', {
         createdBefore: new Date(
           bucketStart.getTime() - VILLAGE_MIN_TEAM_AGE_MS,
@@ -176,8 +194,7 @@ export class VillageService {
           consentApproved: ParentalConsentStatus.APPROVED,
           minMembers: VILLAGE_MIN_QUALIFIED_MEMBERS,
         },
-      )
-      .getRawMany<QualifiedTeamRow>();
+      );
   }
 
   private async findActiveTeamIds(

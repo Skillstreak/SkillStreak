@@ -36,12 +36,25 @@ function chain(rows: unknown[]) {
  * `qualified` stands for what the SQL returns (qualification is done in
  * the query, asserted separately via the recorded where clauses).
  */
-function setup(own: OwnTeam, qualified: Row[], activeIds: string[] = []) {
+function setup(
+  own: OwnTeam,
+  qualified: Row[],
+  activeIds: string[] = [],
+  viewerQualifies = true,
+) {
+  // Two team queries: the viewer's own qualification (filtered by
+  // `t.id = :teamId`) and the list of other qualifying teams.
+  const viewerQb = chain(
+    viewerQualifies ? [{ id: own.id, name: own.name, sport: own.sport }] : [],
+  );
   const teamQb = chain(qualified);
   const logQb = chain(activeIds.map((teamId) => ({ teamId })));
   const teamRepository = {
     findOneOrFail: jest.fn(() => Promise.resolve(own)),
-    createQueryBuilder: jest.fn(() => teamQb),
+    createQueryBuilder: jest
+      .fn()
+      .mockReturnValueOnce(viewerQb)
+      .mockReturnValue(teamQb),
     update: jest.fn(() => Promise.resolve({ affected: 1 })),
   };
   const trainingLogRepository = { createQueryBuilder: jest.fn(() => logQb) };
@@ -49,7 +62,7 @@ function setup(own: OwnTeam, qualified: Row[], activeIds: string[] = []) {
     teamRepository as never,
     trainingLogRepository as never,
   );
-  return { service, teamRepository, teamQb, logQb };
+  return { service, teamRepository, viewerQb, teamQb, logQb };
 }
 
 const own: OwnTeam = {
@@ -137,6 +150,23 @@ describe('VillageService', () => {
       expect(s).toEqual({ sport: s.sport, level: 'CALM', arenas: [] });
     }
     expect(teamRepository.createQueryBuilder).not.toHaveBeenCalled();
+    expect(logQb.getRawMany).not.toHaveBeenCalled();
+  });
+
+  it('applies the same qualification to the viewer team (symmetric)', async () => {
+    const { service, viewerQb, logQb } = setup(
+      own,
+      rows(VILLAGE_K_THRESHOLD + 5),
+      ['t0', 't1', 't2'],
+      false,
+    );
+    const view = await service.getVillageView(viewer, now);
+    for (const s of view.sports) {
+      expect(s).toEqual({ sport: s.sport, level: 'CALM', arenas: [] });
+    }
+    expect(viewerQb.andWhere).toHaveBeenCalledWith('t.id = :teamId', {
+      teamId: 'own',
+    });
     expect(logQb.getRawMany).not.toHaveBeenCalled();
   });
 

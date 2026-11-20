@@ -7,7 +7,9 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * - `village_opt_in`: off by default. A team is invisible to every other
  *   team until its captain turns this on.
  * - `village_opt_in_changed_at` / `_by`: audit of the last change (the
- *   captain's player id).
+ *   captain's player id). The FK's ON DELETE SET NULL means account
+ *   erasure, which deletes the player row, clears it without any change
+ *   to the erasure code.
  *
  * The partial index serves the only query that reads the flag: opted-in,
  * non-test teams, a small subset of `team`.
@@ -29,7 +31,7 @@ export class AddTeamVillageFields1790100000000 implements MigrationInterface {
       `ALTER TABLE "team" ADD "village_opt_in_changed_at" timestamptz`,
     );
     await queryRunner.query(
-      `ALTER TABLE "team" ADD "village_opt_in_changed_by" uuid`,
+      `ALTER TABLE "team" ADD "village_opt_in_changed_by" uuid REFERENCES "player"("id") ON DELETE SET NULL`,
     );
     await queryRunner.query(
       `CREATE INDEX "idx_team_village_opt_in" ON "team" ("sport") WHERE "village_opt_in" = true AND "is_test" = false`,
