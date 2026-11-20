@@ -1,4 +1,4 @@
-import { IsHexadecimal, IsString, Length } from 'class-validator';
+import { IsHexadecimal, IsString, Length, Matches } from 'class-validator';
 
 /**
  * Approving a drill. The hash is the version of the file the reviewer's
@@ -16,5 +16,10 @@ export class ApproveDrillDto {
 export class RejectDrillDto extends ApproveDrillDto {
   @IsString()
   @Length(3, 300)
+  // Three spaces pass @Length but trim to nothing — a rejection with no
+  // reason. The CHECK in the migration says the same at the database.
+  @Matches(/\S[\s\S]*\S[\s\S]*\S/, {
+    message: 'reason must contain at least 3 visible characters',
+  })
   reason!: string;
 }

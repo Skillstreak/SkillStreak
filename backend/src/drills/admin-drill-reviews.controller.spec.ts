@@ -130,6 +130,10 @@ describe('drill review DTOs', () => {
     expect(
       await errors(RejectDrillDto, { contentSha256: sha, reason: 'no' }),
     ).not.toHaveLength(0);
+    // Passes a bare length check, trims to nothing.
+    expect(
+      await errors(RejectDrillDto, { contentSha256: sha, reason: '     ' }),
+    ).not.toHaveLength(0);
     expect(
       await errors(RejectDrillDto, {
         contentSha256: sha,

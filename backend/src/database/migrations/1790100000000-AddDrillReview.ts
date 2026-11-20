@@ -37,7 +37,7 @@ export class AddDrillReview1790100000000 implements MigrationInterface {
         CONSTRAINT "FK_drill_review_reviewer" FOREIGN KEY ("reviewed_by_staff_account_id")
           REFERENCES "staff_account"("id") ON DELETE SET NULL,
         CONSTRAINT "CHK_drill_review_rejection_reason" CHECK (
-          ("status" = 'rejected' AND "rejection_reason" IS NOT NULL)
+          ("status" = 'rejected' AND length(btrim("rejection_reason")) >= 3)
           OR ("status" = 'approved' AND "rejection_reason" IS NULL)
         )
       )
