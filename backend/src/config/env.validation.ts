@@ -334,6 +334,15 @@ class EnvironmentVariables {
   PUBLIC_SHARING_ENABLED_TEAM_IDS?: string;
 
   /**
+   * ADR-0039 — server-side off switch for Skillstreak Village. Only the
+   * exact string 'true' turns it on; unset, blank or anything else means
+   * both village endpoints answer 404. `@IsOptional()` alone for the same
+   * blank-ConfigMap-key reason as PUBLIC_SHARING_ENABLED_TEAM_IDS.
+   */
+  @IsOptional()
+  VILLAGE_ENABLED?: string;
+
+  /**
    * ADR-0030 finding 4 — the bounce mailbox that makes Decision 5's
    * fail-closed disable able to fire at all.
    *

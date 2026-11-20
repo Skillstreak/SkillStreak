@@ -94,6 +94,18 @@ export class Team {
   @Column({ name: 'village_opt_in', type: 'boolean', default: false })
   villageOptIn!: boolean;
 
+  /** Audit for `villageOptIn`: when it last changed, and which player
+   * (the captain) changed it. Null until the first change. */
+  @Column({
+    name: 'village_opt_in_changed_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  villageOptInChangedAt!: Date | null;
+
+  @Column({ name: 'village_opt_in_changed_by', type: 'uuid', nullable: true })
+  villageOptInChangedBy!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

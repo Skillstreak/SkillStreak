@@ -152,6 +152,13 @@ data:
   # answered by this line working.
   PUBLIC_SHARING_ENABLED_TEAM_IDS: "cd0ce417-300b-417a-aea4-8bfe1b4a58f4"
 
+  # --- Skillstreak Village (ADR-0039) --------------------------------------
+  # Off. Only the exact string "true" turns on GET /village and
+  # PUT /village/opt-in; anything else answers 404. Do not turn on until
+  # the project owner has amended CLAUDE.md's closed-team-bubble clause
+  # for Village (ADR-0039 "Gate before enabling").
+  VILLAGE_ENABLED: "false"
+
   # --- Bounce mailbox (ADR-0030 finding 4) ---------------------------------
   #
   # The IMAP mailbox that receives delivery-status notifications for mail

@@ -78,14 +78,22 @@ const APPROVED_NOUNS = new Set([
  * using only the fixed vocabulary above. Case-insensitive; NFC-normalised so
  * a decomposed "ö" matches.
  */
-export function isNameBuilderName(rawName: string): boolean {
-  if (typeof rawName !== 'string') return false;
+function nameBuilderTokens(rawName: string): string[] | null {
+  if (typeof rawName !== 'string') return null;
   const parts = rawName.normalize('NFC').trim().toLowerCase().split(/\s+/);
-  if (parts.length === 1) return APPROVED_NOUNS.has(parts[0]);
-  if (parts.length === 2) {
-    return APPROVED_ADJECTIVES.has(parts[0]) && APPROVED_NOUNS.has(parts[1]);
+  if (parts.length === 1 && APPROVED_NOUNS.has(parts[0])) return parts;
+  if (
+    parts.length === 2 &&
+    APPROVED_ADJECTIVES.has(parts[0]) &&
+    APPROVED_NOUNS.has(parts[1])
+  ) {
+    return parts;
   }
-  return false;
+  return null;
+}
+
+export function isNameBuilderName(rawName: string): boolean {
+  return nameBuilderTokens(rawName) !== null;
 }
 
 const NEUTRAL_NAMES: Record<VillageSportCode, string> = {
@@ -95,8 +103,15 @@ const NEUTRAL_NAMES: Record<VillageSportCode, string> = {
 };
 const DEFAULT_NEUTRAL_NAME = 'Arenakompisarna';
 
-/** Name of ANOTHER team as shown in the village. */
+/**
+ * Name of ANOTHER team as shown in the village. A name-builder name is
+ * rebuilt from the matched vocabulary words ("SNABBA   falkarna" ->
+ * "Snabba Falkarna"), so casing and whitespace can't carry anything extra.
+ */
 export function villageTeamName(team: { name: string; sport: string }): string {
-  if (isNameBuilderName(team.name)) return team.name.normalize('NFC').trim();
+  const tokens = nameBuilderTokens(team.name);
+  if (tokens) {
+    return tokens.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
   return NEUTRAL_NAMES[team.sport as VillageSportCode] ?? DEFAULT_NEUTRAL_NAME;
 }

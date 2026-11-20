@@ -2,70 +2,116 @@
 
 ## Status
 
-Accepted, 2026-11-20. Building I-004 ("OS-byn" / Skillstreak Village) was
-approved by the project owner on 2026-11-20. Design source: Hermes' spec
+Code accepted, 2026-11-20; **switched off until the gate below is passed.**
+The project owner approved building I-004 ("OS-byn" / Skillstreak
+Village) on 2026-11-20. Design source: Hermes' spec
 `mockups/I-004/README.md` (v3).
+
+### Gate before enabling
+
+Village crosses the closed team bubble, and CLAUDE.md names exactly one
+exception to it today (ADR-0030, a player's own clips). ADR-0029
+Decision 1 says that crossing its moves 1 or 4 "requires the project
+owner's CLAUDE.md amendment plus a new ADR". This is the new ADR. **The
+amendment is still owed, and only the project owner can make it.** Until
+then both switches stay off: the API's `VILLAGE_ENABLED` (k8s ConfigMap,
+only `"true"` turns it on; otherwise both endpoints 404) and the app's
+`EXPO_PUBLIC_VILLAGE_ENABLED` (only `true` shows the entry point).
+
+Suggested wording for the owner to accept, reject or edit:
+
+> **Except for Skillstreak Village (ADR-0039)**: a team whose captain has
+> opted it in may show other opted-in teams exactly three things — its
+> team name (masked to a fixed name-builder vocabulary), its sport, and a
+> coarse per-sport activity level aggregated over at least ten teams.
+> Nothing a child wrote, recorded or earned beyond that crosses.
 
 ## Context
 
-CLAUDE.md: *"a user only ever sees their own verified team"*, with one
-existing exception (a player's own clips under their own parent's consent,
-ADR-0030). Village shows a team its own arena next to other teams' arenas,
-grouped by sport — so it is a second, deliberate exception, and this ADR is
-where its edges are written down. Anything not listed under "what crosses"
-does not cross.
+Village shows a team its own arena next to other teams' arenas, grouped by
+sport. It is a second, deliberate exception to "a user only ever sees their
+own verified team", and this ADR is where its edges are written down.
+Anything not listed under "what crosses" does not cross.
+
+### Reconciling with ADR-0029 Decision 1
+
+ADR-0029's rule: a cross-team surface may carry facts about teams, never
+"anything a child authored, recorded, typed, earned", and never make teams
+browsable by adults. Village crosses two of its five moves, knowingly:
+
+- **Move 1 (child-created artifact).** A team name is typed by a child,
+  and the activity level is derived from training logs. Mitigation: the
+  name is shown only if it consists solely of fixed-vocabulary words
+  (otherwise a neutral name replaces it, Decision 1), and the level is a
+  4-step bucket over at least ten qualifying teams, computed per quarter
+  hour (Decisions 1 and 5). No individual log, time or count crosses.
+- **Move 4 (browsable list of teams).** Village lists teams to players of
+  other teams. Mitigation: only teams that opted in, only to teams that
+  also opted in (reciprocal), at most ten names per sport, no id, no link,
+  no contact path, and no way to reach a team from its name.
+
+ADR-0029 is otherwise unchanged; kudos and the drill library stay as it
+decided.
 
 ## Decision
 
-**1. What crosses the bubble — exactly three things, nothing else.**
+**1. What crosses the bubble — exactly three things.**
 
-- Another opted-in team's **display name**, masked: shown as typed only if
-  it is built entirely from the fixed name-builder vocabulary
+- Another qualifying team's **display name**, masked: shown only if it is
+  built entirely from the fixed name-builder vocabulary
   (`backend/src/village/village-team-name.util.ts`, e.g. "Snabba
-  Falkarna"); anything else is replaced by a neutral sport name
-  ("Klubbhjältarna"). The check runs on the server, on the name itself —
-  never on a client-supplied "came from the builder" flag.
+  Falkarna"), and then rebuilt from the matched words so casing and
+  whitespace carry nothing; anything else becomes a neutral sport name
+  ("Klubbhjältarna"). Decided on the server from the name itself, never
+  from a client-supplied flag.
 - That team's **sport** (`team.sport`, one per team, default `FLOORBALL`).
 - One **coarse activity level per sport** (`CALM`/`SOME`/`MANY`/
-  `VERY_MANY`): how many other opted-in teams in that sport logged any
-  training in the last 3 hours, bucketed (0 / 1–2 / 3–5 / 6+). Never a
-  per-team value, never a time, never a ranking.
+  `VERY_MANY`): how many other qualifying teams in that sport logged any
+  training in the 3 hours before the current quarter-hour bucket,
+  bucketed 0 / 1–2 / 3–5 / 6+. Never per team, never a time, never a
+  ranking.
 
-**2. What never crosses.** Team ids (each name gets a one-off slot `s1…`,
-in a fresh random order per response), player counts, children's real
-names or screen names, avatars, photos, clips, chat, training logs or
-times, points, locations, profiles. Names are plain text with no link to
-anything.
+**2. What never crosses.** Team ids, player counts, team counts,
+children's names or screen names, avatars, photos, clips, chat, training
+logs or times, points, locations, profiles. Names are plain text with no
+link to anything.
 
-**3. Off by default.** `team.village_opt_in` defaults to `false`. A team
-that has not opted in is not listed, does not count toward the threshold
-or the activity level, and — reciprocally — its own players see no other
-team's name either (they still see the sport cards and coarse levels).
+**3. Off by default, and reciprocal.** `team.village_opt_in` defaults to
+`false`. A team that has not opted in is not listed and does not count
+toward the threshold or the level — and its own players get neither names
+nor levels (every sport card is CALM and empty).
 
 **4. Who can opt in.** The team's captain, through the same
-`PlayersService.assertIsCaptainOfTeam` check every other team setting uses
-(invite-code rotation, weekly goals, PT links), which also requires the
-captain's own parental consent to be approved. The endpoint only ever acts
-on the caller's own team. The app asks the captain to talk to the coach and
-the parents first and confirms before turning it on; it can be turned off
-at any time and takes effect on the next request (the app keeps no cached
-copy of other teams' names).
+`PlayersService.assertIsCaptainOfTeam` check every other team setting
+uses, which also requires the captain's own parental consent to be
+approved. The endpoint acts only on the caller's own team. The app tells
+the captain to talk to the coach and the parents first and confirms
+before turning it on. Every change records who (captain's player id) and
+when (`village_opt_in_changed_at` / `_by`).
 
-**5. k-anonymity floor: 10.** A sport lists no names, and its level stays
-`CALM`, until at least 10 *other* opted-in, non-test teams share it. At
-most 25 names are listed per sport. Test teams (`is_test`) never appear.
+**5. k-anonymity, hardened against padding.** A sport lists no names, and
+its level stays CALM, until at least **10 other qualifying teams** share
+it. A team qualifies only if it is opted in, not a test team, at least
+**14 days old**, and has at least **5 members whose team join and
+parental consent are both approved** — so defeating k with throwaway
+teams costs 50 consented accounts and two weeks rather than nine sign-ups.
+Once k is met, exactly **10** names are shown, so the list length says
+nothing about the team count. The sample, its order and the level are
+fixed for each quarter-hour bucket, so polling learns nothing finer.
 
 **6. Who can read it.** Authenticated players whose team join is approved
-(`assertTeamMembership`) — the same gate as every team-scoped read.
+(`assertTeamMembership`), 12 requests/min.
 
 ## Consequences
 
-- Until a sport has 10 opted-in teams, Village shows only the team's own
+- Until a sport has 10 qualifying teams, Village shows only the team's own
   arena and empty, calm sport cards. That is intended.
-- Without a name builder in onboarding, most existing team names are
-  free text and will show masked. Bringing in Hermes' `TeamNameBuilder`
-  is a separate change.
+- Without a name builder in onboarding, most existing team names are free
+  text and will show masked. Hermes' `TeamNameBuilder` is a separate
+  change.
 - `team.sport` has no UI yet; every team is floorball until one is added.
-- **Not built, still owed by the spec**: informing parents when a team
-  joins (Hermes' spec: "parents informed"), and a staff "hide this name"
-  status. Both should land before Village is promoted beyond beta.
+- **Still owed before enabling beyond beta**: informing parents when their
+  team joins (Hermes' spec: "parents informed"), a staff "hide this name"
+  status, and the CLAUDE.md amendment above. The padding defence in
+  Decision 5 does not check for distinct parent email addresses across
+  teams; that is a possible further hardening.

@@ -1,12 +1,16 @@
+import { NotFoundException } from '@nestjs/common';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { VillageController } from './village.controller';
 
 describe('VillageController', () => {
-  function setup(player: {
-    teamId: string;
-    isCaptain: boolean;
-    parentalConsentStatus: ParentalConsentStatus;
-  }) {
+  function setup(
+    player: {
+      teamId: string;
+      isCaptain: boolean;
+      parentalConsentStatus: ParentalConsentStatus;
+    },
+    enabled: string | null = 'true',
+  ) {
     const villageService = {
       getVillageView: jest.fn(() => Promise.resolve({})),
       setOptIn: jest.fn(() => Promise.resolve()),
@@ -16,9 +20,11 @@ describe('VillageController', () => {
       assertTeamMembership: jest.fn(() => Promise.resolve(player)),
       assertIsCaptainOfTeam: jest.fn(() => Promise.resolve(player)),
     };
+    const configService = { get: jest.fn(() => enabled) };
     const controller = new VillageController(
       villageService as never,
       playersService as never,
+      configService as never,
     );
     return { controller, villageService, playersService };
   }
@@ -86,6 +92,28 @@ describe('VillageController', () => {
     ).resolves.toEqual({
       optedIn: false,
     });
-    expect(villageService.setOptIn).toHaveBeenCalledWith('team-a', false);
+    expect(villageService.setOptIn).toHaveBeenCalledWith('team-a', false, 'p1');
   });
+
+  it.each([null, '', 'false', 'TRUE'])(
+    'both endpoints 404 unless VILLAGE_ENABLED is exactly "true" (%p)',
+    async (enabled) => {
+      const { controller, villageService, playersService } = setup(
+        {
+          teamId: 'team-a',
+          isCaptain: true,
+          parentalConsentStatus: ParentalConsentStatus.APPROVED,
+        },
+        enabled,
+      );
+      await expect(controller.getVillage('p1')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(
+        controller.setOptIn('p1', { optedIn: true }),
+      ).rejects.toThrow(NotFoundException);
+      expect(playersService.findByIdOrThrow).not.toHaveBeenCalled();
+      expect(villageService.setOptIn).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -27,6 +27,12 @@ describe('isNameBuilderName', () => {
 });
 
 describe('villageTeamName', () => {
+  it('rebuilds a name-builder name from the vocabulary (casing, whitespace)', () => {
+    expect(
+      villageTeamName({ name: 'SNABBA \u00a0  falkarna', sport: 'FLOORBALL' }),
+    ).toBe('Snabba Falkarna');
+  });
+
   it('shows a name-builder name as typed (trimmed)', () => {
     expect(
       villageTeamName({ name: ' Snabba Falkarna ', sport: 'FLOORBALL' }),

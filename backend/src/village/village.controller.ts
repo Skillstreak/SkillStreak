@@ -4,9 +4,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentPlayerId } from '../auth/current-player-id.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -26,7 +28,18 @@ export class VillageController {
   constructor(
     private readonly villageService: VillageService,
     private readonly playersService: PlayersService,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Server-side off switch (VILLAGE_ENABLED, only 'true' turns it on), so
+   * turning Village off does not depend on which app build is installed.
+   */
+  private assertEnabled(): void {
+    if (this.configService.get<string>('VILLAGE_ENABLED') !== 'true') {
+      throw new NotFoundException();
+    }
+  }
 
   /**
    * Team-scoped read: assertTeamMembership refuses a pending or rejected
@@ -36,6 +49,7 @@ export class VillageController {
   @Throttle({ default: { limit: 12, ttl: 60_000 } })
   @Get()
   async getVillage(@CurrentPlayerId() playerId: string): Promise<VillageView> {
+    this.assertEnabled();
     const me = await this.playersService.findByIdOrThrow(playerId);
     const player = await this.playersService.assertTeamMembership(
       playerId,
@@ -64,9 +78,10 @@ export class VillageController {
     @CurrentPlayerId() playerId: string,
     @Body() body: SetVillageOptInDto,
   ): Promise<{ optedIn: boolean }> {
+    this.assertEnabled();
     const me = await this.playersService.findByIdOrThrow(playerId);
     await this.playersService.assertIsCaptainOfTeam(playerId, me.teamId);
-    await this.villageService.setOptIn(me.teamId, body.optedIn);
+    await this.villageService.setOptIn(me.teamId, body.optedIn, playerId);
     return { optedIn: body.optedIn };
   }
 }
