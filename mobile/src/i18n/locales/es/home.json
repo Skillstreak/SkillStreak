@@ -290,7 +290,7 @@
   },
   "anonymousStats": {
     "heading": "Estadísticas de uso de la app",
-    "body": "Si lo activas, la app cuenta cuántas veces se abren las pantallas y se pulsan los botones. No sabemos quién pulsó, cuándo ocurrió ni nada de lo que escribiste o grabaste. Está desactivado hasta que lo actives y puedes desactivarlo cuando quieras.",
+    "body": "Si lo activas, la app cuenta cuántas veces se abren las pantallas y se pulsan los botones. No sabemos quién pulsó, a qué hora del día ni nada de lo que escribiste o grabaste. Está desactivado hasta que lo actives y puedes desactivarlo cuando quieras.",
     "info": "Las cifras se guardan 90 días y después se eliminan. Como cualquier petición a nuestro servidor, el envío llega desde la dirección IP de tu dispositivo; se usa durante aproximadamente un minuto para frenar abusos, aparece en nuestros registros habituales del servidor y nunca se guarda junto con las cifras.",
     "confirmBody": "¿Quieres activar las estadísticas? La app solo envía cuántas veces se usaron las pantallas y los botones. Puedes desactivarlo cuando quieras.",
     "confirmNo": "No, gracias",

@@ -290,7 +290,7 @@
   },
   "anonymousStats": {
     "heading": "Statistik över appanvändning",
-    "body": "Om du slår på det räknar appen hur ofta skärmar öppnas och knappar trycks. Vi får inte veta vem som tryckte, när det hände eller något du skrivit eller filmat. Det är av tills du slår på det, och du kan stänga av det när du vill.",
+    "body": "Om du slår på det räknar appen hur ofta skärmar öppnas och knappar trycks. Vi får inte veta vem som tryckte, vilken tid på dagen eller något du skrivit eller filmat. Det är av tills du slår på det, och du kan stänga av det när du vill.",
     "info": "Siffrorna sparas i 90 dagar och raderas sedan. Som alla anrop till vår server kommer uppladdningen från din enhets IP-adress; den används i ungefär en minut för att stoppa missbruk, syns i våra vanliga serverloggar och sparas aldrig tillsammans med siffrorna.",
     "confirmBody": "Vill du slå på statistiken? Appen skickar bara hur många gånger skärmar och knappar använts. Du kan stänga av det när du vill.",
     "confirmNo": "Nej tack",

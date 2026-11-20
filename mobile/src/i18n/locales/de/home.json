@@ -290,7 +290,7 @@
   },
   "anonymousStats": {
     "heading": "Statistik zur App-Nutzung",
-    "body": "Wenn du sie einschaltest, zählt die App, wie oft Bildschirme geöffnet und Tasten gedrückt werden. Wir erfahren nicht, wer gedrückt hat, wann es war oder was du geschrieben oder gefilmt hast. Sie ist aus, bis du sie einschaltest, und du kannst sie jederzeit ausschalten.",
+    "body": "Wenn du sie einschaltest, zählt die App, wie oft Bildschirme geöffnet und Tasten gedrückt werden. Wir erfahren nicht, wer gedrückt hat, zu welcher Tageszeit oder was du geschrieben oder gefilmt hast. Sie ist aus, bis du sie einschaltest, und du kannst sie jederzeit ausschalten.",
     "info": "Die Zahlen werden 90 Tage lang gespeichert und dann gelöscht. Wie jede Anfrage an unseren Server kommt der Upload von der IP-Adresse deines Geräts; sie wird etwa eine Minute lang zur Missbrauchsabwehr verwendet, erscheint in unseren normalen Serverprotokollen und wird nie zusammen mit den Zahlen gespeichert.",
     "confirmBody": "Möchtest du die Statistik einschalten? Die App sendet nur, wie oft Bildschirme und Tasten genutzt wurden. Du kannst sie jederzeit ausschalten.",
     "confirmNo": "Nein danke",

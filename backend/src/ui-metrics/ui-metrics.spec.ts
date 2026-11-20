@@ -215,7 +215,7 @@ describe('retention', () => {
     query.mockResolvedValue([[], 4]);
     await expect(service.deleteExpired()).resolves.toBe(4);
     const [sql, params] = query.mock.calls[0] as [string, unknown[]];
-    expect(sql).toMatch(/DELETE FROM ui_click_count\s+WHERE day < /);
+    expect(sql).toMatch(/DELETE FROM ui_click_count\s+WHERE day <= /);
     expect(params).toEqual([90]);
   });
 

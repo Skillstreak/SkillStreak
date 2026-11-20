@@ -52,6 +52,9 @@ let enabled = false;
 let currentAccountId: string | null = null;
 // Whether that account may consent for itself (ADR-0039 Decision 2).
 let currentEligible = false;
+// Bumped by every init and reset; an async step that finds it changed
+// gives up instead of acting on a state that no longer holds.
+let generation = 0;
 let counts = new Map<UiCounterKey, number>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
@@ -90,13 +93,15 @@ export async function initUiMetrics(
   accountId: string,
   isSelfVerification: boolean,
 ): Promise<void> {
+  // State is set before any await, and every await is followed by a
+  // generation check, so a logout (resetUiMetrics) that lands mid-init
+  // always wins and the client cannot switch back on for that account.
   const previous = currentAccountId;
-  if (previous !== accountId) {
-    applyEnabled(false);
-    if (previous) await deleteStoredFlag(previous);
-  }
+  const gen = ++generation;
+  if (previous !== accountId) applyEnabled(false);
   currentAccountId = accountId;
   currentEligible = isSelfVerification;
+  if (previous && previous !== accountId) await deleteStoredFlag(previous);
   if (!isSelfVerification) {
     // Under 13: never sends in v1. Clear any flag so nothing can turn it
     // back on from this device.
@@ -104,9 +109,12 @@ export async function initUiMetrics(
     await deleteStoredFlag(accountId);
     return;
   }
+  if (gen !== generation) return;
   const saved = await loadAnonymousStatsEnabled();
   // Logout or an account switch may have happened while reading.
-  if (currentAccountId === accountId && currentEligible) applyEnabled(saved);
+  if (gen === generation && currentAccountId === accountId && currentEligible) {
+    applyEnabled(saved);
+  }
 }
 
 /**
@@ -115,6 +123,7 @@ export async function initUiMetrics(
  * again starts from off.
  */
 export async function resetUiMetrics(): Promise<void> {
+  generation++;
   const accountId = currentAccountId;
   currentAccountId = null;
   currentEligible = false;
@@ -126,6 +135,7 @@ export async function resetUiMetrics(): Promise<void> {
  * signed in, so the switch can't show "on" while nothing is enabled. */
 export async function setAnonymousStatsEnabled(next: boolean): Promise<boolean> {
   const accountId = currentAccountId;
+  const gen = generation;
   if (!accountId || !currentEligible) {
     applyEnabled(false);
     return false;
@@ -135,7 +145,11 @@ export async function setAnonymousStatsEnabled(next: boolean): Promise<boolean> 
   } else {
     await deleteStoredFlag(accountId);
   }
-  if (currentAccountId !== accountId || !currentEligible) return false;
+  if (gen !== generation || currentAccountId !== accountId || !currentEligible) {
+    // Logged out mid-write: do not leave an "on" behind for that account.
+    if (next) await deleteStoredFlag(accountId);
+    return false;
+  }
   applyEnabled(next);
   return next;
 }
