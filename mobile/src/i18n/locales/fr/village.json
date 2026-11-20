@@ -29,7 +29,8 @@
       "confirmYes": "Oui, rejoindre",
       "cancel": "Annuler",
       "error": "Le changement n'a pas fonctionné. Réessaie."
-    }
+    },
+    "previewBanner": "Aperçu – toi seul vois ceci. Les équipes ci-dessous sont inventées, et ton équipe ne pourra rejoindre le village qu’à son ouverture."
   },
   "arenas": {
     "floorball": {

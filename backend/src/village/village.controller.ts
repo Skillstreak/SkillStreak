@@ -18,7 +18,9 @@ import { PlayersService } from '../players/players.service';
 import { SetVillageOptInDto } from './dto/set-village-opt-in.dto';
 import { VillageJoinNoticeService } from './village-join-notice.service';
 import { VillageService } from './village.service';
-import type { VillageView } from './village.types';
+import type { VillageAccess, VillageView } from './village.types';
+
+type VillageMode = 'on' | 'preview' | 'off';
 
 /**
  * Skillstreak Village (I-004) — ADR-0040. The one deliberate, opt-in
@@ -39,11 +41,32 @@ export class VillageController {
   /**
    * Server-side off switch (VILLAGE_ENABLED, only 'true' turns it on), so
    * turning Village off does not depend on which app build is installed.
+   * While it is off, players listed in VILLAGE_PREVIEW_PLAYER_IDS get the
+   * made-up preview instead (owner decision 2026-11-20).
    */
-  private assertEnabled(): void {
-    if (this.configService.get<string>('VILLAGE_ENABLED') !== 'true') {
-      throw new NotFoundException();
+  private modeFor(playerId: string): VillageMode {
+    if (this.configService.get<string>('VILLAGE_ENABLED') === 'true') {
+      return 'on';
     }
+    const preview = (
+      this.configService.get<string>('VILLAGE_PREVIEW_PLAYER_IDS') ?? ''
+    )
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
+    return preview.includes(playerId) ? 'preview' : 'off';
+  }
+
+  /**
+   * Whether the app should show the village entry for this player. Never
+   * 404s, so the app can ask before it knows; says nothing about any team.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 12, ttl: 60_000 } })
+  @Get('access')
+  getAccess(@CurrentPlayerId() playerId: string): VillageAccess {
+    const mode = this.modeFor(playerId);
+    return { enabled: mode !== 'off', preview: mode === 'preview' };
   }
 
   /**
@@ -54,12 +77,16 @@ export class VillageController {
   @Throttle({ default: { limit: 12, ttl: 60_000 } })
   @Get()
   async getVillage(@CurrentPlayerId() playerId: string): Promise<VillageView> {
-    this.assertEnabled();
+    const mode = this.modeFor(playerId);
+    if (mode === 'off') throw new NotFoundException();
     const me = await this.playersService.findByIdOrThrow(playerId);
     const player = await this.playersService.assertTeamMembership(
       playerId,
       me.teamId,
     );
+    if (mode === 'preview') {
+      return this.villageService.getPreviewView(player.teamId);
+    }
     return this.villageService.getVillageView({
       teamId: player.teamId,
       canManage:
@@ -83,7 +110,9 @@ export class VillageController {
     @CurrentPlayerId() playerId: string,
     @Body() body: SetVillageOptInDto,
   ): Promise<{ optedIn: boolean }> {
-    this.assertEnabled();
+    // Only when really on: a preview viewer must not join for real, which
+    // would mail parents about a village nobody can see yet.
+    if (this.modeFor(playerId) !== 'on') throw new NotFoundException();
     const me = await this.playersService.findByIdOrThrow(playerId);
     await this.playersService.assertIsCaptainOfTeam(playerId, me.teamId);
     await this.villageService.setOptIn(me.teamId, body.optedIn, playerId);

@@ -50,6 +50,7 @@ export function useVillageLabels(): VillageScreenLabels {
       trainNowTitle: tt('village.trainNowTitle'),
       trainNowBody: tt('village.trainNowBody'),
       trainNowCta: tt('village.trainNowCta'),
+      previewBanner: tt('village.previewBanner'),
       optIn: {
         onTitle: tt('village.optIn.onTitle'),
         onBody: tt('village.optIn.onBody'),

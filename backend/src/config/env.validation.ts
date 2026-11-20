@@ -343,6 +343,16 @@ class EnvironmentVariables {
   VILLAGE_ENABLED?: string;
 
   /**
+   * ADR-0040 preview — comma-separated player ids who see a Village
+   * preview while VILLAGE_ENABLED is off. They get their own team's arena
+   * plus made-up teams generated in the response; no other team's data is
+   * read, and opt-in stays refused (no parent mail, no real change).
+   * Ignored once VILLAGE_ENABLED is 'true'. Blank means nobody.
+   */
+  @IsOptional()
+  VILLAGE_PREVIEW_PLAYER_IDS?: string;
+
+  /**
    * ADR-0030 finding 4 — the bounce mailbox that makes Decision 5's
    * fail-closed disable able to fire at all.
    *

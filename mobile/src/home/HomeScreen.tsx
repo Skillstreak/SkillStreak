@@ -29,6 +29,7 @@ import {
   getClickOnlyAllowance,
   getMe,
   getProfile,
+  getVillageAccess,
   postTrainingLog,
   postTrainingTimer,
 } from '../api/endpoints';
@@ -180,6 +181,22 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   // reached via AppHeader's avatar circle.
   // 'village' added for I-004 (docs/adr/0040), reached via AppHeader.
   const [view, setView] = useState<'home' | 'leaderboard' | 'profile' | 'village'>('home');
+
+  // I-004 — the server decides who sees the village entry, so the owner
+  // preview (VILLAGE_PREVIEW_PLAYER_IDS) works without a special build.
+  // The build flag still turns it on for everyone. Any failure: hidden.
+  const [villageAccess, setVillageAccess] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    getVillageAccess()
+      .then((access) => {
+        if (!cancelled) setVillageAccess(access.enabled);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // I-002 — weekly quick-feedback card. Starts "handled" so the card never
   // flashes before the local flag has been read.
@@ -693,7 +710,9 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
         onAvatarPress={() => setView('profile')}
         // The village is team-scoped (the server refuses a pending join),
         // so the entry point only appears once both gates have cleared.
-        onVillagePress={isApproved && VILLAGE_ENABLED ? () => setView('village') : undefined}
+        onVillagePress={
+          isApproved && (VILLAGE_ENABLED || villageAccess) ? () => setView('village') : undefined
+        }
       />
 
       <View style={styles.content}>

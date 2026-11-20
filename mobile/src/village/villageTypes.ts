@@ -23,6 +23,8 @@ export interface VillageSport {
 
 export interface VillageView {
   generatedAt: string;
+  /** Owner preview while the village is off: every other arena is made up. */
+  preview?: true;
   ownArena: {
     sport: string;
     name: string;
