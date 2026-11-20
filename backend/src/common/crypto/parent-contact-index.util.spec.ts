@@ -13,6 +13,11 @@ describe('normaliseParentContact', () => {
     ['+46 70-123 45 67', '+46701234567'],
     ['070 123 45 67', '0701234567'],
     ['(070) 123.45.67', '0701234567'],
+    ['0046 70 123 45 67', '+46701234567'],
+    ['Anna+1@Example.se', 'anna@example.se'],
+    ['a.n.n.a+x@googlemail.com', 'anna@gmail.com'],
+    ['A.Nna@Gmail.com', 'anna@gmail.com'],
+    ['a.nna@outlook.com', 'a.nna@outlook.com'],
   ])('%p -> %p', (raw, normalised) => {
     expect(normaliseParentContact(raw)).toBe(normalised);
   });

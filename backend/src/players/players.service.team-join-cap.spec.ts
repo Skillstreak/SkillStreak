@@ -12,7 +12,15 @@ describe('PlayersService.decideTeamJoin — pre-approval hook', () => {
       teamId: 'team-1',
       teamJoinStatus: TeamJoinStatus.PENDING,
     };
-    const txRepo = { save: jest.fn((p: unknown) => Promise.resolve(p)) };
+    const lockedRow = { ...target };
+    const txRepo = {
+      save: jest.fn((p: unknown) => Promise.resolve(p)),
+      createQueryBuilder: jest.fn(() => ({
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn(() => Promise.resolve(lockedRow)),
+      })),
+    };
     const manager = {
       getRepository: jest.fn(() => txRepo),
     } as unknown as EntityManager;
@@ -29,7 +37,7 @@ describe('PlayersService.decideTeamJoin — pre-approval hook', () => {
     );
     jest.spyOn(service, 'assertIsCaptainOfTeam').mockResolvedValue({} as never);
     jest.spyOn(service, 'findByIdOrThrow').mockResolvedValue(target as never);
-    return { service, target, txRepo, manager, playerRepository };
+    return { service, target, lockedRow, txRepo, manager, playerRepository };
   }
 
   it('runs the hook in the transaction before saving an approval', async () => {
@@ -48,7 +56,7 @@ describe('PlayersService.decideTeamJoin — pre-approval hook', () => {
   });
 
   it('does not approve when the hook refuses (parent at the team cap)', async () => {
-    const { service, txRepo, target } = build();
+    const { service, txRepo, lockedRow } = build();
     const hook = jest.fn(() =>
       Promise.reject(new ParentTeamCapReachedException()),
     );
@@ -62,7 +70,7 @@ describe('PlayersService.decideTeamJoin — pre-approval hook', () => {
       ),
     ).rejects.toBeInstanceOf(ParentTeamCapReachedException);
     expect(txRepo.save).not.toHaveBeenCalled();
-    expect(target.teamJoinStatus).toBe(TeamJoinStatus.PENDING);
+    expect(lockedRow.teamJoinStatus).toBe(TeamJoinStatus.PENDING);
   });
 
   it('never runs the hook for a rejection', async () => {
@@ -77,5 +85,22 @@ describe('PlayersService.decideTeamJoin — pre-approval hook', () => {
     );
     expect(hook).not.toHaveBeenCalled();
     expect(playerRepository.save).toHaveBeenCalled();
+  });
+
+  it('re-checks PENDING under the row lock (a concurrent reject wins)', async () => {
+    const { service, txRepo, lockedRow } = build();
+    lockedRow.teamJoinStatus = TeamJoinStatus.REJECTED;
+    const hook = jest.fn(() => Promise.resolve());
+    await expect(
+      service.decideTeamJoin(
+        'team-1',
+        'captain',
+        'kid',
+        TeamJoinStatus.APPROVED,
+        hook,
+      ),
+    ).rejects.toThrow();
+    expect(hook).not.toHaveBeenCalled();
+    expect(txRepo.save).not.toHaveBeenCalled();
   });
 });

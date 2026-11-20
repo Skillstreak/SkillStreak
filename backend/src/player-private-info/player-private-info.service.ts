@@ -41,6 +41,21 @@ import { PlayerPrivateInfo } from './entities/player-private-info.entity';
  * parent of approved members in at most this many distinct teams. */
 export const MAX_TEAMS_PER_PARENT_CONTACT = 5;
 
+/**
+ * ADR-0040 / ADR-0002 addendum §1 — the one SQL fragment another module
+ * may compose against `player_private_info`: "number of distinct parent
+ * contacts among the given team's approved, consented members", by blind
+ * index only. Owned here so the table's shape stays this module's
+ * business; VillageService splices it in with its own parameters
+ * (`:joinApproved`, `:consentApproved`) and an outer alias `t` for team.
+ */
+export const DISTINCT_VERIFIED_PARENTS_OF_TEAM_SQL = `(SELECT COUNT(DISTINCT ppi.parent_contact_index)
+    FROM "player" p
+    JOIN "player_private_info" ppi ON ppi.player_id = p.id
+   WHERE p.team_id = t.id
+     AND p.team_join_status = :joinApproved
+     AND p.parental_consent_status = :consentApproved)`;
+
 export interface ParentEmailRecipient {
   /** Decrypted address. Callers must not log it. */
   email: string;
@@ -88,9 +103,14 @@ export class PlayerPrivateInfoService {
 
   /**
    * ADR-0040 cap: refuses when `index` is already the parent contact of
-   * approved members in MAX_TEAMS_PER_PARENT_CONTACT distinct teams OTHER
-   * than `teamId` (joining a team the parent is already in never counts
-   * twice). Must run inside the transaction that makes the membership
+   * members whose team join AND parental consent are both approved in
+   * MAX_TEAMS_PER_PARENT_CONTACT distinct teams OTHER than `teamId`
+   * (joining a team the parent is already in never counts twice).
+   *
+   * Consent must be approved for a membership to count: only then has
+   * someone proven they own the address. Counting unverified accounts let
+   * anyone lock any address out by creating five teams with it.
+   * Must run inside the transaction that makes the membership
    * approved: it takes a transaction-scoped advisory lock on the index, so
    * two concurrent approvals for the same parent serialise instead of
    * both passing at 4. The lock key is derived from the index, never the
@@ -112,8 +132,9 @@ export class PlayerPrivateInfoService {
          JOIN "player_private_info" ppi ON ppi.player_id = p.id
         WHERE ppi.parent_contact_index = $1
           AND p.team_join_status = $2
-          AND p.team_id <> $3`,
-      [index, TeamJoinStatus.APPROVED, teamId],
+          AND p.parental_consent_status = $3
+          AND p.team_id <> $4`,
+      [index, TeamJoinStatus.APPROVED, ParentalConsentStatus.APPROVED, teamId],
     );
     const teams = Number(rows[0]?.teams ?? 0);
     if (teams >= MAX_TEAMS_PER_PARENT_CONTACT) {
@@ -138,7 +159,10 @@ export class PlayerPrivateInfoService {
    * this module exposes, for exactly that informational mail. Returns each
    * distinct EMAIL contact once (a parent with two children on the team
    * gets one mail); phone contacts are skipped, since nothing here can
-   * text. Reads the live column (a pending, unconfirmed change is not
+   * text. Self-verified accounts (13+, ADR-0002 addendum §2: the contact
+   * is the child's own address) are skipped — this mail is for parents.
+   * The caller passes only consent-approved members, so every address
+   * here has been proven by its owner. Reads the live column (a pending, unconfirmed change is not
    * mailed). Callers must not log what this returns.
    */
   async getParentEmailRecipients(
@@ -146,6 +170,17 @@ export class PlayerPrivateInfoService {
   ): Promise<ParentEmailRecipient[]> {
     if (players.length === 0) return [];
     const localeById = new Map(players.map((p) => [p.id, p.locale]));
+    const selfVerified = new Set(
+      (
+        await this.consentRecordRepository.find({
+          where: {
+            playerId: In(players.map((p) => p.id)),
+            method: ConsentMethod.SELF_EMAIL_LINK,
+          },
+          select: { playerId: true },
+        })
+      ).map((r) => r.playerId),
+    );
     const rows = await this.privateInfoRepository.find({
       where: { playerId: In(players.map((p) => p.id)) },
       select: { playerId: true, parentContact: true },
@@ -153,6 +188,7 @@ export class PlayerPrivateInfoService {
     const key = this.encryptionKey;
     const byNormalised = new Map<string, ParentEmailRecipient>();
     for (const row of rows) {
+      if (selfVerified.has(row.playerId)) continue;
       let contact: string;
       try {
         contact = decryptPii(row.parentContact, key);

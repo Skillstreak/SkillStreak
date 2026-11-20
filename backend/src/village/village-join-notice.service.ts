@@ -5,6 +5,7 @@ import { MailService } from '../mail/mail.service';
 import { buildVillageJoinedEmail } from '../mail/templates/village-joined-email.template';
 import { PlayerPrivateInfoService } from '../player-private-info/player-private-info.service';
 import { Player } from '../players/entities/player.entity';
+import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { Team } from '../teams/entities/team.entity';
 import { villageTeamName } from './village-team-name.util';
@@ -70,7 +71,13 @@ export class VillageJoinNoticeService {
     if (!team) return none;
 
     const members = await this.playerRepository.find({
-      where: { teamId, teamJoinStatus: TeamJoinStatus.APPROVED },
+      // Consent-approved only: an address nobody has proven they own
+      // does not get mail naming the team.
+      where: {
+        teamId,
+        teamJoinStatus: TeamJoinStatus.APPROVED,
+        parentalConsentStatus: ParentalConsentStatus.APPROVED,
+      },
       select: { id: true, locale: true },
     });
     const recipients =

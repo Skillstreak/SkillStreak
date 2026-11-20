@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Cambiar código",
     "rotateSuccessToast": "Nuevo código del equipo: {{inviteCode}}",
     "rotateErrorToast": "No se pudo cambiar el código ahora. Inténtalo de nuevo.",
-    "approveParentCapToast": "No se pudo aprobar: la dirección de la familia ya está vinculada a 5 equipos."
+    "approveParentCapToast": "No se pudo aprobar. Pide ayuda al entrenador."
   },
   "k2": {
     "heading": "Lista completa del equipo",

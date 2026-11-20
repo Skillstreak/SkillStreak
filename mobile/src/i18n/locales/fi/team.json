@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Vaihda koodi",
     "rotateSuccessToast": "Uusi joukkuekoodi: {{inviteCode}}",
     "rotateErrorToast": "Koodia ei voitu vaihtaa juuri nyt. Yritä uudelleen.",
-    "approveParentCapToast": "Hyväksyntä ei onnistunut: huoltajan osoite on jo liitetty viiteen joukkueeseen."
+    "approveParentCapToast": "Hyväksyntä ei onnistunut. Pyydä apua valmentajalta."
   },
   "k2": {
     "heading": "Joukkue tarkemmin",

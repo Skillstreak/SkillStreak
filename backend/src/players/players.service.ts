@@ -556,9 +556,23 @@ export class PlayersService {
       return this.playerRepository.save(target);
     }
     return this.dataSource.transaction(async (manager) => {
+      // Re-read under a row lock: a concurrent reject (or approve) must
+      // not be overwritten by this one.
+      const locked = await manager
+        .getRepository(Player)
+        .createQueryBuilder('player')
+        .setLock('pessimistic_write')
+        .where('player.id = :id', { id: targetPlayerId })
+        .getOne();
+      if (!locked || locked.teamId !== teamId) {
+        throw new TeamMismatchException();
+      }
+      if (locked.teamJoinStatus !== TeamJoinStatus.PENDING) {
+        throw new TeamJoinNotPendingException();
+      }
       await beforeApprove(manager);
-      target.teamJoinStatus = decision;
-      return manager.getRepository(Player).save(target);
+      locked.teamJoinStatus = decision;
+      return manager.getRepository(Player).save(locked);
     });
   }
 

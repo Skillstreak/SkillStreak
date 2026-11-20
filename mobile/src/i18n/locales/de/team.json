@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Code ändern",
     "rotateSuccessToast": "Neuer Teamcode: {{inviteCode}}",
     "rotateErrorToast": "Der Code konnte gerade nicht geändert werden. Versuch es noch mal.",
-    "approveParentCapToast": "Bestätigung nicht möglich: Die Adresse der Eltern ist bereits mit 5 Teams verknüpft."
+    "approveParentCapToast": "Bestätigung nicht möglich. Bitte frag den Trainer um Hilfe."
   },
   "k2": {
     "heading": "Team im Detail",

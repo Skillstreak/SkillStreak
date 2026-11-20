@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Bytt kode",
     "rotateSuccessToast": "Ny lagkode: {{inviteCode}}",
     "rotateErrorToast": "Kunne ikke bytte koden akkurat nå. Prøv igjen.",
-    "approveParentCapToast": "Kunne ikke godkjenne: foreldrenes adresse er allerede knyttet til 5 lag."
+    "approveParentCapToast": "Kunne ikke godkjenne. Be treneren om hjelp."
   },
   "k2": {
     "heading": "Laget i detalj",

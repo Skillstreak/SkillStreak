@@ -91,7 +91,11 @@ describe('VillageJoinNoticeService (ADR-0040)', () => {
     );
     expect(playerRepository.find).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { teamId: 'team-1', teamJoinStatus: 'approved' },
+        where: {
+          teamId: 'team-1',
+          teamJoinStatus: 'approved',
+          parentalConsentStatus: 'approved',
+        },
       }),
     );
     const calls = mailService.sendMail.mock.calls as unknown as Array<

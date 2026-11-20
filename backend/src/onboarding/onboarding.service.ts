@@ -135,16 +135,12 @@ export class OnboardingService {
           dto,
         );
 
-        // ADR-0040 — one parent contact, at most 5 teams. Checked for every
-        // new account, not only the auto-approved captain of a new team: a
-        // pending join into a sixth team would only fail later at the
-        // captain's approval, so refusing here is the kinder place. The
-        // approval step re-checks (PlayersService.decideTeamJoin).
-        await this.playerPrivateInfoService.assertParentTeamCapAllows(
-          manager,
-          this.playerPrivateInfoService.indexFor(dto.parentContact),
-          team.id,
-        );
+        // ADR-0040's 5-teams-per-parent cap is deliberately NOT checked
+        // here: nothing about this address is verified yet, and checking it
+        // unauthenticated would both let anyone probe whether an address is
+        // at the cap and (when unverified accounts counted) let anyone lock
+        // an address out. It is enforced where a membership starts to
+        // count — parental consent approval and the captain's join approval.
 
         const player = await this.playersService.createShell(manager, {
           teamId: team.id,

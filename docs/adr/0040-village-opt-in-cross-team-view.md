@@ -123,33 +123,57 @@ fixed for each quarter-hour bucket, so polling learns nothing finer.
 (`assertTeamMembership`), 12 requests/min.
 
 **7. Parents are told when their team joins.** When the captain turns
-opt-in ON, every approved member's parent contact gets one informational
-mail (`mail/templates/village-joined-email.template.ts`, in the child's
-locale, Swedish fallback): the team joined, exactly what other teams see
-(the name as shown — masked if free text —, the sport, the coarse level),
-what they never see, and how to get it turned off (captain/coach, or
-hello@skillstreak.xyz). One mail per distinct address; phone-only
-contacts cannot be mailed and are skipped. Not sent on OFF, and not again
-if turned ON within 30 days (`team.village_join_notice_sent_at`, claimed
+opt-in ON, the parent contact of every member whose team join AND
+parental consent are approved gets one informational mail
+(`mail/templates/village-joined-email.template.ts`, in the child's locale,
+Swedish fallback): the team joined, exactly what other teams see (the
+name as shown — masked if free text —, the sport, the coarse level), what
+they never see, and how to get it turned off (captain/coach, or
+hello@skillstreak.xyz). Only consent-approved members, so every address
+mailed has been proven by its owner. Self-verified accounts (13+, whose
+contact is the child's own address) are skipped. One mail per distinct
+address (by the same normalisation as Decision 8); phone-only contacts
+cannot be mailed and are skipped. Not sent on OFF, and not again if
+turned ON within 30 days (`team.village_join_notice_sent_at`, claimed
 under a row lock). Best-effort: the toggle never waits on or fails because
 of mail; if no mail at all is handed off, the claim is released so the
 next ON retries. Counts are logged, addresses never.
 
 **8. One parent contact, at most 5 teams** (owner's rule, 2026-11-20). A
-parent contact may be the parent of approved members in at most 5
-distinct teams. Enforced at onboarding (any new account against a team),
-at the captain's join approval (inside the approval transaction, under a
-transaction-scoped advisory lock keyed by the blind index, so concurrent
-approvals cannot both pass at 4), and at a contact-change request for an
-approved member. Error `parent_team_cap_reached` (409), localised in the
-app. Existing data over the cap is grandfathered, not removed.
+parent contact may be the parent of members whose team join AND parental
+consent are both approved in at most 5 distinct teams. Only verified
+memberships count: counting unverified ones let anyone lock any address
+out by creating five teams with it (security review, 2026-11-20). It is
+enforced where a membership starts to count, each time inside that
+transaction under a transaction-scoped advisory lock keyed by the blind
+index (so concurrent approvals cannot both pass at 4):
+
+- **parental consent approval** — the parent who clicks sees a "could not
+  approve" page; the approval is rolled back and the link stays usable;
+- **the captain's join approval** — the captain sees a generic "couldn't
+  approve, ask the coach" (nothing about another family);
+- **a contact-change request** for an approved member.
+
+It is deliberately *not* checked at onboarding: nothing is verified there,
+and an unauthenticated check would let anyone probe whether an address is
+at the cap. Error `parent_team_cap_reached` (409). Existing data over the
+cap is grandfathered, not removed.
 
 Comparison uses `player_private_info.parent_contact_index`: an HMAC-SHA256
-of the normalised contact (trimmed; email lower-cased; phone reduced to
-"+" and digits) under a key derived from `PII_ENCRYPTION_KEY` with a fixed
-label. `parent_contact` itself stays AES-GCM with a random IV and is never
-compared or logged. The index is backfilled by the migration and kept in
-step on every write of `parent_contact`.
+of the normalised contact under a key derived from `PII_ENCRYPTION_KEY`
+with a fixed label. Normalisation merges aggressively so one inbox cannot
+pass for several parents: email lower-cased, "+tag" dropped, Gmail dots
+dropped and googlemail.com folded into gmail.com; phone reduced to "+"
+and digits with a leading "00" read as "+". `parent_contact` itself stays
+AES-GCM with a random IV and is never compared or logged. The index is
+backfilled by the migration (which refuses to finish if no row decrypts —
+a wrong key would otherwise silently switch the cap off) and kept in step
+on every write of `parent_contact`. A rotation of `PII_ENCRYPTION_KEY`
+must recompute it.
+
+The index is a new disclosure compared with random-IV ciphertext: someone
+with a database dump, even without the key, can see which children share
+a parent contact (siblings). Accepted as the cost of the comparison.
 
 ## Consequences
 
@@ -161,9 +185,16 @@ step on every write of `parent_contact`.
 - `team.sport` has no UI yet; every team is floorball until one is added.
 - **Still owed**: the CLAUDE.md amendment (gate item 1) and a staff "hide
   this name" status.
-- The cap is checked when a contact change is *requested*; a change that
-  sits in its grace period while the parent joins other teams could land
-  over the cap. Accepted as a narrow edge.
+- **Known gaps, not closed in this change** (security review 2026-11-20):
+  - The cap is checked when a contact change is *requested*, not when it
+    is applied after its grace period; concurrent requests, or a change on
+    a still-pending member, can land an address over the cap.
+  - The join notice and the cap read the stored contact without first
+    applying a contact change that is already due, so for a short window
+    the notice can go to the old address.
+  - Parents of children who join (or get consent approved) *after* the
+    team turned Village on are not sent the notice.
+  - A national phone number ("070…") is not folded into its "+46…" form.
 - The cap and the distinct-parent rule raise the cost of padding a sport
-  to k (now ≥ 9 distinct parent addresses, 45 consented accounts, 14
+  to k (≥ 9 distinct verified parent addresses, 45 consented accounts, 14
   days); they do not make it impossible.

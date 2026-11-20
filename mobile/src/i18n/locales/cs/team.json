@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Změnit kód",
     "rotateSuccessToast": "Nový kód týmu: {{inviteCode}}",
     "rotateErrorToast": "Kód se teď nepodařilo změnit. Zkus to znovu.",
-    "approveParentCapToast": "Nelze schválit: adresa rodiče je už propojená s 5 týmy."
+    "approveParentCapToast": "Nelze schválit. Požádej o pomoc trenéra."
   },
   "k2": {
     "heading": "Tým podrobně",

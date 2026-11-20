@@ -29,7 +29,7 @@
     "rotateConfirmConfirm": "Changer le code",
     "rotateSuccessToast": "Nouveau code d'équipe : {{inviteCode}}",
     "rotateErrorToast": "Impossible de changer le code pour l'instant. Réessaie.",
-    "approveParentCapToast": "Impossible d'accepter : l'adresse du parent est déjà liée à 5 équipes."
+    "approveParentCapToast": "Impossible d'accepter. Demande de l'aide à l'entraîneur."
   },
   "k2": {
     "heading": "Équipe en détail",

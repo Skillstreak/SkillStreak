@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { ParentalConsentStatus } from '../players/player-consent-status.enum';
 import { TeamJoinStatus } from '../players/team-join-status.enum';
+import { DISTINCT_VERIFIED_PARENTS_OF_TEAM_SQL } from '../player-private-info/player-private-info.service';
 import { Team } from '../teams/entities/team.entity';
 import { TrainingLogEntry } from '../training-logs/entities/training-log-entry.entity';
 import { villageTeamName } from './village-team-name.util';
@@ -185,22 +186,14 @@ export class VillageService {
             bucketStart.getTime() - VILLAGE_MIN_TEAM_AGE_MS,
           ),
         })
-        // ADR-0040: approved members with DISTINCT parent contacts. Reads
-        // only the keyed blind index from player_private_info (never the
-        // address); a member whose index is NULL does not count.
-        .andWhere(
-          `(SELECT COUNT(DISTINCT ppi.parent_contact_index)
-            FROM "player" p
-            JOIN "player_private_info" ppi ON ppi.player_id = p.id
-           WHERE p.team_id = t.id
-             AND p.team_join_status = :joinApproved
-             AND p.parental_consent_status = :consentApproved) >= :minMembers`,
-          {
-            joinApproved: TeamJoinStatus.APPROVED,
-            consentApproved: ParentalConsentStatus.APPROVED,
-            minMembers: VILLAGE_MIN_QUALIFIED_MEMBERS,
-          },
-        )
+        // ADR-0040: approved members with DISTINCT parent contacts, by
+        // blind index only. The fragment is owned by PlayerPrivateInfoModule;
+        // a member whose index is NULL does not count.
+        .andWhere(`${DISTINCT_VERIFIED_PARENTS_OF_TEAM_SQL} >= :minMembers`, {
+          joinApproved: TeamJoinStatus.APPROVED,
+          consentApproved: ParentalConsentStatus.APPROVED,
+          minMembers: VILLAGE_MIN_QUALIFIED_MEMBERS,
+        })
     );
   }
 

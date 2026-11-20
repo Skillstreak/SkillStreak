@@ -14,6 +14,7 @@ import {
   renderConsentApprovedPage,
   renderConsentConfirmPage,
   renderConsentInvalidPage,
+  renderConsentParentTeamCapPage,
   renderSelfVerificationApprovedPage,
   renderSelfVerificationConfirmPage,
 } from './consent-page.templates';
@@ -63,9 +64,11 @@ export class ConsentController {
     // an error, per the task's idempotent-feeling requirement.
     const html = !result
       ? renderConsentAlreadyUsedPage()
-      : result.isSelfVerification
-        ? renderSelfVerificationApprovedPage(result.screenName, result.locale)
-        : renderConsentApprovedPage(result.screenName, result.locale);
+      : 'capReached' in result
+        ? renderConsentParentTeamCapPage(result.locale)
+        : result.isSelfVerification
+          ? renderSelfVerificationApprovedPage(result.screenName, result.locale)
+          : renderConsentApprovedPage(result.screenName, result.locale);
     res.status(HttpStatus.OK).type('html').send(html);
   }
 }

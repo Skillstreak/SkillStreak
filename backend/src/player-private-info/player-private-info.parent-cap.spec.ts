@@ -10,13 +10,21 @@ import {
 // CI-only test key (same one ci-cd.yml uses), a real 32-byte base64 value.
 const TEST_KEY = 'Y2ktb25seS10ZXN0LWtleS0zMi1ieXRlcy1sb25nISE=';
 
-function build(rows: Array<{ playerId: string; parentContact: string }> = []) {
+function build(
+  rows: Array<{ playerId: string; parentContact: string }> = [],
+  selfVerifiedIds: string[] = [],
+) {
   const privateInfoRepository = {
     find: jest.fn(() => Promise.resolve(rows)),
   };
+  const consentRecordRepository = {
+    find: jest.fn(() =>
+      Promise.resolve(selfVerifiedIds.map((playerId) => ({ playerId }))),
+    ),
+  };
   const service = new PlayerPrivateInfoService(
     privateInfoRepository as never,
-    {} as never,
+    consentRecordRepository as never,
     { getOrThrow: jest.fn().mockReturnValue(TEST_KEY) } as never,
     {} as never,
   );
@@ -85,8 +93,10 @@ describe('PlayerPrivateInfoService.assertParentTeamCapAllows (ADR-0040)', () => 
     expect(countSql).toContain('COUNT(DISTINCT p.team_id)');
     expect(countSql).toContain('ppi.parent_contact_index = $1');
     expect(countSql).toContain('p.team_join_status = $2');
-    expect(countSql).toContain('p.team_id <> $3');
-    expect(countParams).toEqual([index, 'approved', 'team-x']);
+    // Only consent-verified memberships count (security review B1).
+    expect(countSql).toContain('p.parental_consent_status = $3');
+    expect(countSql).toContain('p.team_id <> $4');
+    expect(countParams).toEqual([index, 'approved', 'approved', 'team-x']);
   });
 
   it('a second child of the same parent in a team the parent is already in is not a new team', async () => {
@@ -147,5 +157,28 @@ describe('PlayerPrivateInfoService.getParentEmailRecipients (ADR-0040)', () => {
     const { service, privateInfoRepository } = build();
     expect(await service.getParentEmailRecipients([])).toEqual([]);
     expect(privateInfoRepository.find).not.toHaveBeenCalled();
+  });
+
+  it('skips self-verified (13+) accounts: their contact is the child, not a parent', async () => {
+    const { service } = build(
+      [
+        {
+          playerId: 'kid13',
+          parentContact: encryptPii('kid@example.com', TEST_KEY),
+        },
+        {
+          playerId: 'kid10',
+          parentContact: encryptPii('mum@example.com', TEST_KEY),
+        },
+      ],
+      ['kid13'],
+    );
+    const recipients = await service.getParentEmailRecipients([
+      { id: 'kid13', locale: PlayerLocale.SV },
+      { id: 'kid10', locale: PlayerLocale.SV },
+    ]);
+    expect(recipients).toEqual([
+      { email: 'mum@example.com', locale: PlayerLocale.SV },
+    ]);
   });
 });

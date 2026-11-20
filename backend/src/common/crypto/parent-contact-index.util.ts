@@ -22,18 +22,40 @@ import { createHmac } from 'crypto';
 
 const INDEX_LABEL = 'skillstreak/parent-contact-index/v1';
 
+const DOTLESS_DOMAINS = new Set(['gmail.com', 'googlemail.com']);
+
 /**
  * The consent flow stores the address as typed (only trimmed for the
- * format check), so this defines the comparison form: trimmed; an email
- * is lower-cased whole (real providers treat the local part
- * case-insensitively, and "Anna@X.se" vs "anna@x.se" must not count as
- * two parents); a phone number keeps only a leading "+" and its digits.
+ * format check), so this defines the comparison form. It is deliberately
+ * aggressive at merging: one person must not pass for several parents by
+ * writing the same inbox several ways (a false merge of two real parents
+ * is negligibly likely).
+ *
+ * - Email: lower-cased whole; any "+tag" in the local part dropped (all
+ *   domains — a "+tag" address delivers to the untagged inbox at every
+ *   major provider); dots in the local part dropped for Gmail, whose
+ *   googlemail.com alias is folded into gmail.com.
+ * - Phone: only a leading "+" and digits kept; a leading "00" becomes "+".
+ *   A national number ("070…") is NOT folded into "+4670…" — that needs
+ *   the country, and the contact carries none.
  */
 export function normaliseParentContact(raw: string): string {
   const trimmed = raw.normalize('NFC').trim();
-  if (trimmed.includes('@')) return trimmed.toLowerCase();
-  const plus = trimmed.startsWith('+') ? '+' : '';
-  return plus + trimmed.replace(/\D/g, '');
+  if (trimmed.includes('@')) {
+    const lower = trimmed.toLowerCase();
+    const at = lower.lastIndexOf('@');
+    let local = lower.slice(0, at);
+    let domain = lower.slice(at + 1);
+    const plus = local.indexOf('+');
+    if (plus > 0) local = local.slice(0, plus);
+    if (domain === 'googlemail.com') domain = 'gmail.com';
+    if (DOTLESS_DOMAINS.has(domain)) local = local.replace(/\./g, '');
+    return `${local}@${domain}`;
+  }
+  const digits = trimmed.replace(/\D/g, '');
+  if (trimmed.startsWith('+')) return `+${digits}`;
+  if (digits.startsWith('00')) return `+${digits.slice(2)}`;
+  return digits;
 }
 
 export function parentContactIndex(raw: string, rawPiiKey: string): string {

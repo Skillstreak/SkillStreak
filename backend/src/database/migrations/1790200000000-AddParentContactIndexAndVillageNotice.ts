@@ -50,6 +50,15 @@ export class AddParentContactIndexAndVillageNotice1790200000000 implements Migra
         [index, row.player_id],
       );
     }
+    // Every row unreadable means the wrong PII_ENCRYPTION_KEY, not bad
+    // data. Finishing anyway would leave every index NULL, which silently
+    // switches off the parent cap and Village's distinct-parent rule —
+    // so fail the migration (and its transaction) instead.
+    if (unreadable === rows.length) {
+      throw new Error(
+        `AddParentContactIndexAndVillageNotice: none of ${rows.length} row(s) could be decrypted — wrong PII_ENCRYPTION_KEY? Refusing to continue.`,
+      );
+    }
     if (unreadable > 0) {
       console.warn(
         `AddParentContactIndexAndVillageNotice: ${unreadable} row(s) could not be decrypted and keep a NULL index.`,
