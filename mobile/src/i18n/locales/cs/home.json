@@ -161,7 +161,12 @@
       "trainerLinked": "Trenérský režim",
       "trainerLinkAccounts": "Propojit s trenérským účtem",
       "trainerUnlink": "Odpojit trenérský účet",
-      "trainerLinkFailed": "Teď to nevyšlo. Zkus to znovu."
+      "trainerLinkFailed": "Teď to nevyšlo. Zkus to znovu.",
+      "nameLabel": "Skutečné jméno",
+      "removeName": "Odstranit jméno",
+      "removeNameConfirm": "Jméno bude odstraněno z tvého profilu. V aplikaci ho už nepůjde přidat zpět.",
+      "removeNameConfirmButton": "Ano, odstranit",
+      "nameRemovedToast": "Jméno odstraněno"
     }
   },
   "erasureCheckEmail": {

@@ -161,7 +161,12 @@
       "trainerLinked": "Trainer mode",
       "trainerLinkAccounts": "Link your trainer account",
       "trainerUnlink": "Unlink the trainer account",
-      "trainerLinkFailed": "That didn't work just now. Try again."
+      "trainerLinkFailed": "That didn't work just now. Try again.",
+      "nameLabel": "Real name",
+      "removeName": "Remove name",
+      "removeNameConfirm": "Your name will be removed from your profile. You can't add it back in the app.",
+      "removeNameConfirmButton": "Yes, remove",
+      "nameRemovedToast": "Name removed"
     }
   },
   "erasureCheckEmail": {

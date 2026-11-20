@@ -134,6 +134,12 @@ export function ProfileScreen({
   const [avatarSelection, setAvatarSelection] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
 
+  // Real names can no longer be added in the app (screen names only), but a
+  // player who entered one earlier must still be able to remove it. Two taps:
+  // the first arms the confirm, the second clears.
+  const [confirmingNameRemoval, setConfirmingNameRemoval] = useState(false);
+  const [nameRemoving, setNameRemoving] = useState(false);
+
   const [contactInput, setContactInput] = useState('');
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactSubmitting, setContactSubmitting] = useState(false);
@@ -221,6 +227,22 @@ export function ProfileScreen({
       setToastMessage(t('shared.genericErrorTryAgain'));
     } finally {
       setAvatarSaving(false);
+    }
+  };
+
+  const handleRemoveName = async () => {
+    setNameRemoving(true);
+    try {
+      await updateProfile({ realName: null });
+      setProfile((prev) => (prev ? { ...prev, realName: null } : prev));
+      setConfirmingNameRemoval(false);
+      setToastDurationMs(2000);
+      setToastMessage(t('profileScreen.view.nameRemovedToast'));
+    } catch {
+      setToastDurationMs(2000);
+      setToastMessage(t('shared.genericErrorTryAgain'));
+    } finally {
+      setNameRemoving(false);
     }
   };
 
@@ -762,6 +784,31 @@ export function ProfileScreen({
           />
         </View>
 
+        {profile.realName ? (
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>{t('profileScreen.view.nameLabel')}</Text>
+            <Text style={styles.fieldValue}>{profile.realName}</Text>
+            {confirmingNameRemoval ? (
+              <>
+                <Text style={styles.fieldHelper}>{t('profileScreen.view.removeNameConfirm')}</Text>
+                <PrimaryButton
+                  label={t('profileScreen.view.removeNameConfirmButton')}
+                  onPress={() => void handleRemoveName()}
+                  loading={nameRemoving}
+                />
+                <SecondaryLink
+                  label={t('shared.cancel')}
+                  onPress={() => setConfirmingNameRemoval(false)}
+                />
+              </>
+            ) : (
+              <SecondaryLink
+                label={t('profileScreen.view.removeName')}
+                onPress={() => setConfirmingNameRemoval(true)}
+              />
+            )}
+          </View>
+        ) : null}
 
         <View style={styles.card}>
           <Text style={styles.fieldLabel}>{t('profileScreen.view.birthYearLabel')}</Text>

@@ -161,7 +161,12 @@
       "trainerLinked": "Trainermodus",
       "trainerLinkAccounts": "Mit deinem Trainerkonto verbinden",
       "trainerUnlink": "Trainerkonto trennen",
-      "trainerLinkFailed": "Das hat gerade nicht geklappt. Versuch es nochmal."
+      "trainerLinkFailed": "Das hat gerade nicht geklappt. Versuch es nochmal.",
+      "nameLabel": "Echter Name",
+      "removeName": "Namen entfernen",
+      "removeNameConfirm": "Dein Name wird aus deinem Profil entfernt. Du kannst ihn in der App nicht wieder hinzufügen.",
+      "removeNameConfirmButton": "Ja, entfernen",
+      "nameRemovedToast": "Name entfernt"
     }
   },
   "erasureCheckEmail": {
