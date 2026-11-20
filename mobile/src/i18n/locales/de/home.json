@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Dein Profil",
-    "workingTitle": "Arbeitstitel"
+    "workingTitle": "Arbeitstitel",
+    "villageAccessibilityLabel": "Skillstreak Village öffnen"
   },
   "homeScreen": {
     "loadError": "Deine Daten konnten nicht geladen werden. Prüf deine Verbindung.",

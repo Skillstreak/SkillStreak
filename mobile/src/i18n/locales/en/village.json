@@ -4,12 +4,32 @@
     "intro": "Here you see team names and sports. No players, no numbers.",
     "ownHeading": "Your team",
     "level": {
-      "calm": "Quiet here",
-      "some": "A few teams",
-      "many": "Many teams",
-      "veryMany": "Lots of teams"
+      "calm": "Quiet right now",
+      "some": "A few teams training",
+      "many": "Many teams training",
+      "veryMany": "Lots of teams training"
     },
-    "empty": "No teams are shown here right now."
+    "empty": "No teams are shown here right now.",
+    "backButton": "← Back",
+    "loadError": "Couldn't load the village. Check your connection.",
+    "retry": "Try again",
+    "trainNowTitle": "Want to wake up the arena today?",
+    "trainNowBody": "Do a session whenever suits you – it adds points to your team's World Championship Gold.",
+    "trainNowCta": "Do a session",
+    "optIn": {
+      "onTitle": "Your team is in the village",
+      "onBody": "Other teams in the village only see your team name and sport – no players, photos, clips or chat.",
+      "offTitle": "Your team is not in the village",
+      "offBodyCaptain": "As captain, you decide. Talk to your coach and the parents first. If you join, other teams in the village see your team name and sport – nothing else. Until then you won't see other teams' names either.",
+      "offBodyPlayer": "Other teams can't see your team, and you can't see their names. The captain can choose to join the village.",
+      "turnOn": "Join the village",
+      "turnOff": "Leave the village",
+      "confirmTitle": "Join the village?",
+      "confirmBody": "Other teams in the village will see your team name and sport. Have you talked to your coach and the parents?",
+      "confirmYes": "Yes, join",
+      "cancel": "Cancel",
+      "error": "Couldn't change that. Try again."
+    }
   },
   "arenas": {
     "floorball": {

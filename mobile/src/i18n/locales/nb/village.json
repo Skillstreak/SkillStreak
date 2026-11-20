@@ -4,12 +4,32 @@
     "intro": "Her ser du lagnavn og idrett. Ingen spillere, ingen tall.",
     "ownHeading": "Laget ditt",
     "level": {
-      "calm": "Stille her",
-      "some": "Noen lag",
-      "many": "Mange lag",
-      "veryMany": "Veldig mange lag"
+      "calm": "Rolig akkurat nå",
+      "some": "Noen lag trener",
+      "many": "Mange lag trener",
+      "veryMany": "Veldig mange lag trener"
     },
-    "empty": "Ingen lag vises her akkurat nå."
+    "empty": "Ingen lag vises her akkurat nå.",
+    "backButton": "← Tilbake",
+    "loadError": "Kunne ikke hente landsbyen. Sjekk tilkoblingen.",
+    "retry": "Prøv igjen",
+    "trainNowTitle": "Vil du vekke arenaen i dag?",
+    "trainNowBody": "Tren når det passer deg – det gir poeng til lagets VM-gull.",
+    "trainNowCta": "Tren nå",
+    "optIn": {
+      "onTitle": "Laget deres er med i landsbyen",
+      "onBody": "Andre lag i landsbyen ser bare lagnavnet og idretten deres – ingen spillere, bilder, klipp eller chat.",
+      "offTitle": "Laget deres er ikke med i landsbyen",
+      "offBodyCaptain": "Som kaptein bestemmer du. Snakk med treneren og foreldrene først. Blir dere med, ser andre lag i landsbyen lagnavnet og idretten deres – ikke noe mer. Inntil da ser dere heller ikke andre lags navn.",
+      "offBodyPlayer": "Andre lag ser ikke laget deres, og dere ser ikke navnene deres. Kapteinen kan velge å bli med i landsbyen.",
+      "turnOn": "Bli med i landsbyen",
+      "turnOff": "Forlat landsbyen",
+      "confirmTitle": "Bli med i landsbyen?",
+      "confirmBody": "Andre lag i landsbyen vil se lagnavnet og idretten deres. Har dere snakket med treneren og foreldrene?",
+      "confirmYes": "Ja, bli med",
+      "cancel": "Avbryt",
+      "error": "Kunne ikke endre det. Prøv igjen."
+    }
   },
   "arenas": {
     "floorball": {

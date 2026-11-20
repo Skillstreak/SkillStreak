@@ -72,6 +72,7 @@ import type {
   ClipReportReason,
   SavedClipsResponse,
 } from './types';
+import type { VillageView } from '../village/villageTypes';
 
 // The only four endpoints Phase 1's Expo app talks to, per
 // docs/api/phase1-contract.md. Deliberately thin — no extra client-side
@@ -122,6 +123,20 @@ export function postTrainingTimer(
 export function getClickOnlyAllowance(): Promise<ClickOnlyAllowance> {
   return apiClient.request<ClickOnlyAllowance>('/training-logs/click-only-allowance', {
     auth: true,
+  });
+}
+
+/** GET /village — docs/adr/0039. Team-scoped: needs an approved join. */
+export function getVillage(): Promise<VillageView> {
+  return apiClient.request<VillageView>('/village', { auth: true });
+}
+
+/** PUT /village/opt-in — captain-only (own consent approved), own team only. */
+export function setVillageOptIn(optedIn: boolean): Promise<{ optedIn: boolean }> {
+  return apiClient.request<{ optedIn: boolean }>('/village/opt-in', {
+    method: 'PUT',
+    auth: true,
+    body: { optedIn },
   });
 }
 

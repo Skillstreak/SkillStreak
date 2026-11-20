@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Tvůj profil",
-    "workingTitle": "pracovní název"
+    "workingTitle": "pracovní název",
+    "villageAccessibilityLabel": "Otevřít Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Nepodařilo se načíst tvoje data. Zkontroluj připojení.",

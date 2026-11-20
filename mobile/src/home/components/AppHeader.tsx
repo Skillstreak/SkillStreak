@@ -14,6 +14,8 @@ interface AppHeaderProps {
    * so AppHeader stays usable/testable standalone without wiring a
    * profile screen through every call site. */
   onAvatarPress?: () => void;
+  /** Skillstreak Village (I-004, docs/adr/0039). No button when omitted. */
+  onVillagePress?: () => void;
 }
 
 /** Home tab's top banner: wordmark + working-title note, the player's own
@@ -21,7 +23,7 @@ interface AppHeaderProps {
  * ever sends `avatarId`, never the emoji itself), and a screen-name-only
  * greeting (never the real name, per the "screen names in any player-facing
  * UI" rule). Otherwise purely presentational — no fetch, no state. */
-export function AppHeader({ screenName, avatarId, onAvatarPress }: AppHeaderProps) {
+export function AppHeader({ screenName, avatarId, onAvatarPress, onVillagePress }: AppHeaderProps) {
   const { t } = useTranslation('home');
 
   return (
@@ -30,6 +32,16 @@ export function AppHeader({ screenName, avatarId, onAvatarPress }: AppHeaderProp
         <Text style={styles.wordmark}>SkillStreak</Text>
         <Text style={styles.workingTitle}>{t('appHeader.workingTitle')}</Text>
       </View>
+      {onVillagePress ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('appHeader.villageAccessibilityLabel')}
+          onPress={onVillagePress}
+          style={({ pressed }) => [styles.villageCircle, pressed && styles.avatarPressed]}
+        >
+          <Text style={styles.villageIcon}>🏟️</Text>
+        </Pressable>
+      ) : null}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('appHeader.profileAccessibilityLabel')}
@@ -80,6 +92,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.flameTint,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  villageCircle: {
+    position: 'absolute',
+    top: 0,
+    right: 46,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.goldRowTint,
+    borderWidth: 1,
+    borderColor: colors.goldRowBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  villageIcon: {
+    fontSize: 18,
   },
   avatarPressed: {
     opacity: 0.7,

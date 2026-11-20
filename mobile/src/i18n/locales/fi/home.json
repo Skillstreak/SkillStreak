@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Oma profiilisi",
-    "workingTitle": "työnimi"
+    "workingTitle": "työnimi",
+    "villageAccessibilityLabel": "Avaa Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Tietojasi ei saatu ladattua. Tarkista verkkoyhteytesi.",

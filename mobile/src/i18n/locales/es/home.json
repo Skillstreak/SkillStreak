@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Tu perfil",
-    "workingTitle": "nombre provisional"
+    "workingTitle": "nombre provisional",
+    "villageAccessibilityLabel": "Abrir Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "No se pudieron cargar tus datos. Revisa tu conexión.",

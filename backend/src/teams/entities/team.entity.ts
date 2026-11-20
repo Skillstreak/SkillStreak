@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Jurisdiction } from '../../common/age/article8-age';
+import type { VillageSportCode } from '../../village/village.types';
 
 // A Team is only ever reachable via its invite_code — no public listing/
 // searchability, satisfying CLAUDE.md's "closed team bubbles" constraint
@@ -68,6 +69,30 @@ export class Team {
   set is_test(value: boolean) {
     this.isTest = value;
   }
+
+  /**
+   * The team's sport, for Skillstreak Village (I-004, ADR-0039). One value
+   * per team, defaulting to floorball because every team that exists today
+   * is a floorball team. Not a child's data and not a location.
+   */
+  @Column({
+    name: 'sport',
+    type: 'varchar',
+    length: 32,
+    default: 'FLOORBALL',
+  })
+  sport!: VillageSportCode;
+
+  /**
+   * ADR-0039 — whether this team appears in Skillstreak Village. Off by
+   * default; only the team's captain (own parental consent approved, via
+   * `PlayersService.assertIsCaptainOfTeam`) can change it. While false the
+   * team's name is never shown to another team, it does not count toward
+   * the k-anonymity threshold or the activity level, and its own players
+   * see no other team's name either (reciprocal).
+   */
+  @Column({ name: 'village_opt_in', type: 'boolean', default: false })
+  villageOptIn!: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

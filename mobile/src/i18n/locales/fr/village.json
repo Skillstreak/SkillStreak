@@ -4,12 +4,32 @@
     "intro": "Ici, tu vois les noms d'équipes et les sports. Pas de joueurs, pas de chiffres.",
     "ownHeading": "Ton équipe",
     "level": {
-      "calm": "Calme ici",
-      "some": "Quelques équipes",
-      "many": "Beaucoup d'équipes",
-      "veryMany": "Énormément d'équipes"
+      "calm": "Calme en ce moment",
+      "some": "Quelques équipes s'entraînent",
+      "many": "Beaucoup d'équipes s'entraînent",
+      "veryMany": "Énormément d'équipes s'entraînent"
     },
-    "empty": "Aucune équipe n'est affichée ici pour le moment."
+    "empty": "Aucune équipe n'est affichée ici pour le moment.",
+    "backButton": "← Retour",
+    "loadError": "Impossible de charger le village. Vérifie ta connexion.",
+    "retry": "Réessayer",
+    "trainNowTitle": "Tu veux réveiller l'arène aujourd'hui ?",
+    "trainNowBody": "Fais une séance quand ça te convient – ça rapporte des points pour l'or mondial de ton équipe.",
+    "trainNowCta": "Faire une séance",
+    "optIn": {
+      "onTitle": "Votre équipe est dans le village",
+      "onBody": "Les autres équipes du village voient seulement le nom de votre équipe et votre sport – pas de joueurs, de photos, de clips ni de chat.",
+      "offTitle": "Votre équipe n'est pas dans le village",
+      "offBodyCaptain": "En tant que capitaine, c'est toi qui décides. Parle d'abord avec l'entraîneur et les parents. Si vous rejoignez le village, les autres équipes verront le nom de votre équipe et votre sport – rien d'autre. D'ici là, vous ne voyez pas non plus les noms des autres équipes.",
+      "offBodyPlayer": "Les autres équipes ne voient pas votre équipe, et vous ne voyez pas leurs noms. Le capitaine peut choisir de rejoindre le village.",
+      "turnOn": "Rejoindre le village",
+      "turnOff": "Quitter le village",
+      "confirmTitle": "Rejoindre le village ?",
+      "confirmBody": "Les autres équipes du village verront le nom de votre équipe et votre sport. Avez-vous parlé avec l'entraîneur et les parents ?",
+      "confirmYes": "Oui, rejoindre",
+      "cancel": "Annuler",
+      "error": "Le changement n'a pas fonctionné. Réessaie."
+    }
   },
   "arenas": {
     "floorball": {

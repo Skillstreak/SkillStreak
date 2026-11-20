@@ -4,12 +4,32 @@
     "intro": "Her ser du holdnavne og sport. Ingen spillere, ingen tal.",
     "ownHeading": "Dit hold",
     "level": {
-      "calm": "Stille her",
-      "some": "Nogle hold",
-      "many": "Mange hold",
-      "veryMany": "Rigtig mange hold"
+      "calm": "Roligt lige nu",
+      "some": "Nogle hold træner",
+      "many": "Mange hold træner",
+      "veryMany": "Rigtig mange hold træner"
     },
-    "empty": "Ingen hold vises her lige nu."
+    "empty": "Ingen hold vises her lige nu.",
+    "backButton": "← Tilbage",
+    "loadError": "Kunne ikke hente landsbyen. Tjek din forbindelse.",
+    "retry": "Prøv igen",
+    "trainNowTitle": "Vil du vække arenaen i dag?",
+    "trainNowBody": "Træn når det passer dig – det giver point til holdets VM-guld.",
+    "trainNowCta": "Træn nu",
+    "optIn": {
+      "onTitle": "Jeres hold er med i landsbyen",
+      "onBody": "Andre hold i landsbyen ser kun jeres holdnavn og sport – ingen spillere, billeder, klip eller chat.",
+      "offTitle": "Jeres hold er ikke med i landsbyen",
+      "offBodyCaptain": "Som kaptajn bestemmer du. Tal med træneren og forældrene først. Hvis I går med, ser andre hold i landsbyen jeres holdnavn og sport – intet andet. Indtil da ser I heller ikke andre holds navne.",
+      "offBodyPlayer": "Andre hold kan ikke se jeres hold, og I kan ikke se deres navne. Kaptajnen kan vælge at gå med i landsbyen.",
+      "turnOn": "Gå med i landsbyen",
+      "turnOff": "Forlad landsbyen",
+      "confirmTitle": "Gå med i landsbyen?",
+      "confirmBody": "Andre hold i landsbyen vil se jeres holdnavn og sport. Har I talt med træneren og forældrene?",
+      "confirmYes": "Ja, gå med",
+      "cancel": "Annuller",
+      "error": "Det kunne ikke ændres. Prøv igen."
+    }
   },
   "arenas": {
     "floorball": {

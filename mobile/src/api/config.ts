@@ -26,6 +26,11 @@ export const API_BASE_URL: string =
 // string 'true' turns it on.
 export const PT_ENABLED: boolean = process.env.EXPO_PUBLIC_PT_ENABLED === 'true';
 
+// Skillstreak Village (I-004, docs/adr/0039). The entry point only: what
+// a team shows to others is gated server-side by the team's own opt-in,
+// which is off by default. 'false' hides the entry point entirely.
+export const VILLAGE_ENABLED: boolean = process.env.EXPO_PUBLIC_VILLAGE_ENABLED !== 'false';
+
 // Fixed per docs/api/phase1-contract.md's "Conventions" section.
 export const API_PREFIX = '/api/v1';
 

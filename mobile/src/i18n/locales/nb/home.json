@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Din profil",
-    "workingTitle": "arbeidstittel"
+    "workingTitle": "arbeidstittel",
+    "villageAccessibilityLabel": "Åpne Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Fikk ikke hentet dataene dine. Sjekk internettforbindelsen.",

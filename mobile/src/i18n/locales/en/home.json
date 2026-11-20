@@ -10,7 +10,8 @@
   },
   "appHeader": {
     "profileAccessibilityLabel": "Your profile",
-    "workingTitle": "working title"
+    "workingTitle": "working title",
+    "villageAccessibilityLabel": "Open Skillstreak Village"
   },
   "homeScreen": {
     "loadError": "Couldn't load your data. Check your connection.",

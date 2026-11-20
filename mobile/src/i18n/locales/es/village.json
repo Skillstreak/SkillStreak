@@ -4,12 +4,32 @@
     "intro": "Aquí ves los nombres de equipos y deportes. Sin jugadores, sin cifras.",
     "ownHeading": "Tu equipo",
     "level": {
-      "calm": "Tranquilo por aquí",
-      "some": "Algunos equipos",
-      "many": "Muchos equipos",
-      "veryMany": "Muchísimos equipos"
+      "calm": "Tranquilo ahora mismo",
+      "some": "Algunos equipos entrenan",
+      "many": "Muchos equipos entrenan",
+      "veryMany": "Muchísimos equipos entrenan"
     },
-    "empty": "Ahora mismo no se muestra ningún equipo aquí."
+    "empty": "Ahora mismo no se muestra ningún equipo aquí.",
+    "backButton": "← Volver",
+    "loadError": "No se pudo cargar el pueblo. Revisa tu conexión.",
+    "retry": "Reintentar",
+    "trainNowTitle": "¿Quieres despertar la arena hoy?",
+    "trainNowBody": "Entrena cuando te venga bien: suma puntos para el oro mundial de tu equipo.",
+    "trainNowCta": "Entrenar ahora",
+    "optIn": {
+      "onTitle": "Tu equipo está en el pueblo",
+      "onBody": "Los demás equipos del pueblo solo ven el nombre de tu equipo y el deporte: ni jugadores, ni fotos, ni clips, ni chat.",
+      "offTitle": "Tu equipo no está en el pueblo",
+      "offBodyCaptain": "Como capitán, decides tú. Habla antes con el entrenador y con las familias. Si os unís, los demás equipos del pueblo verán el nombre de vuestro equipo y el deporte, nada más. Hasta entonces, vosotros tampoco veréis los nombres de otros equipos.",
+      "offBodyPlayer": "Los demás equipos no ven a tu equipo y vosotros no veis sus nombres. El capitán puede decidir unirse al pueblo.",
+      "turnOn": "Unirse al pueblo",
+      "turnOff": "Salir del pueblo",
+      "confirmTitle": "¿Unirse al pueblo?",
+      "confirmBody": "Los demás equipos del pueblo verán el nombre de vuestro equipo y el deporte. ¿Habéis hablado con el entrenador y las familias?",
+      "confirmYes": "Sí, unirse",
+      "cancel": "Cancelar",
+      "error": "No se pudo cambiar. Inténtalo de nuevo."
+    }
   },
   "arenas": {
     "floorball": {

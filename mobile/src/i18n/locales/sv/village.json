@@ -4,12 +4,32 @@
     "intro": "Här syns lagnamn och sport. Inga spelare, inga siffror.",
     "ownHeading": "Ditt lag",
     "level": {
-      "calm": "Lugnt här",
-      "some": "Några lag",
-      "many": "Många lag",
-      "veryMany": "Väldigt många lag"
+      "calm": "Lugnt just nu",
+      "some": "Några lag tränar",
+      "many": "Många lag tränar",
+      "veryMany": "Väldigt många lag tränar"
     },
-    "empty": "Inga lag visas här just nu."
+    "empty": "Inga lag visas här just nu.",
+    "backButton": "← Tillbaka",
+    "loadError": "Kunde inte hämta byn. Kolla din uppkoppling.",
+    "retry": "Försök igen",
+    "trainNowTitle": "Vill du väcka arenan idag?",
+    "trainNowBody": "Kör ett pass när det passar dig – det ger poäng till lagets VM-Guld.",
+    "trainNowCta": "Kör ett pass",
+    "optIn": {
+      "onTitle": "Ert lag är med i byn",
+      "onBody": "Andra lag i byn ser bara ert lagnamn och er sport – inga spelare, bilder, klipp eller chatt.",
+      "offTitle": "Ert lag är inte med i byn",
+      "offBodyCaptain": "Som kapten bestämmer du. Prata med tränaren och föräldrarna först. Går ni med ser andra lag i byn ert lagnamn och er sport – inget mer. Tills dess ser ni inte heller andra lags namn.",
+      "offBodyPlayer": "Andra lag ser inte ert lag, och ni ser inte deras namn. Kaptenen kan välja att gå med i byn.",
+      "turnOn": "Gå med i byn",
+      "turnOff": "Lämna byn",
+      "confirmTitle": "Gå med i byn?",
+      "confirmBody": "Andra lag som är med i byn ser ert lagnamn och er sport. Har ni pratat med tränaren och föräldrarna?",
+      "confirmYes": "Ja, gå med",
+      "cancel": "Avbryt",
+      "error": "Det gick inte att ändra. Försök igen."
+    }
   },
   "arenas": {
     "floorball": {
