@@ -8,7 +8,7 @@ export type VillageLevel = 'CALM' | 'SOME' | 'MANY' | 'VERY_MANY';
 export interface VillageArena {
   /** One-off per response. Never a team id; do not store or log it. */
   slot: string;
-  /** Already masked on the server (`villageTeamName`, ADR-0039). */
+  /** Already masked on the server (`villageTeamName`, ADR-0040). */
   name: string;
 }
 

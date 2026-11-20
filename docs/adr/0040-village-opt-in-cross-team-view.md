@@ -1,4 +1,4 @@
-# ADR-0039 — Skillstreak Village: an opt-in, k-anonymous view across team bubbles
+# ADR-0040 — Skillstreak Village: an opt-in, k-anonymous view across team bubbles
 
 ## Status
 
@@ -32,7 +32,7 @@ only `"true"` turns it on; otherwise both endpoints 404) and the app's
 
 Suggested wording for the owner to accept, reject or edit:
 
-> **Except for Skillstreak Village (ADR-0039)**: a team whose captain has
+> **Except for Skillstreak Village (ADR-0040)**: a team whose captain has
 > opted it in may show other opted-in teams exactly three things — its
 > team name (masked to a fixed name-builder vocabulary), its sport, and a
 > coarse per-sport activity level aggregated over at least ten teams.

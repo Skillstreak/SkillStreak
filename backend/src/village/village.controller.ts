@@ -19,7 +19,7 @@ import { VillageService } from './village.service';
 import type { VillageView } from './village.types';
 
 /**
- * Skillstreak Village (I-004) — ADR-0039. The one deliberate, opt-in
+ * Skillstreak Village (I-004) — ADR-0040. The one deliberate, opt-in
  * exception to "a user only ever sees their own verified team"; read the
  * ADR before widening anything here.
  */

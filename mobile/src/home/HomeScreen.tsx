@@ -177,7 +177,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   // GoalScreen/TeamScreen already use for their own sub-views. 'profile'
   // added Fas 4.1 (docs/adr/0012-profile-page-and-contact-email-change.md),
   // reached via AppHeader's avatar circle.
-  // 'village' added for I-004 (docs/adr/0039), reached via AppHeader.
+  // 'village' added for I-004 (docs/adr/0040), reached via AppHeader.
   const [view, setView] = useState<'home' | 'leaderboard' | 'profile' | 'village'>('home');
 
   // I-002 — weekly quick-feedback card. Starts "handled" so the card never

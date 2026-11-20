@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * ADR-0039 — Skillstreak Village (I-004).
+ * ADR-0040 — Skillstreak Village (I-004).
  *
  * - `sport`: one sport per team; every existing team is a floorball team.
  * - `village_opt_in`: off by default. A team is invisible to every other

@@ -71,7 +71,7 @@ export class Team {
   }
 
   /**
-   * The team's sport, for Skillstreak Village (I-004, ADR-0039). One value
+   * The team's sport, for Skillstreak Village (I-004, ADR-0040). One value
    * per team, defaulting to floorball because every team that exists today
    * is a floorball team. Not a child's data and not a location.
    */
@@ -84,7 +84,7 @@ export class Team {
   sport!: VillageSportCode;
 
   /**
-   * ADR-0039 — whether this team appears in Skillstreak Village. Off by
+   * ADR-0040 — whether this team appears in Skillstreak Village. Off by
    * default; only the team's captain (own parental consent approved, via
    * `PlayersService.assertIsCaptainOfTeam`) can change it. While false the
    * team's name is never shown to another team, it does not count toward

@@ -16,7 +16,7 @@ import {
 } from './village.types';
 
 /**
- * k-anonymity floor (ADR-0039): a sport lists no names, and its level stays
+ * k-anonymity floor (ADR-0040): a sport lists no names, and its level stays
  * CALM, until at least this many OTHER qualifying teams share it.
  */
 export const VILLAGE_K_THRESHOLD = 10;
@@ -34,7 +34,7 @@ export const VILLAGE_BUCKET_MS = 15 * 60 * 1000;
  * A team only qualifies (counts toward k and the level, and can be
  * listed) with at least this many members whose team join AND parental
  * consent are approved, and once it is this old. Both raise the cost of
- * padding a sport with throwaway teams to defeat k (ADR-0039 Decision 5).
+ * padding a sport with throwaway teams to defeat k (ADR-0040 Decision 5).
  */
 export const VILLAGE_MIN_QUALIFIED_MEMBERS = 5;
 export const VILLAGE_MIN_TEAM_AGE_MS = 14 * 24 * 60 * 60 * 1000;
@@ -170,7 +170,7 @@ export class VillageService {
     return rows.length > 0;
   }
 
-  /** The one definition of a qualifying team (ADR-0039 Decision 5). */
+  /** The one definition of a qualifying team (ADR-0040 Decision 5). */
   private qualifiedTeamsQuery(bucketStart: Date) {
     return this.teamRepository
       .createQueryBuilder('t')

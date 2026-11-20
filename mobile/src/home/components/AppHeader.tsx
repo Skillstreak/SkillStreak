@@ -14,7 +14,7 @@ interface AppHeaderProps {
    * so AppHeader stays usable/testable standalone without wiring a
    * profile screen through every call site. */
   onAvatarPress?: () => void;
-  /** Skillstreak Village (I-004, docs/adr/0039). No button when omitted. */
+  /** Skillstreak Village (I-004, docs/adr/0040). No button when omitted. */
   onVillagePress?: () => void;
 }
 

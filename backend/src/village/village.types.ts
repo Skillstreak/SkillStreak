@@ -1,5 +1,5 @@
 /**
- * Skillstreak Village (I-004) — response contract, ADR-0039.
+ * Skillstreak Village (I-004) — response contract, ADR-0040.
  *
  * What may cross a team bubble here is exactly: another opted-in team's
  * display name (masked unless it is a name-builder name), its sport, and

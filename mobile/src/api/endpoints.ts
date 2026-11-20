@@ -126,7 +126,7 @@ export function getClickOnlyAllowance(): Promise<ClickOnlyAllowance> {
   });
 }
 
-/** GET /village — docs/adr/0039. Team-scoped: needs an approved join. */
+/** GET /village — docs/adr/0040. Team-scoped: needs an approved join. */
 export function getVillage(): Promise<VillageView> {
   return apiClient.request<VillageView>('/village', { auth: true });
 }

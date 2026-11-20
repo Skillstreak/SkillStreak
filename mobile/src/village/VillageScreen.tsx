@@ -50,7 +50,7 @@ export interface VillageScreenProps {
 }
 
 /**
- * Skillstreak Village (I-004, docs/adr/0039): the team's own arena plus
+ * Skillstreak Village (I-004, docs/adr/0040): the team's own arena plus
  * other opted-in teams' arenas, one card per sport.
  *
  * Fetches on open and on pull-to-refresh only. Deliberately keeps no copy

@@ -334,7 +334,7 @@ class EnvironmentVariables {
   PUBLIC_SHARING_ENABLED_TEAM_IDS?: string;
 
   /**
-   * ADR-0039 — server-side off switch for Skillstreak Village. Only the
+   * ADR-0040 — server-side off switch for Skillstreak Village. Only the
    * exact string 'true' turns it on; unset, blank or anything else means
    * both village endpoints answer 404. `@IsOptional()` alone for the same
    * blank-ConfigMap-key reason as PUBLIC_SHARING_ENABLED_TEAM_IDS.

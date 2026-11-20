@@ -1,7 +1,7 @@
 import type { VillageSportCode } from './village.types';
 
 /**
- * How another team's name is shown in Skillstreak Village (ADR-0039).
+ * How another team's name is shown in Skillstreak Village (ADR-0040).
  *
  * Team names are free text typed by a child at team creation. They can
  * carry a club, a town, a birth year or a surname ("Ackers P15", "Täby
