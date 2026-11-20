@@ -122,19 +122,21 @@ export class TrainingPlansService {
    * app moves. Deferring it was the owner's call, 2026-08-12, and the
    * trigger is written down so it is revisited on evidence, not vibes.
    */
-  private selectDrills(): TrainingPlanJob['drills'] {
-    const all = this.drillLibraryService.list();
-    return all
-      .map((summary) => this.drillLibraryService.findBySlug(summary.slug))
-      .filter((drill): drill is NonNullable<typeof drill> => Boolean(drill))
-      .map((drill) => ({
-        slug: drill.slug,
-        title: drill.title,
-        ageBand: drill.ageBand,
-        focus: drill.focus,
-        durationMinutes: drill.durationMinutes,
-        body: drill.body,
-      }));
+  private async selectDrills(): Promise<TrainingPlanJob['drills']> {
+    // list() for its sorted order, then one lookup for the bodies — both
+    // see only visible drills (git-reviewed or console-approved).
+    const all = await this.drillLibraryService.list();
+    const drills = await this.drillLibraryService.findBySlugs(
+      all.map((summary) => summary.slug),
+    );
+    return drills.map((drill) => ({
+      slug: drill.slug,
+      title: drill.title,
+      ageBand: drill.ageBand,
+      focus: drill.focus,
+      durationMinutes: drill.durationMinutes,
+      body: drill.body,
+    }));
   }
 
   /**
@@ -323,7 +325,7 @@ export class TrainingPlansService {
     if (!rows.length) return null;
     const row = rows[0];
 
-    const drills = this.selectDrills();
+    const drills = await this.selectDrills();
 
     return {
       leaseId: row.lease_id,
