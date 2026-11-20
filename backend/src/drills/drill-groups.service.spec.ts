@@ -91,8 +91,8 @@ describe('DrillGroupsService', () => {
         },
         {
           provide: DrillLibraryService,
-          useValue: {
-            findBySlug: (slug: string) =>
+          useValue: (() => {
+            const lookup = (slug: string) =>
               slug === 'kortpassningar-under-press'
                 ? {
                     slug,
@@ -105,8 +105,13 @@ describe('DrillGroupsService', () => {
                     sourceNote: null,
                     body: 'text',
                   }
-                : undefined,
-          },
+                : null;
+            return {
+              findBySlug: (slug: string) => Promise.resolve(lookup(slug)),
+              findBySlugs: (slugs: string[]) =>
+                Promise.resolve(slugs.map(lookup).filter(Boolean)),
+            };
+          })(),
         },
         {
           provide: getRepositoryToken(DrillGroup),
