@@ -1,10 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  DrillReviewNotFoundException,
+  DrillReviewStaleException,
+} from '../common/errors/exceptions';
+import {
   ANONYMOUS_AUTHOR,
   DrillLibraryService,
+  drillContentSha256,
   parseDrill,
 } from './drill-library.service';
+import { DrillReview, DrillReviewStatus } from './entities/drill-review.entity';
 
 const VALID = `---
 title: "Kortpassningar under press"
@@ -244,27 +250,66 @@ describe('parseDrill: the coach-review gate', () => {
   });
 });
 
+/**
+ * A stand-in for the `drill_review` repository, holding rows in memory.
+ * `find({ where: { status } })` filters like the real query does, so the
+ * service's own filtering is what these tests exercise.
+ */
+function reviewRepo(initial: Partial<DrillReview>[] = []) {
+  const rows = new Map<string, DrillReview>(
+    initial.map((row) => [
+      row.drillSlug!,
+      {
+        reviewedByStaffAccountId: 'staff-1',
+        reviewedAt: new Date('2026-11-20T08:00:00Z'),
+        rejectionReason: null,
+        ...row,
+      } as DrillReview,
+    ]),
+  );
+  return {
+    rows,
+    find: jest.fn((options?: { where?: { status?: DrillReviewStatus } }) =>
+      Promise.resolve(
+        [...rows.values()].filter(
+          (row) =>
+            !options?.where?.status || row.status === options.where.status,
+        ),
+      ),
+    ),
+    findOne: jest.fn((options: { where: { drillSlug: string } }) =>
+      Promise.resolve(rows.get(options.where.drillSlug) ?? null),
+    ),
+    create: (row: DrillReview) => row,
+    save: jest.fn((row: DrillReview) => {
+      rows.set(row.drillSlug, row);
+      return Promise.resolve(row);
+    }),
+  };
+}
+
+const libraryDir = join(__dirname, 'library');
+const onDisk = readdirSync(libraryDir)
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => {
+    const raw = readFileSync(join(libraryDir, f), 'utf8');
+    return { drill: parseDrill(f, raw), sha: drillContentSha256(raw) };
+  });
+const gitReviewed = onDisk.filter((d) => d.drill.coachReviewed);
+const awaiting = onDisk.filter((d) => !d.drill.coachReviewed);
+
 describe('DrillLibraryService: unreviewed drills are not served', () => {
-  const service = new DrillLibraryService();
+  const service = new DrillLibraryService(reviewRepo() as never);
 
-  const onDisk = readdirSync(join(__dirname, 'library'))
-    .filter((f) => f.endsWith('.md'))
-    .map((f) =>
-      parseDrill(f, readFileSync(join(__dirname, 'library', f), 'utf8')),
+  it('serves exactly the coach-reviewed files and no others', async () => {
+    const reviewed = gitReviewed.map((d) => d.drill.slug);
+    expect((await service.list()).map((d) => d.slug).sort()).toEqual(
+      reviewed.sort(),
     );
-
-  it('serves exactly the coach-reviewed files and no others', () => {
-    const reviewed = onDisk.filter((d) => d.coachReviewed).map((d) => d.slug);
-    expect(
-      service
-        .list()
-        .map((d) => d.slug)
-        .sort(),
-    ).toEqual(reviewed.sort());
   });
 
-  it('never includes author, authorConsentedNamed or sourceNote in a listing (Juridik R1)', () => {
-    const list = service.list();
+  it('never includes author, authorConsentedNamed or sourceNote in a listing (Juridik R1)', async () => {
+    const list = await service.list();
     expect(list.length).toBeGreaterThan(0);
     for (const item of list) {
       expect(item).not.toHaveProperty('author');
@@ -273,19 +318,239 @@ describe('DrillLibraryService: unreviewed drills are not served', () => {
     }
   });
 
-  it('cannot reach an unreviewed drill by slug either', () => {
+  it('cannot reach an unreviewed drill by slug either', async () => {
     // The listing and the lookup are separate paths, and hiding a drill
     // from one while leaving it fetchable by the other would be the more
     // dangerous half working.
-    for (const drill of onDisk.filter((d) => !d.coachReviewed)) {
-      expect(service.findBySlug(drill.slug)).toBeNull();
+    for (const { drill } of awaiting) {
+      expect(await service.findBySlug(drill.slug)).toBeNull();
     }
+    expect(
+      await service.findBySlugs(awaiting.map((d) => d.drill.slug)),
+    ).toEqual([]);
   });
 
   it('withholds something right now, so this suite is not vacuous', () => {
     // If every drill is approved one day this flips to a bare assertion
     // that nothing is withheld — which is fine, but it should be a
     // deliberate edit rather than a test that quietly stopped checking.
-    expect(onDisk.some((d) => !d.coachReviewed)).toBe(true);
+    expect(awaiting.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * ADR-0035's 2026-11-20 amendment: the four visibility cases, one each.
+ * Visible = file says true, OR file says false and an approval row matches
+ * the file's current content.
+ */
+describe('DrillLibraryService: visibility with staff review', () => {
+  const target = awaiting[0];
+  const slug = target.drill.slug;
+
+  async function visible(service: DrillLibraryService): Promise<boolean> {
+    const listed = (await service.list()).some((d) => d.slug === slug);
+    const found = (await service.findBySlug(slug)) !== null;
+    // The two read paths must always agree.
+    expect(listed).toBe(found);
+    return found;
+  }
+
+  it('file coachReviewed: true → visible, whatever the table says', async () => {
+    const reviewed = gitReviewed[0].drill.slug;
+    const service = new DrillLibraryService(
+      reviewRepo([
+        {
+          drillSlug: reviewed,
+          status: DrillReviewStatus.REJECTED,
+          contentSha256: gitReviewed[0].sha,
+          rejectionReason: 'ignored',
+        },
+      ]) as never,
+    );
+    expect(await service.findBySlug(reviewed)).not.toBeNull();
+  });
+
+  it('file false + approval for this content → visible', async () => {
+    const service = new DrillLibraryService(
+      reviewRepo([
+        {
+          drillSlug: slug,
+          status: DrillReviewStatus.APPROVED,
+          contentSha256: target.sha,
+        },
+      ]) as never,
+    );
+    expect(await visible(service)).toBe(true);
+    expect(await service.countVisible()).toBe(gitReviewed.length + 1);
+  });
+
+  it('file false + rejection → hidden', async () => {
+    const service = new DrillLibraryService(
+      reviewRepo([
+        {
+          drillSlug: slug,
+          status: DrillReviewStatus.REJECTED,
+          contentSha256: target.sha,
+          rejectionReason: 'Inte för nioåringar.',
+        },
+      ]) as never,
+    );
+    expect(await visible(service)).toBe(false);
+    expect(await service.countVisible()).toBe(gitReviewed.length);
+  });
+
+  it('file false + no row → hidden', async () => {
+    const service = new DrillLibraryService(reviewRepo() as never);
+    expect(await visible(service)).toBe(false);
+  });
+
+  it('file false + approval of DIFFERENT content → hidden, and pending again', async () => {
+    // An approval is of a text, not a name. If the file changes after
+    // approval, the new text has not been read by anyone.
+    const service = new DrillLibraryService(
+      reviewRepo([
+        {
+          drillSlug: slug,
+          status: DrillReviewStatus.APPROVED,
+          contentSha256: 'f'.repeat(64),
+        },
+      ]) as never,
+    );
+    expect(await visible(service)).toBe(false);
+    const view = await service.findForReview(slug);
+    expect(view.state).toBe('pending');
+    expect(view.changedSinceReview).toBe(true);
+  });
+
+  it('fails closed when the approvals cannot be read', async () => {
+    const repo = reviewRepo([
+      {
+        drillSlug: slug,
+        status: DrillReviewStatus.APPROVED,
+        contentSha256: target.sha,
+      },
+    ]);
+    repo.find.mockRejectedValue(new Error('connection refused'));
+    const service = new DrillLibraryService(repo as never);
+    expect(await visible(service)).toBe(false);
+    expect((await service.list()).length).toBe(gitReviewed.length);
+  });
+
+  it('health count falls back to git-reviewed when the lookup hangs', async () => {
+    jest.useFakeTimers();
+    try {
+      const repo = reviewRepo();
+      repo.find.mockReturnValue(new Promise<DrillReview[]>(() => undefined));
+      const service = new DrillLibraryService(repo as never);
+      const count = service.countVisible();
+      await jest.advanceTimersByTimeAsync(600);
+      expect(await count).toBe(gitReviewed.length);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('reads approvals per request, so a decision on another pod applies at once', async () => {
+    // Two API pods in prod: the service must not cache a verdict that
+    // another replica can change.
+    const repo = reviewRepo();
+    const service = new DrillLibraryService(repo as never);
+    expect(await visible(service)).toBe(false);
+    repo.rows.set(slug, {
+      drillSlug: slug,
+      status: DrillReviewStatus.APPROVED,
+      contentSha256: target.sha,
+      reviewedByStaffAccountId: 'other-pod',
+      reviewedAt: new Date(),
+      rejectionReason: null,
+    });
+    expect(await visible(service)).toBe(true);
+    repo.rows.set(slug, {
+      ...repo.rows.get(slug)!,
+      status: DrillReviewStatus.REJECTED,
+      rejectionReason: 'Taken down.',
+    });
+    expect(await visible(service)).toBe(false);
+  });
+});
+
+describe('DrillLibraryService: recording a decision', () => {
+  const target = awaiting[0];
+  const slug = target.drill.slug;
+
+  it('approves, records who and when, and makes the drill visible', async () => {
+    const repo = reviewRepo();
+    const service = new DrillLibraryService(repo as never);
+
+    const view = await service.decide('staff-42', slug, {
+      status: DrillReviewStatus.APPROVED,
+      contentSha256: target.sha,
+    });
+
+    expect(view.state).toBe('approved');
+    expect(view.reviewedByStaffAccountId).toBe('staff-42');
+    expect(view.reviewedAt).not.toBeNull();
+    expect(repo.rows.get(slug)).toMatchObject({
+      status: DrillReviewStatus.APPROVED,
+      contentSha256: target.sha,
+      reviewedByStaffAccountId: 'staff-42',
+      rejectionReason: null,
+    });
+    expect(await service.findBySlug(slug)).not.toBeNull();
+  });
+
+  it('a rejection after an approval takes the drill down', async () => {
+    const repo = reviewRepo([
+      {
+        drillSlug: slug,
+        status: DrillReviewStatus.APPROVED,
+        contentSha256: target.sha,
+      },
+    ]);
+    const service = new DrillLibraryService(repo as never);
+    await service.decide('staff-42', slug, {
+      status: DrillReviewStatus.REJECTED,
+      contentSha256: target.sha,
+      reason: '  Fel åldersgrupp.  ',
+    });
+    expect(repo.rows.get(slug)?.rejectionReason).toBe('Fel åldersgrupp.');
+    expect(await service.findBySlug(slug)).toBeNull();
+  });
+
+  it('refuses a decision on a version of the file the reviewer did not read', async () => {
+    const repo = reviewRepo();
+    const service = new DrillLibraryService(repo as never);
+    await expect(
+      service.decide('staff-42', slug, {
+        status: DrillReviewStatus.APPROVED,
+        contentSha256: '0'.repeat(64),
+      }),
+    ).rejects.toBeInstanceOf(DrillReviewStaleException);
+    expect(repo.save).not.toHaveBeenCalled();
+  });
+
+  it('only reviews coachReviewed: false files — a git-reviewed or unknown slug is 404', async () => {
+    const service = new DrillLibraryService(reviewRepo() as never);
+    await expect(
+      service.decide('staff-42', gitReviewed[0].drill.slug, {
+        status: DrillReviewStatus.REJECTED,
+        contentSha256: gitReviewed[0].sha,
+        reason: 'nope',
+      }),
+    ).rejects.toBeInstanceOf(DrillReviewNotFoundException);
+    await expect(service.findForReview('no-such-drill')).rejects.toBeInstanceOf(
+      DrillReviewNotFoundException,
+    );
+  });
+
+  it('lists every awaiting drill for review, with author and sourceNote for staff', async () => {
+    const service = new DrillLibraryService(reviewRepo() as never);
+    const queue = await service.listForReview();
+    expect(queue.map((d) => d.slug).sort()).toEqual(
+      awaiting.map((d) => d.drill.slug).sort(),
+    );
+    expect(queue.every((d) => d.state === 'pending')).toBe(true);
+    expect(queue[0]).toHaveProperty('author');
+    expect(queue[0]).toHaveProperty('sourceNote');
   });
 });

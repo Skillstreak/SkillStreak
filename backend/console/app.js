@@ -161,7 +161,13 @@
     pt_consent_not_approved:
       'You do not have consent for this player.',
     reauth_required:
-      'This section needs you to confirm it is you.'
+      'This section needs you to confirm it is you.',
+    drill_review_stale:
+      'This drill changed since you opened it (a new release landed). ' +
+      'Reload it and read it again before deciding.',
+    drill_review_not_found:
+      'That drill is not awaiting review — it may already be approved in ' +
+      'the repository, or was removed.'
   };
 
   function errorCode(e) {
@@ -208,6 +214,7 @@
       { id: 'plans', label: 'Session planner', ico: '🧠' },
       { id: 'posts', label: 'My tips', ico: '✍️' },
       { id: 'postReview', label: 'Tip review', ico: '🔎' },
+      { id: 'drillReview', label: 'Drill review', ico: '✅' },
       { id: 'reportedClips', label: 'Reported clips', ico: '🚩' },
       { id: 'tagging', label: 'AI health', ico: '🏷️' }
     ],
@@ -1020,6 +1027,149 @@
       function (b) { b.onclick = function () { act(b, '/reject', true, 'Reject'); }; });
     Array.prototype.forEach.call(view.querySelectorAll('[data-unpublish]'),
       function (b) { b.onclick = function () { act(b, '/unpublish', true, 'Take down'); }; });
+  }
+
+  /* ---- drill review ----------------------------------------------------
+   *
+   * ADR-0035's 2026-11-20 amendment: drills whose file says
+   * `coachReviewed: false` (the AI-drafted ones first) are approved or
+   * rejected here instead of by editing the file. The decision is stored
+   * server-side and takes effect on every pod at once — no redeploy.
+   *
+   * Author and source note are shown because staff may see them and the
+   * reviewer needs them to judge provenance; neither ever reaches a
+   * player client. The button labels are the owner's own words. */
+
+  var DRILL_REVIEW_BADGE = {
+    pending: '<span class="badge warn">Awaiting review</span>',
+    approved: '<span class="badge ok">Approved</span>',
+    rejected: '<span class="badge">Rejected</span>'
+  };
+
+  function drillReviewMeta(d) {
+    return esc(focusLabel(d.focus)) + ' · ' + esc(ageBandLabel(d.ageBand)) +
+      ' · ' + esc(d.durationMinutes) + ' min · ' + esc(d.locale);
+  }
+
+  function drillReviewVerdict(d) {
+    var out = '';
+    if (d.changedSinceReview) {
+      out += '<p class="muted" style="margin:0 0 8px">The file changed ' +
+        'after the last decision, so that decision no longer applies.</p>';
+    }
+    if (d.reviewedAt) {
+      out += '<p class="muted" style="margin:0 0 8px">Decided ' +
+        esc(new Date(d.reviewedAt).toLocaleString('en-GB')) +
+        (d.reviewedByStaffAccountId
+          ? ' by staff account ' + esc(d.reviewedByStaffAccountId)
+          : '') + '</p>';
+    }
+    if (d.rejectionReason) {
+      out += '<p style="margin:0 0 8px"><strong>Reason:</strong> ' +
+        esc(d.rejectionReason) + '</p>';
+    }
+    return out;
+  }
+
+  function drillReviewRow(d) {
+    return '<div class="card">' +
+      '<h3 style="margin:0 0 4px;font-size:15px">' + esc(d.title) + ' ' +
+        DRILL_REVIEW_BADGE[d.state] + '</h3>' +
+      '<p class="muted" style="margin:0 0 8px">' + drillReviewMeta(d) +
+        ' · ' + esc(d.author) + '</p>' +
+      drillReviewVerdict(d) +
+      '<button data-go="drillReview/' + esc(encodeURIComponent(d.slug)) +
+        '">Read and decide</button>' +
+      '</div>';
+  }
+
+  function drillReviewDetail(view, slug) {
+    api.get('/api/v1/admin/drill-reviews/' + encodeURIComponent(slug))
+      .then(function (d) {
+        view.innerHTML =
+          backLink('drillReview', 'Drill review') +
+          '<h2>' + esc(d.title) + ' ' + DRILL_REVIEW_BADGE[d.state] + '</h2>' +
+          '<div class="card">' +
+            '<p class="muted" style="margin:0 0 8px">' + drillReviewMeta(d) +
+              ' · file ' + esc(d.slug) + '.md</p>' +
+            '<p style="margin:0 0 4px"><strong>Author:</strong> ' +
+              esc(d.author) + '</p>' +
+            '<p style="margin:0 0 12px"><strong>Source note:</strong> ' +
+              (d.sourceNote ? esc(d.sourceNote) : '<span class="muted">none</span>') +
+            '</p>' +
+            drillReviewVerdict(d) +
+            '<pre style="white-space:pre-wrap;font:inherit;margin:0">' +
+              esc(d.body) + '</pre>' +
+          '</div>' +
+          '<div class="card">' +
+            '<p class="muted" style="margin:0 0 12px">Approving puts this ' +
+              'drill in the library coaches read and in the session ' +
+              'planner\'s material, on every server at once. Rejecting ' +
+              (d.state === 'approved' ? 'takes it out again at once.' : 'keeps it out.') +
+            '</p>' +
+            '<div id="drillDecision">' +
+              (d.state === 'approved'
+                ? ''
+                : '<button class="primary" id="drillApprove">Godkänn</button> ') +
+              (d.state === 'rejected'
+                ? ''
+                : '<button id="drillReject">Avvisa</button>') +
+            '</div>' +
+            '<p id="drillReviewMsg" class="muted" style="margin:8px 0 0"></p>' +
+          '</div>';
+
+        var msg = document.getElementById('drillReviewMsg');
+        var approve = document.getElementById('drillApprove');
+        var reject = document.getElementById('drillReject');
+
+        function send(button, action, body) {
+          button.disabled = true;
+          msg.className = 'muted';
+          msg.textContent = 'Saving…';
+          /* The hash is the version this screen shows. If a release has
+           * changed the file since, the server refuses (409) rather than
+           * recording a verdict on text nobody here has read. */
+          body.contentSha256 = d.contentSha256;
+          api.post('/api/v1/admin/drill-reviews/' + encodeURIComponent(d.slug) +
+                   '/' + action, body)
+            .then(function () { go('drillReview'); })
+            .catch(function (err) {
+              button.disabled = false;
+              msg.className = 'err';
+              msg.textContent = errorMessage(err);
+            });
+        }
+
+        if (approve) {
+          approve.onclick = function () { send(approve, 'approve', {}); };
+        }
+        if (reject) {
+          /* Two taps, the reason revealed in place, as on Tip review — no
+           * prompt(), and no rejection without a sentence. */
+          reject.onclick = function () {
+            var input = document.getElementById('drillRejectReason');
+            if (!input) {
+              input = document.createElement('input');
+              input.id = 'drillRejectReason';
+              input.placeholder = 'Why? Recorded with the decision.';
+              input.maxLength = 300;
+              input.style.marginTop = '8px';
+              document.getElementById('drillDecision').appendChild(input);
+              reject.textContent = 'Avvisa — tap again';
+              input.focus();
+              return;
+            }
+            var reason = input.value.trim();
+            if (reason.length < 3) {
+              msg.className = 'err';
+              msg.textContent = 'Give a reason first.';
+              return;
+            }
+            send(reject, 'reject', { reason: reason });
+          };
+        }
+      })
+      .catch(function (e) { fail(view, e); });
   }
 
   /* ---- drill groups ---------------------------------------------------
@@ -3203,6 +3353,39 @@
 
         wireReviewButtons(view);
         wirePostPreviews(view, pending.concat(live));
+      }).catch(function (e) { fail(view, e); });
+    },
+
+    /* Drill review (ADR-0035, 2026-11-20 amendment). `drillReview` lists
+     * every drill whose file says coachReviewed: false; `drillReview/<slug>`
+     * opens one to read in full and decide. Admin-only, like the route. */
+    drillReview: function (view, slug) {
+      if (slug) return drillReviewDetail(view, slug);
+      api.get('/api/v1/admin/drill-reviews').then(function (rows) {
+        var by = { pending: [], approved: [], rejected: [] };
+        rows.forEach(function (d) { (by[d.state] || by.pending).push(d); });
+
+        function section(title, list, empty) {
+          return '<h3 style="margin:20px 0 8px;font-size:16px">' + title +
+            ' (' + list.length + ')</h3>' +
+            (list.length
+              ? list.map(drillReviewRow).join('')
+              : '<div class="card"><p class="muted">' + empty + '</p></div>');
+        }
+
+        view.innerHTML =
+          '<h2>Drill review</h2>' +
+          '<div class="card">' +
+            '<p class="muted" style="margin:0">Drills whose file says ' +
+            '<code>coachReviewed: false</code> — most of them drafted by ' +
+            'an AI agent — stay out of the library until someone here ' +
+            'reads them and approves. There is no automatic check; you are ' +
+            'it. Drills already marked reviewed in the repository are not ' +
+            'listed: those are changed in the repository.</p>' +
+          '</div>' +
+          section('Awaiting review', by.pending, 'Nothing waiting.') +
+          section('Approved', by.approved, 'None approved here yet.') +
+          section('Rejected', by.rejected, 'None rejected.');
       }).catch(function (e) { fail(view, e); });
     },
 

@@ -6,7 +6,11 @@ import {
   DrillGroupNotFoundException,
   DrillNotInLibraryException,
 } from '../common/errors/exceptions';
-import { DrillLibraryService, DrillSummary } from './drill-library.service';
+import {
+  Drill,
+  DrillLibraryService,
+  DrillSummary,
+} from './drill-library.service';
 import {
   DRILL_GROUP_MAX_TAGS,
   DRILL_GROUP_TAG_MAX,
@@ -78,10 +82,22 @@ export class DrillGroupsService {
     return stored ? stored.split(',').filter(Boolean) : [];
   }
 
-  private toView(group: DrillGroup, slugs: string[]): DrillGroupView {
+  /** The visible drills among `slugs`, keyed by slug — one library lookup
+   *  however many groups are about to be rendered. */
+  private async visibleBySlug(slugs: string[]): Promise<Map<string, Drill>> {
+    if (!slugs.length) return new Map();
+    const drills = await this.drillLibraryService.findBySlugs(slugs);
+    return new Map(drills.map((drill) => [drill.slug, drill]));
+  }
+
+  private toView(
+    group: DrillGroup,
+    slugs: string[],
+    library: Map<string, Drill>,
+  ): DrillGroupView {
     const drills = slugs
-      .map((slug) => this.drillLibraryService.findBySlug(slug))
-      .filter((drill): drill is NonNullable<typeof drill> => Boolean(drill))
+      .map((slug) => library.get(slug))
+      .filter((drill): drill is Drill => Boolean(drill))
       // Fields listed rather than rest-spread off `body`, matching
       // DrillLibraryService.list: the listing's shape stays a written
       // decision instead of a side effect of which fields were omitted.
@@ -122,8 +138,11 @@ export class DrillGroupsService {
       byGroup.set(row.groupId, slugs);
     }
 
+    const library = await this.visibleBySlug(
+      memberships.map((row) => row.drillSlug),
+    );
     return groups.map((group) =>
-      this.toView(group, byGroup.get(group.id) ?? []),
+      this.toView(group, byGroup.get(group.id) ?? [], library),
     );
   }
 
@@ -145,7 +164,7 @@ export class DrillGroupsService {
         tags: this.normaliseTags(input.tags),
       }),
     );
-    return this.toView(saved, []);
+    return this.toView(saved, [], new Map());
   }
 
   async update(
@@ -161,10 +180,8 @@ export class DrillGroupsService {
     const memberships = await this.membershipRepository.find({
       where: { groupId },
     });
-    return this.toView(
-      group,
-      memberships.map((row) => row.drillSlug),
-    );
+    const slugs = memberships.map((row) => row.drillSlug);
+    return this.toView(group, slugs, await this.visibleBySlug(slugs));
   }
 
   /** Memberships go with it via ON DELETE CASCADE. */
@@ -187,7 +204,7 @@ export class DrillGroupsService {
     slug: string,
     groupIds: string[],
   ): Promise<DrillGroupView[]> {
-    if (!this.drillLibraryService.findBySlug(slug)) {
+    if (!(await this.drillLibraryService.findBySlug(slug))) {
       throw new DrillNotInLibraryException();
     }
 

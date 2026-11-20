@@ -57,6 +57,7 @@ describe('TrainingPlansService', () => {
           useValue: {
             list: () => [{ slug: drill.slug }],
             findBySlug: () => drill,
+            findBySlugs: () => [drill],
           },
         },
         {

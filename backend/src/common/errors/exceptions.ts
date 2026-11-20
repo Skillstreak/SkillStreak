@@ -1388,6 +1388,32 @@ export class DrillNotInLibraryException extends AppException {
   }
 }
 
+/** Not a drill awaiting staff review: unknown, malformed, or already
+ *  `coachReviewed: true` in git (which is changed in git, not here). */
+export class DrillReviewNotFoundException extends AppException {
+  constructor() {
+    super(
+      'drill_review_not_found',
+      'No drill awaiting review by that name.',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+}
+
+/**
+ * The drill file changed between the reviewer opening it and deciding.
+ * Refused so an approval can only ever apply to the text that was read.
+ */
+export class DrillReviewStaleException extends AppException {
+  constructor() {
+    super(
+      'drill_review_stale',
+      'This drill has changed since you opened it. Reload and read it again.',
+      HttpStatus.CONFLICT,
+    );
+  }
+}
+
 /**
  * Every clip-tagging worker rejection, whatever the cause.
  *
