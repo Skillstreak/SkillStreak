@@ -293,7 +293,7 @@
   "anonymousStats": {
     "heading": "Statistika používání aplikace",
     "body": "Když ji zapneš, aplikace počítá, jak často se otevírají obrazovky a mačkají tlačítka. Nedozvíme se, kdo tlačítko stiskl, v kterou denní dobu, ani nic z toho, co jsi napsal nebo natočil. Je vypnutá, dokud ji nezapneš, a kdykoli ji můžeš vypnout.",
-    "info": "Čísla uchováváme 90 dní a pak je mažeme. Jako každý požadavek na náš server přichází odeslání z IP adresy tvého zařízení; používá se asi minutu k zastavení zneužití, objeví se v našich běžných serverových záznamech a nikdy se neukládá spolu s čísly.",
+    "info": "Čísla uchováváme 365 dní a pak je mažeme. Jako každý požadavek na náš server přichází odeslání z IP adresy tvého zařízení; používá se asi minutu k zastavení zneužití, objeví se v našich běžných serverových záznamech, které mažeme nejpozději po 30 dnech, a nikdy se neukládá spolu s čísly.",
     "confirmBody": "Chceš statistiku zapnout? Aplikace posílá jen to, kolikrát byly obrazovky a tlačítka použity. Kdykoli ji můžeš vypnout.",
     "confirmNo": "Ne, děkuji",
     "confirmYes": "Zapnout"

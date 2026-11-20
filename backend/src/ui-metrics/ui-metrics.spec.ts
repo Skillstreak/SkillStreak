@@ -210,13 +210,13 @@ describe('bigint counters (ADR-0039 Decision 6)', () => {
 });
 
 describe('retention', () => {
-  it('deletes rows older than 90 days via the service', async () => {
+  it('deletes rows older than 365 days via the service', async () => {
     const { service, query } = makeService();
     query.mockResolvedValue([[], 4]);
     await expect(service.deleteExpired()).resolves.toBe(4);
     const [sql, params] = query.mock.calls[0] as [string, unknown[]];
     expect(sql).toMatch(/DELETE FROM ui_click_count\s+WHERE day <= /);
-    expect(params).toEqual([90]);
+    expect(params).toEqual([365]);
   });
 
   function makeRetention(claimed: boolean) {

@@ -1,6 +1,6 @@
 /** Rows older than this are deleted nightly (I-003; the app copy and the
- * privacy policy both promise 90 days). */
-export const RETENTION_DAYS = 90;
+ * privacy policy both promise 365 days). */
+export const RETENTION_DAYS = 365;
 export const UI_METRICS_RETENTION_DAYS = RETENTION_DAYS;
 
 /** Max elements per upload and the largest accepted body. */

@@ -212,9 +212,10 @@ no account, team, device or session identifier.
 
 Like every request to our server, the upload arrives from your device's
 IP address; it is used for about a minute to stop abuse, appears in our
-ordinary server logs, and is never stored with the counts.
+ordinary server logs, which are deleted after at most 30 days, and is
+never stored with the counts.
 
-The counts are kept for **90 days** and then deleted. Only our own staff
+The counts are kept for **365 days** and then deleted. Only our own staff
 can read them, as app-wide totals for finished days, with low-volume days
 hidden.
 
@@ -259,7 +260,8 @@ together.
 | Video clips | 90 days |
 | Bug reports | 90 days |
 | Error logs | 90 days |
-| Optional app usage statistics (per screen/button per day) | 90 days |
+| Optional app usage statistics (per screen/button per day) | 365 days |
+| Server access logs (contain IP addresses) | at most 30 days |
 | Generated training plans (staff) | 365 days |
 | Event registrations | 365 days |
 | Account data | Until the account is deleted |

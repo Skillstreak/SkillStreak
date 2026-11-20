@@ -23,7 +23,7 @@ and buttons is used, holds the counts in memory, and every 4–6 minutes
 `POST /api/v1/ui-metrics/counts`. The server adds them into
 `ui_click_count(key, day, count, senders)` — no player, device, team, IP
 or timestamp column. An admin-only view reads it; a nightly sweep deletes
-rows after 90 days.
+rows after 365 days (90 in the original PR; see the 2026-11-20 amendment).
 
 The stored table is genuinely not about anyone. Four things around it
 were not right, and they are what this ADR decides:
@@ -196,14 +196,14 @@ logs are whatever the cluster keeps (see owner's calls below).
 the card and confirm must say what is counted (how often screens and
 buttons are used), what is not (who pressed, when, anything they wrote or
 filmed), that it is off until switched on, that it can be switched off at
-any time, and that **counts are kept for 90 days** and then deleted. Drop
+any time, and that **counts are kept for 365 days** and then deleted. Drop
 "helt anonymt" and "inga personuppgifter" as absolute claims; the IP
 sentence makes them untrue in transit.
 
 **Elsewhere, same PR as the feature:**
 
 - `docs/legal/privacy-policy-DRAFT.md`: a short section next to §8's
-  site counters, with the IP sentence and the 90 days.
+  site counters, with the IP sentence and the 365 days.
 - `docs/STORE-DATA-SAFETY.md`: add *Usage Data — Product Interaction*,
   optional, **not linked**, purpose analytics, not tracking. Today both
   store forms say no usage data is collected; shipping this without the
@@ -234,7 +234,18 @@ sentence makes them untrue in transit.
    is the conservative reading, not a lawyer's. If counsel says option
    (A) is defensible, the ParentalGate path could return, but the copy
    still may not say a parent consented.
-3. **Ingress log retention.** How long the cluster keeps access logs with
+3. **Ingress log retention.** *Decided 2026-11-20, see the amendment
+   below.* How long the cluster keeps access logs with
    client IPs is not documented anywhere in this repo, and the privacy
    policy does not currently mention server logs at all. That gap
    predates I-003 but the IP sentence in Decision 7 depends on it.
+
+## Amendment 2026-11-20 — retention periods (owner's call 3)
+
+Decided by the project owner: **logs that can identify a person (server
+and ingress access logs with client IP addresses) are kept at most 30
+days; anonymous aggregate statistics such as `ui_click_count` are kept
+365 days.** `RETENTION_DAYS` is 365, and the app copy, privacy policy and
+this ADR say so. The 30-day log limit is a promise about the cluster's
+log retention and has to be true there — verify it on the ingress and
+node log rotation, not just in this text.
