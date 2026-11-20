@@ -132,7 +132,10 @@ they never see, and how to get it turned off (captain/coach, or
 hello@skillstreak.xyz). Only consent-approved members, so every address
 mailed has been proven by its owner. Self-verified accounts (13+, whose
 contact is the child's own address) are skipped. One mail per distinct
-address (by the same normalisation as Decision 8); phone-only contacts
+address (by the same normalisation as Decision 8), read through the same
+path as every other contact read, so a contact change already past its
+grace period is applied first and the replaced address is never mailed;
+phone-only contacts
 cannot be mailed and are skipped. Not sent on OFF, and not again if
 turned ON within 30 days (`team.village_join_notice_sent_at`, claimed
 under a row lock). Best-effort: the toggle never waits on or fails because
@@ -189,9 +192,6 @@ a parent contact (siblings). Accepted as the cost of the comparison.
   - The cap is checked when a contact change is *requested*, not when it
     is applied after its grace period; concurrent requests, or a change on
     a still-pending member, can land an address over the cap.
-  - The join notice and the cap read the stored contact without first
-    applying a contact change that is already due, so for a short window
-    the notice can go to the old address.
   - Parents of children who join (or get consent approved) *after* the
     team turned Village on are not sent the notice.
   - A national phone number ("070…") is not folded into its "+46…" form.

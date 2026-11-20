@@ -181,10 +181,19 @@ export class PlayerPrivateInfoService {
         })
       ).map((r) => r.playerId),
     );
-    const rows = await this.privateInfoRepository.find({
-      where: { playerId: In(players.map((p) => p.id)) },
-      select: { playerId: true, parentContact: true },
-    });
+    // Through getEffective, one player at a time (a team is ~20): a
+    // contact change already past its grace period is applied first, so
+    // this never mails an address the family has replaced.
+    const rows: Array<{ playerId: string; parentContact: string }> = [];
+    for (const player of players) {
+      const info = await this.getEffective(player.id);
+      if (info) {
+        rows.push({
+          playerId: info.playerId,
+          parentContact: info.parentContact,
+        });
+      }
+    }
     const key = this.encryptionKey;
     const byNormalised = new Map<string, ParentEmailRecipient>();
     for (const row of rows) {

@@ -10,25 +10,56 @@ import {
 // CI-only test key (same one ci-cd.yml uses), a real 32-byte base64 value.
 const TEST_KEY = 'Y2ktb25seS10ZXN0LWtleS0zMi1ieXRlcy1sb25nISE=';
 
-function build(
-  rows: Array<{ playerId: string; parentContact: string }> = [],
-  selfVerifiedIds: string[] = [],
-) {
+type Row = {
+  playerId: string;
+  parentContact: string;
+  pendingParentContact?: string | null;
+  contactChangeApplyAt?: Date | null;
+};
+
+function build(rows: Row[] = [], selfVerifiedIds: string[] = []) {
+  const stored = rows.map((r) => ({
+    pendingParentContact: null,
+    contactChangeApplyAt: null,
+    ...r,
+  }));
   const privateInfoRepository = {
-    find: jest.fn(() => Promise.resolve(rows)),
+    findOne: jest.fn(({ where }: { where: { playerId: string } }) =>
+      Promise.resolve(
+        stored.find((r) => r.playerId === where.playerId) ?? null,
+      ),
+    ),
   };
   const consentRecordRepository = {
     find: jest.fn(() =>
       Promise.resolve(selfVerifiedIds.map((playerId) => ({ playerId }))),
     ),
   };
+  // getEffective's lazy apply of a due contact change.
+  const txUpdate = jest.fn(() => Promise.resolve());
+  const manager = {
+    getRepository: () => ({
+      createQueryBuilder: () => {
+        const qb = {
+          setLock: () => qb,
+          where: () => qb,
+          getOne: () => Promise.resolve(stored[0]),
+        };
+        return qb;
+      },
+      update: txUpdate,
+    }),
+  };
+  const dataSource = {
+    transaction: jest.fn((cb: (m: unknown) => unknown) => cb(manager)),
+  };
   const service = new PlayerPrivateInfoService(
     privateInfoRepository as never,
     consentRecordRepository as never,
     { getOrThrow: jest.fn().mockReturnValue(TEST_KEY) } as never,
-    {} as never,
+    dataSource as never,
   );
-  return { service, privateInfoRepository };
+  return { service, privateInfoRepository, txUpdate };
 }
 
 /** A manager whose count query reports the parent is already approved in
@@ -156,7 +187,7 @@ describe('PlayerPrivateInfoService.getParentEmailRecipients (ADR-0040)', () => {
   it('reads nothing for an empty team', async () => {
     const { service, privateInfoRepository } = build();
     expect(await service.getParentEmailRecipients([])).toEqual([]);
-    expect(privateInfoRepository.find).not.toHaveBeenCalled();
+    expect(privateInfoRepository.findOne).not.toHaveBeenCalled();
   });
 
   it('skips self-verified (13+) accounts: their contact is the child, not a parent', async () => {
@@ -179,6 +210,24 @@ describe('PlayerPrivateInfoService.getParentEmailRecipients (ADR-0040)', () => {
     ]);
     expect(recipients).toEqual([
       { email: 'mum@example.com', locale: PlayerLocale.SV },
+    ]);
+  });
+
+  it('applies a contact change already past its grace period, and mails the NEW address', async () => {
+    const { service, txUpdate } = build([
+      {
+        playerId: 'kid',
+        parentContact: encryptPii('old@example.com', TEST_KEY),
+        pendingParentContact: encryptPii('new@example.com', TEST_KEY),
+        contactChangeApplyAt: new Date(Date.now() - 60_000),
+      },
+    ]);
+    const recipients = await service.getParentEmailRecipients([
+      { id: 'kid', locale: PlayerLocale.SV },
+    ]);
+    expect(txUpdate).toHaveBeenCalled();
+    expect(recipients).toEqual([
+      { email: 'new@example.com', locale: PlayerLocale.SV },
     ]);
   });
 });
