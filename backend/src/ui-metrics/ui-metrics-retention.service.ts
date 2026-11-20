@@ -12,7 +12,7 @@ import {
 import { UiMetricsService } from './ui-metrics.service';
 
 /**
- * Nightly deletion of `ui_click_count` rows older than RETENTION_DAYS (90),
+ * Nightly deletion of `ui_click_count` rows older than RETENTION_DAYS (365),
  * the period promised to parents. Same shape as the other retention sweeps:
  * in-process cron, one replica wins a Redis run-claim.
  *

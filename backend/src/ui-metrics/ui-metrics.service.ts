@@ -132,7 +132,7 @@ export class UiMetricsService {
   }
 
   /** Deletes rows older than the retention window. Returns rows removed.
-   * `<=`, so with the nightly sweep no row outlives the promised 90 days. */
+   * `<=`, so with the nightly sweep no row outlives the promised 365 days. */
   async deleteExpired(): Promise<number> {
     // Typed via the generic, not an `as` cast: query<T = any>() leaves T as
     // `any` under a cast, which no-unsafe-assignment/-return reject.

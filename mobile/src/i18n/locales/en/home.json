@@ -293,7 +293,7 @@
   "anonymousStats": {
     "heading": "App usage statistics",
     "body": "If you turn this on, the app counts how often screens are opened and buttons are pressed. We don't learn who pressed, what time of day, or anything you wrote or filmed. It is off until you turn it on, and you can turn it off at any time.",
-    "info": "The counts are kept for 90 days and then deleted. Like every request to our server, the upload arrives from your device's IP address; it is used for about a minute to stop abuse, appears in our ordinary server logs, and is never stored with the counts.",
+    "info": "The counts are kept for 365 days and then deleted. Like every request to our server, the upload arrives from your device's IP address; it is used for about a minute to stop abuse, appears in our ordinary server logs, which are deleted after at most 30 days,, and is never stored with the counts.",
     "confirmBody": "Do you want to turn on the statistics? The app only sends how many times screens and buttons were used. You can turn it off at any time.",
     "confirmNo": "No thanks",
     "confirmYes": "Turn on"
