@@ -49,6 +49,7 @@ import {
 import type { ActiveTimer } from '../api/trainingTimer';
 import { colors } from '../theme/colors';
 import { UploadFlow } from '../clips/upload/UploadFlow';
+import { trackButton } from '../api/uiMetricsClient';
 import type {
   ClickOnlyAllowance,
   CreateTrainingLogRequest,
@@ -319,6 +320,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
   /** docs/adr/0038 Decision 2 — the server starts the clock; the phone
    * only displays it. */
   const startTimer = async () => {
+    trackButton('btn_start_timer');
     setSheetLoading(true);
     setSheetError(null);
     try {
@@ -359,6 +361,7 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
    * upload-then-log path as an untimed video log, carrying the timer. */
   const handleTimerLog = (minutesDone: number, choice: TimerLogChoice) => {
     if (!activeTimer) return;
+    trackButton('btn_log_training');
     const base = {
       durationMinutes: minutesDone,
       timerId: activeTimer.timerId,
@@ -389,6 +392,9 @@ export function HomeScreen({ onSessionInvalid, onGoalBonusTriggered }: HomeScree
     durationMinutes: number,
     evidence: EvidenceChoice,
   ) => {
+    // I-003: the log button on the sheet, counted once per press — not in
+    // writeTrainingLog, which also runs for retries and fallbacks.
+    trackButton('btn_log_training');
     if (evidence !== 'none') {
       setSheetOpen(false);
       setPendingEvidenceLog({ durationMinutes, evidence });

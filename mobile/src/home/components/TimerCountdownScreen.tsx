@@ -15,6 +15,7 @@ import {
   MAX_TIMER_MINUTES,
 } from '../../api/trainingTimer';
 import type { ActiveTimer } from '../../api/trainingTimer';
+import { trackButton } from '../../api/uiMetricsClient';
 
 /** What a finished timer can be logged with — ADR-0038 Decision 5: the
  * timer fixes the minutes, an attached clip sets the tier. */
@@ -210,7 +211,13 @@ export function TimerCountdownScreen({
       <>
         <Text style={styles.heading}>{t('trainingTimer.heading')}</Text>
         <Text style={styles.body}>{t('trainingTimer.explainer')}</Text>
-        <PrimaryButton label={t('trainingTimer.stop')} onPress={() => setPhase('confirmStop')} />
+        <PrimaryButton
+          label={t('trainingTimer.stop')}
+          onPress={() => {
+            trackButton('btn_stop_timer');
+            setPhase('confirmStop');
+          }}
+        />
       </>
     );
   }

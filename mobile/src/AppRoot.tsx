@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { OnboardingFlow } from './onboarding/OnboardingFlow';
 import { AppShell } from './AppShell';
 import { getSessionToken } from './api/authStorage';
+import { resetUiMetrics } from './api/uiMetricsClient';
 import { colors } from './theme/colors';
 
 type RootStatus = 'checking-session' | 'onboarding' | 'home';
@@ -32,7 +33,12 @@ export function AppRoot() {
   }, []);
 
   const handleOnboardingComplete = useCallback(() => setStatus('home'), []);
-  const handleSessionInvalid = useCallback(() => setStatus('onboarding'), []);
+  // I-003 (ADR-0039 Decision 3): a dropped session is a logout too — switch
+  // the click-statistics client off and discard its unsent counts.
+  const handleSessionInvalid = useCallback(() => {
+    void resetUiMetrics();
+    setStatus('onboarding');
+  }, []);
 
   let body: ReactNode;
   if (status === 'checking-session') {

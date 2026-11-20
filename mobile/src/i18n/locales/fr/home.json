@@ -290,6 +290,14 @@
     "a11yCategoryGroup": "Choisis ce qui s'est passé",
     "a11yScreenGroup": "Choisis où dans l'appli c'est arrivé"
   },
+  "anonymousStats": {
+    "heading": "Statistiques d'utilisation de l'appli",
+    "body": "Si tu l'actives, l'appli compte combien de fois les écrans sont ouverts et les boutons utilisés. Nous ne savons pas qui a appuyé, à quelle heure, ni rien de ce que tu as écrit ou filmé. C'est désactivé tant que tu ne l'actives pas, et tu peux le désactiver à tout moment.",
+    "info": "Les chiffres sont conservés 90 jours puis supprimés. Comme toute requête vers notre serveur, l'envoi provient de l'adresse IP de ton appareil ; elle sert environ une minute à bloquer les abus, apparaît dans nos journaux de serveur habituels et n'est jamais enregistrée avec les chiffres.",
+    "confirmBody": "Veux-tu activer les statistiques ? L'appli envoie seulement combien de fois les écrans et les boutons ont été utilisés. Tu peux les désactiver à tout moment.",
+    "confirmNo": "Non merci",
+    "confirmYes": "Activer"
+  },
   "trainingReminder": {
     "heading": "Rappel d'entraînement",
     "body": "Un rappel amical par jour. Tu choisis quand — et il n'arrive jamais le soir ni la nuit.",
