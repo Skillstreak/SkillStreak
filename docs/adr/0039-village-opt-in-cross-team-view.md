@@ -9,6 +9,18 @@ Village) on 2026-11-20. Design source: Hermes' spec
 
 ### Gate before enabling
 
+Three things must be done before either switch is turned on, in any
+environment (the beta is the live app):
+
+1. **The CLAUDE.md amendment** below — the project owner's own action.
+2. **Parents informed when their team joins** (Hermes' spec), through the
+   existing parental email flow. Without it a child captain's single tap
+   is the only step between a team and the village.
+3. **Distinct-parent check for k** — a member counts toward a team's
+   qualification only if their parent email is not also behind a member of
+   another qualifying team. Without it, someone controlling 45 parent
+   addresses can, after 14 days, still pad a sport to k (Decision 5).
+
 Village crosses the closed team bubble, and CLAUDE.md names exactly one
 exception to it today (ADR-0030, a player's own clips). ADR-0029
 Decision 1 says that crossing its moves 1 or 4 "requires the project
@@ -86,15 +98,19 @@ nor levels (every sport card is CALM and empty).
 uses, which also requires the captain's own parental consent to be
 approved. The endpoint acts only on the caller's own team. The app tells
 the captain to talk to the coach and the parents first and confirms
-before turning it on. Every change records who (captain's player id) and
-when (`village_opt_in_changed_at` / `_by`).
+before turning it on. The last change is recorded: who (captain's player
+id, FK `ON DELETE SET NULL` so account erasure clears it) and when
+(`village_opt_in_changed_at` / `_by`). Only the latest change is kept; a
+full history would need an append-only table.
 
 **5. k-anonymity, hardened against padding.** A sport lists no names, and
 its level stays CALM, until at least **10 other qualifying teams** share
 it. A team qualifies only if it is opted in, not a test team, at least
 **14 days old**, and has at least **5 members whose team join and
 parental consent are both approved** — so defeating k with throwaway
-teams costs 50 consented accounts and two weeks rather than nine sign-ups.
+teams costs 45 consented accounts and two weeks rather than nine sign-ups.
+The viewer's own team must qualify by the same rule before it sees
+anything (symmetric reciprocity).
 Once k is met, exactly **10** names are shown, so the list length says
 nothing about the team count. The sample, its order and the level are
 fixed for each quarter-hour bucket, so polling learns nothing finer.
@@ -110,8 +126,5 @@ fixed for each quarter-hour bucket, so polling learns nothing finer.
   text and will show masked. Hermes' `TeamNameBuilder` is a separate
   change.
 - `team.sport` has no UI yet; every team is floorball until one is added.
-- **Still owed before enabling beyond beta**: informing parents when their
-  team joins (Hermes' spec: "parents informed"), a staff "hide this name"
-  status, and the CLAUDE.md amendment above. The padding defence in
-  Decision 5 does not check for distinct parent email addresses across
-  teams; that is a possible further hardening.
+- **Still owed**: the three items under "Gate before enabling", and a
+  staff "hide this name" status.
