@@ -14,8 +14,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * The partial index serves the only query that reads the flag: opted-in,
  * non-test teams, a small subset of `team`.
  */
-export class AddTeamVillageFields1790100000000 implements MigrationInterface {
-  name = 'AddTeamVillageFields1790100000000';
+export class AddTeamVillageFields1790150000000 implements MigrationInterface {
+  name = 'AddTeamVillageFields1790150000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
