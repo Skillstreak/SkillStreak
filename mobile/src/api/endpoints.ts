@@ -131,6 +131,14 @@ export function getVillage(): Promise<VillageView> {
   return apiClient.request<VillageView>('/village', { auth: true });
 }
 
+/** GET /village/access — whether to show the village entry for this
+ * player (on for everyone, or the owner preview while it is off). */
+export function getVillageAccess(): Promise<{ enabled: boolean; preview: boolean }> {
+  return apiClient.request<{ enabled: boolean; preview: boolean }>('/village/access', {
+    auth: true,
+  });
+}
+
 /** PUT /village/opt-in — captain-only (own consent approved), own team only. */
 export function setVillageOptIn(optedIn: boolean): Promise<{ optedIn: boolean }> {
   return apiClient.request<{ optedIn: boolean }>('/village/opt-in', {

@@ -195,3 +195,23 @@ a parent contact (siblings). Accepted as the cost of the comparison.
 - The cap and the distinct-parent rule raise the cost of padding a sport
   to k (≥ 9 distinct verified parent addresses, 45 consented accounts, 14
   days); they do not make it impossible.
+
+## Amendment 2026-11-20 — owner preview
+
+The project owner asked to see Village on their own account before it is
+switched on for anyone. `VILLAGE_PREVIEW_PLAYER_IDS` (ConfigMap) lists
+player ids that, while `VILLAGE_ENABLED` is not `"true"`, get:
+
+- `GET /village/access` → `{ enabled: true, preview: true }`, which shows
+  the entry in any app build (the build flag is no longer required);
+- `GET /village` → their own team's arena as stored, plus arenas that are
+  **made up in code** (`village-preview.ts`, name-builder vocabulary, no
+  database read). No other team's name, sport or activity is read, so
+  nothing crosses a bubble; the response carries `preview: true` and the
+  app labels it;
+- `PUT /village/opt-in` → 404, and `canManage` is always false: a preview
+  viewer cannot join for real, so no parent notice goes out and nothing
+  changes for when Village opens.
+
+Once `VILLAGE_ENABLED` is `"true"` the list is ignored and everyone,
+listed or not, gets the real view.

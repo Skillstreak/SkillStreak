@@ -29,7 +29,8 @@
       "confirmYes": "Ano, připojit",
       "cancel": "Zrušit",
       "error": "Změnu se nepodařilo uložit. Zkus to znovu."
-    }
+    },
+    "previewBanner": "Náhled – vidíš ho jen ty. Týmy níže jsou smyšlené a tvůj tým se nemůže připojit, dokud se vesnice neotevře."
   },
   "arenas": {
     "floorball": {

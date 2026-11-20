@@ -39,6 +39,8 @@ export interface VillageScreenLabels {
   trainNowBody: string;
   trainNowCta: string;
   optIn: VillageOptInLabels;
+  /** Shown only on the owner preview: the other teams are made up. */
+  previewBanner: string;
 }
 
 export interface VillageScreenProps {
@@ -163,6 +165,11 @@ export function VillageScreen({ alreadyLoggedToday, onBack, onTrainNow }: Villag
             {labels.title}
           </Text>
           <Text style={styles.intro}>{labels.intro}</Text>
+          {view.preview ? (
+            <View style={styles.previewBanner}>
+              <Text style={styles.previewBannerText}>{labels.previewBanner}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.own}>
             <Text style={styles.ownHeading}>{labels.ownHeading}</Text>
@@ -246,6 +253,14 @@ const styles = StyleSheet.create({
   backButtonText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
   title: { fontFamily: fonts.headingBold, fontSize: 28, color: colors.ink },
   intro: { fontFamily: fonts.body, fontSize: 15, color: colors.textBody },
+  previewBanner: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.gold,
+    borderRadius: 12,
+    padding: 12,
+  },
+  previewBannerText: { fontFamily: fonts.body, fontSize: 14, color: colors.textBody },
   own: {
     backgroundColor: colors.goldRowTint,
     borderColor: colors.goldRowBorder,

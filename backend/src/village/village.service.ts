@@ -7,6 +7,7 @@ import { TeamJoinStatus } from '../players/team-join-status.enum';
 import { DISTINCT_VERIFIED_PARENTS_OF_TEAM_SQL } from '../player-private-info/player-private-info.service';
 import { Team } from '../teams/entities/team.entity';
 import { TrainingLogEntry } from '../training-logs/entities/training-log-entry.entity';
+import { buildPreviewSports } from './village-preview';
 import { villageTeamName } from './village-team-name.util';
 import {
   VILLAGE_SPORTS,
@@ -95,6 +96,36 @@ export class VillageService {
         canManage: viewer.canManage,
       },
       sports,
+    };
+  }
+
+  /**
+   * Owner preview (VILLAGE_PREVIEW_PLAYER_IDS) while the village is off:
+   * the viewer's own arena as stored, every other arena made up by
+   * `buildPreviewSports`. Reads only the viewer's own team. canManage is
+   * always false — joining for real is refused in preview, so no parent
+   * notice can go out and nothing changes for when the village opens.
+   */
+  async getPreviewView(
+    teamId: string,
+    now: Date = new Date(),
+  ): Promise<VillageView> {
+    const bucketStart = new Date(
+      Math.floor(now.getTime() / VILLAGE_BUCKET_MS) * VILLAGE_BUCKET_MS,
+    );
+    const ownTeam = await this.teamRepository.findOneOrFail({
+      where: { id: teamId },
+    });
+    return {
+      generatedAt: bucketStart.toISOString(),
+      preview: true,
+      ownArena: {
+        sport: ownTeam.sport,
+        name: ownTeam.name,
+        optedIn: ownTeam.villageOptIn,
+        canManage: false,
+      },
+      sports: buildPreviewSports(bucketStart),
     };
   }
 

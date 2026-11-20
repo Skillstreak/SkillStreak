@@ -29,7 +29,8 @@
       "confirmYes": "Sí, unirse",
       "cancel": "Cancelar",
       "error": "No se pudo cambiar. Inténtalo de nuevo."
-    }
+    },
+    "previewBanner": "Vista previa: solo tú ves esto. Los equipos de abajo son inventados y tu equipo no puede unirse hasta que abra la aldea."
   },
   "arenas": {
     "floorball": {

@@ -158,6 +158,12 @@ data:
   # the project owner has amended CLAUDE.md's closed-team-bubble clause
   # for Village (ADR-0040 "Gate before enabling").
   VILLAGE_ENABLED: "false"
+  # Owner preview while Village is off (owner decision 2026-11-20): these
+  # player ids see their own team plus made-up teams generated in the
+  # response. No other team is read; joining stays refused, so no parent
+  # mail goes out. Ignored once VILLAGE_ENABLED is "true". Currently the
+  # project owner's own player, IssenDissen.
+  VILLAGE_PREVIEW_PLAYER_IDS: "195a5e19-f0e1-4504-b202-f5e4c430135a"
 
   # --- Bounce mailbox (ADR-0030 finding 4) ---------------------------------
   #

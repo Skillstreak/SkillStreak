@@ -10,9 +10,11 @@ describe('VillageController', () => {
       parentalConsentStatus: ParentalConsentStatus;
     },
     enabled: string | null = 'true',
+    previewIds: string | null = null,
   ) {
     const villageService = {
       getVillageView: jest.fn(() => Promise.resolve({})),
+      getPreviewView: jest.fn(() => Promise.resolve({ preview: true })),
       setOptIn: jest.fn(() => Promise.resolve()),
     };
     const playersService = {
@@ -20,7 +22,11 @@ describe('VillageController', () => {
       assertTeamMembership: jest.fn(() => Promise.resolve(player)),
       assertIsCaptainOfTeam: jest.fn(() => Promise.resolve(player)),
     };
-    const configService = { get: jest.fn(() => enabled) };
+    const configService = {
+      get: jest.fn((key: string) =>
+        key === 'VILLAGE_PREVIEW_PLAYER_IDS' ? previewIds : enabled,
+      ),
+    };
     const joinNotice = {
       notifyIfDue: jest.fn(() => Promise.resolve({ sent: true })),
     };
@@ -145,5 +151,78 @@ describe('VillageController', () => {
     );
     expect(villageService.setOptIn).toHaveBeenCalledWith('team-a', true, 'p1');
     await new Promise((r) => setImmediate(r));
+  });
+
+  describe('owner preview (VILLAGE_PREVIEW_PLAYER_IDS)', () => {
+    const captain = {
+      teamId: 'team-a',
+      isCaptain: true,
+      parentalConsentStatus: ParentalConsentStatus.APPROVED,
+    };
+
+    it('a listed player gets the preview while the village is off', async () => {
+      const { controller, villageService } = setup(
+        captain,
+        'false',
+        ' other , p1 ',
+      );
+      expect(controller.getAccess('p1')).toEqual({
+        enabled: true,
+        preview: true,
+      });
+      await expect(controller.getVillage('p1')).resolves.toEqual({
+        preview: true,
+      });
+      expect(villageService.getPreviewView).toHaveBeenCalledWith('team-a');
+      expect(villageService.getVillageView).not.toHaveBeenCalled();
+    });
+
+    it('the preview still runs the team-membership gate', async () => {
+      const { controller, playersService, villageService } = setup(
+        captain,
+        'false',
+        'p1',
+      );
+      playersService.assertTeamMembership.mockRejectedValueOnce(
+        new Error('pending'),
+      );
+      await expect(controller.getVillage('p1')).rejects.toThrow('pending');
+      expect(villageService.getPreviewView).not.toHaveBeenCalled();
+    });
+
+    it('a preview player cannot join for real, so no parent mail goes out', async () => {
+      const { controller, villageService, joinNotice } = setup(
+        captain,
+        'false',
+        'p1',
+      );
+      await expect(
+        controller.setOptIn('p1', { optedIn: true }),
+      ).rejects.toThrow(NotFoundException);
+      expect(villageService.setOptIn).not.toHaveBeenCalled();
+      expect(joinNotice.notifyIfDue).not.toHaveBeenCalled();
+    });
+
+    it('an unlisted player sees nothing', async () => {
+      const { controller } = setup(captain, 'false', 'p1');
+      expect(controller.getAccess('p2')).toEqual({
+        enabled: false,
+        preview: false,
+      });
+      await expect(controller.getVillage('p2')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('once the village is on, listed players get the real view', async () => {
+      const { controller, villageService } = setup(captain, 'true', 'p1');
+      expect(controller.getAccess('p1')).toEqual({
+        enabled: true,
+        preview: false,
+      });
+      await controller.getVillage('p1');
+      expect(villageService.getVillageView).toHaveBeenCalled();
+      expect(villageService.getPreviewView).not.toHaveBeenCalled();
+    });
   });
 });
