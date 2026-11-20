@@ -64,6 +64,7 @@ Each row names the column or file it comes from.
 | **Identifiers — User ID** | Yes | `player.id`, internal only | Account identity | Yes | No |
 | **Diagnostics — Other** | Yes | `bug_report.app_version/.platform/.os_version/.screen/.locale`; `error_log_entry` | Diagnosing a reported problem | Yes | No |
 | **Other Data — Age band** | Yes | `player.birth_year` (year only, never a full date) | Age-banding the consent flow: who must have a parent approve | Yes | No |
+| **Usage Data — Product Interaction** | Optional | `ui_click_count` — one running sum per screen/button per day, sent only after the account holder (13+ or adult) switches it on; never from an under-13 account (ADR-0039) | Analytics: which screens and buttons are used | **No** | No |
 
 ### Explicitly **not** collected
 
@@ -74,7 +75,11 @@ omission:
   geolocation call, and `bug_report`'s own entity comment names it: *"never
   device geolocation … never a device identifier/advertising id, never an
   IP address"*.
-- **No IP address stored**, in the app or the site's counters.
+- **No IP address stored**, in the app or the site's counters. The
+  optional usage-statistics upload (ADR-0039) arrives from the device's IP
+  like every request; the rate limiter holds a hash of it for about a
+  minute, ordinary server logs see it, and it is never stored with the
+  counts.
 - **No contacts, no calendar, no microphone or camera beyond an explicit
   clip recording, no browsing history, no purchases** (there are none), **no
   financial info**.
@@ -190,9 +195,15 @@ tied to a person.
 **App activity**
 - ✅ **Other user-generated content** — clip captions, `bug_report`
   descriptions.
-- ❌ App interactions, in-app search history, installed apps, other
-  actions. ADR-0020's usage metrics are aggregate-only and computed
-  server-side from data already declared above, so they add no collection.
+- ✅ **App interactions** — the optional usage statistics of ADR-0039
+  (I-003): per-day counts of a fixed list of screens and buttons, sent
+  with no identifier and only after a 13+ or adult account switches it on.
+  **Optional, not linked, purpose Analytics.** Before ADR-0039 this box
+  was correctly unticked; shipping the feature without ticking it makes
+  the form false.
+- ❌ In-app search history, installed apps, other actions. ADR-0020's
+  server-side usage metrics are aggregate-only and computed from data
+  already declared above, so they add no collection.
 
 **App info and performance**
 - ✅ **Crash logs** — see the warning above. **Not linked.**
@@ -225,9 +236,9 @@ Same answers throughout unless noted:
 |---|---|
 | Collected or shared? | **Collected**, never shared. Hosting, object storage and the SMTP relay are processors acting on instruction — declare them in the privacy policy, not by ticking "shared". |
 | Processed ephemerally? | **No** for everything stored. |
-| Required or optional? | **Optional** for name, videos, messages, user-generated content, diagnostics and crash logs. See the judgement call below for fitness. |
-| Purpose | **App functionality** for all of it. Not analytics, not advertising, not personalisation. |
-| Linked to the user? | **Yes**, except **crash logs → No**. |
+| Required or optional? | **Optional** for name, videos, messages, user-generated content, diagnostics, crash logs and app interactions. See the judgement call below for fitness. |
+| Purpose | **App functionality** for all of it, except **app interactions → Analytics**. Not advertising, not personalisation, not tracking. |
+| Linked to the user? | **Yes**, except **crash logs and app interactions → No**. |
 
 **One judgement call to make deliberately: is fitness data required or
 optional?** The app runs without logging anything — you can join a team,

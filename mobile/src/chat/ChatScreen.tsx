@@ -36,6 +36,7 @@ import {
   reportClip,
 } from '../api/endpoints';
 import { ApiError } from '../api/ApiError';
+import { trackButton } from '../api/uiMetricsClient';
 import {
   addCachedChatBlock,
   getHasSeenChatIntro,
@@ -347,6 +348,8 @@ export function ChatScreen({
     // ADR-0017 Decision 4 — a message needs non-empty text OR an attached
     // clip (or both), not text alone.
     if (!content && !attachedClip) return;
+    // I-003: counts that a message was sent, never what it said.
+    trackButton('btn_chat_send');
     setSending(true);
     setSendError(null);
     try {

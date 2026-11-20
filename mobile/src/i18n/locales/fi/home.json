@@ -288,6 +288,14 @@
     "a11yCategoryGroup": "Valitse mitä tapahtui",
     "a11yScreenGroup": "Valitse missä sovelluksessa se tapahtui"
   },
+  "anonymousStats": {
+    "heading": "Sovelluksen käyttötilasto",
+    "body": "Jos otat tämän käyttöön, sovellus laskee, kuinka usein näkymiä avataan ja painikkeita painetaan. Emme saa tietää, kuka painoi, mihin aikaan päivästä tai mitä kirjoitit tai kuvasit. Se on pois päältä, kunnes otat sen käyttöön, ja voit poistaa sen käytöstä milloin tahansa.",
+    "info": "Lukuja säilytetään 90 päivää, minkä jälkeen ne poistetaan. Kuten kaikki palvelimellemme tulevat pyynnöt, lähetys saapuu laitteesi IP-osoitteesta; sitä käytetään noin minuutin ajan väärinkäytön estämiseen, se näkyy tavallisissa palvelinlokeissamme eikä sitä koskaan tallenneta lukujen yhteyteen.",
+    "confirmBody": "Haluatko ottaa tilaston käyttöön? Sovellus lähettää vain, kuinka monta kertaa näkymiä ja painikkeita on käytetty. Voit poistaa sen käytöstä milloin tahansa.",
+    "confirmNo": "Ei kiitos",
+    "confirmYes": "Ota käyttöön"
+  },
   "trainingReminder": {
     "heading": "Harjoitusmuistutus",
     "body": "Yksi ystävällinen muistutus päivässä. Sinä valitset milloin — eikä se tule koskaan illalla tai yöllä.",
