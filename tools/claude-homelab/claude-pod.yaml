@@ -1,0 +1,113 @@
+# A Claude Code workstation for SkillStreak on the home-lab K3s node
+# skillstreak01 (20 cores / 31 GB), so long sessions and EAS waits stop
+# competing with everything else on ubuntu01. See README.md.
+#
+# Not applied by CI. Apply by hand against the home-lab cluster only:
+#   kubectl --kubeconfig ~/.kube/skillstreak-homelab.yaml \
+#     --context skillstreak-homelab apply -f tools/claude-homelab/claude-pod.yaml
+#
+# Credentials are NOT in this file: the kubeconfig Secret is created by
+# setup.sh from local files, and Claude / GitHub / Expo logins are done by
+# the owner inside the pod (README.md).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-skillstreak
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home
+  namespace: claude-skillstreak
+spec:
+  accessModes: [ReadWriteOnce]
+  # Retain: the home holds the repo working tree, docs/internal (not in
+  # git) and Claude's memory — deleting the PVC must not delete those.
+  storageClassName: local-path-retain
+  resources:
+    requests:
+      storage: 60Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bootstrap
+  namespace: claude-skillstreak
+data:
+  bootstrap.sh: |
+    #!/bin/bash
+    # Runs as root on every start: system packages live in the image layer
+    # and are gone after a restart; everything in /home/chrisp persists.
+    set -euo pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq --no-install-recommends \
+      git tmux postgresql-client ca-certificates curl jq less vim-tiny \
+      procps python3 gh >/dev/null
+    if ! command -v kubectl >/dev/null; then
+      curl -fsSL -o /usr/local/bin/kubectl \
+        "https://dl.k8s.io/release/v1.31.14/bin/linux/amd64/kubectl"
+      chmod +x /usr/local/bin/kubectl
+    fi
+    # node:22 ships user "node" with uid 1000; rename it to chrisp so paths
+    # (and Claude's per-project memory key) match ubuntu01 exactly.
+    if id node >/dev/null 2>&1; then
+      usermod -l chrisp -d /home/chrisp node
+      groupmod -n chrisp node
+    fi
+    chown chrisp:chrisp /home/chrisp
+    su - chrisp -c '
+      set -e
+      mkdir -p ~/.local/bin ~/.kube
+      npm config set prefix ~/.local >/dev/null
+      command -v claude >/dev/null || npm install -g --silent @anthropic-ai/claude-code
+      command -v pnpm >/dev/null || npm install -g --silent pnpm@11.9.0
+      grep -q ".local/bin" ~/.bashrc 2>/dev/null || {
+        echo "export PATH=\$HOME/.local/bin:\$PATH" >> ~/.bashrc
+        echo "export KUBECONFIG=/etc/claude-kube/config" >> ~/.bashrc
+      }
+    '
+    echo "bootstrap done"
+    exec sleep infinity
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude
+  namespace: claude-skillstreak
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app: claude}
+  template:
+    metadata:
+      labels: {app: claude}
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: skillstreak01
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: claude
+          image: docker.io/library/node:22-bookworm
+          command: ["/bin/bash", "/opt/bootstrap/bootstrap.sh"]
+          env:
+            - name: TZ
+              value: Europe/Stockholm
+          resources:
+            requests: {cpu: "1", memory: 2Gi}
+            limits: {cpu: "8", memory: 16Gi}
+          volumeMounts:
+            - {name: home, mountPath: /home/chrisp}
+            - {name: bootstrap, mountPath: /opt/bootstrap}
+            - {name: kube, mountPath: /etc/claude-kube, readOnly: true}
+      volumes:
+        - name: home
+          persistentVolumeClaim: {claimName: home}
+        - name: bootstrap
+          configMap: {name: bootstrap}
+        - name: kube
+          secret:
+            secretName: kubeconfig
+            defaultMode: 0444
