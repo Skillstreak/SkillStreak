@@ -56,16 +56,22 @@ data:
       groupmod -n chrisp node
     fi
     chown chrisp:chrisp /home/chrisp
+    # Login shells (su -, tmux) read /etc/profile, never ~/.bashrc — so the
+    # PATH to claude/pnpm and KUBECONFIG must be set here, for every shell.
+    cat > /etc/profile.d/claude-pod.sh <<'PROFILE'
+    export PATH="$HOME/.local/bin:$PATH"
+    export KUBECONFIG=/etc/claude-kube/config
+    export TZ=Europe/Stockholm
+    PROFILE
+    # Interactive non-login shells (new tmux panes via bash) read bash.bashrc.
+    grep -q claude-pod.sh /etc/bash.bashrc || \
+      echo '. /etc/profile.d/claude-pod.sh' >> /etc/bash.bashrc
     su - chrisp -c '
       set -e
       mkdir -p ~/.local/bin ~/.kube
       npm config set prefix ~/.local >/dev/null
       command -v claude >/dev/null || npm install -g --silent @anthropic-ai/claude-code
       command -v pnpm >/dev/null || npm install -g --silent pnpm@11.9.0
-      grep -q ".local/bin" ~/.bashrc 2>/dev/null || {
-        echo "export PATH=\$HOME/.local/bin:\$PATH" >> ~/.bashrc
-        echo "export KUBECONFIG=/etc/claude-kube/config" >> ~/.bashrc
-      }
     '
     echo "bootstrap done"
     exec sleep infinity
